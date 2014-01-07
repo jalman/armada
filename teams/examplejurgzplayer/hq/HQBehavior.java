@@ -27,17 +27,15 @@ public class HQBehavior extends RobotBehavior {
   int CowboyID = 0;
 
   private final boolean[][] IN_RANGE = {
-      {false, false, false, false, false, false, false, false, false, false, false},
-      {false, false, false, false, false, true, false, false, false, false, false},
-      {false, false, false, true, true, true, true, true, false, false, false},
-      {false, false, true, true, true, true, true, true, true, false, false},
-      {false, false, true, true, true, true, true, true, true, false, false},
-      {false, true, true, true, true, true, true, true, true, true, false},
-      {false, false, true, true, true, true, true, true, true, false, false},
-      {false, false, true, true, true, true, true, true, true, false, false},
-      {false, false, false, true, true, true, true, true, false, false, false},
-      {false, false, false, false, false, true, false, false, false, false, false},
-      {false, false, false, false, false, false, false, false, false, false, false}
+      {false, false, false, false, false, false, false, false, false},
+      {false, false, true, true, true, true, true, false, false},
+      {false, true, true, true, true, true, true, true, false},
+      {false, true, true, true, true, true, true, true, false},
+      {false, true, true, true, true, true, true, true, false},
+      {false, true, true, true, true, true, true, true, false},
+      {false, true, true, true, true, true, true, true, false},
+      {false, false, true, true, true, true, true, false, false},
+      {false, false, false, false, false, false, false, false, false}
   };
 
   private boolean attackDelay = false;
@@ -55,7 +53,6 @@ public class HQBehavior extends RobotBehavior {
 
   @Override
   public void run() throws GameActionException {
-    tryAttack();
     macro();
   }
 
@@ -65,7 +62,7 @@ public class HQBehavior extends RobotBehavior {
   }
 
   private void tryAttack() {
-    Robot[] robots = RC.senseNearbyGameObjects(Robot.class, 25);
+    Robot[] robots = RC.senseNearbyGameObjects(Robot.class, 18);
     if (!attackDelay && robots.length > 0) {
       attackDelay = true;
       return;
@@ -74,7 +71,7 @@ public class HQBehavior extends RobotBehavior {
       return;
     }
 
-    int[][] weight = new int[11][11];
+    int[][] weight = new int[9][9];
 
     int[] enemiesX = new int[robots.length];
     int[] enemiesY = new int[robots.length];
@@ -92,8 +89,8 @@ public class HQBehavior extends RobotBehavior {
         x -= curX;
         y -= curY;
 
-        x += 5;
-        y += 5;
+        x += 4;
+        y += 4;
 
         if (0 <= x && x < 11 && 0 <= y && y < 11) {
           if (info.team == ALLY_TEAM) {
@@ -165,7 +162,7 @@ public class HQBehavior extends RobotBehavior {
 
         int i = enemiesX[n];
         int j = enemiesY[n];
-        if (i <= 0 || i >= 16 || j <= 0 || j >= 16) {
+        if (i <= 0 || i >= 9 || j <= 0 || j >= 9) {
           continue;
         }
 
