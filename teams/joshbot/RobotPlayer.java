@@ -1,44 +1,4 @@
-package examplejurgzplayer;
-
-import battlecode.common.Clock;
-import battlecode.common.GameActionException;
-import battlecode.common.RobotController;
-import examplejurgzplayer.hq.HQBehavior;
-import examplejurgzplayer.soldiers.SoldierBehavior;
-import examplejurgzplayer.utils.Utils;
-
-public class RobotPlayer {
-  public static void run(RobotController rc) {
-    Utils.initUtils(rc);
-    RobotBehavior robot = null;
-    switch (rc.getType()) {
-      case HQ:
-        // Strategy strategy = Strategy.decide();
-        robot = new HQBehavior();
-        break;
-      case SOLDIER:
-        robot = new SoldierBehavior();
-        break;
-      default: // change
-        robot = new SoldierBehavior();
-        break;
-    }
-
-    while (true) {
-      try {
-        robot.beginRound();
-        robot.run();
-        robot.endRound();
-        rc.yield();
-      } catch (GameActionException e) {
-        System.out.println("Round number = " + Clock.getRoundNum());
-        e.printStackTrace();
-      }
-    }
-  }
-}
-=======
-package examplejurgzplayer;
+package joshbot;
 
 import battlecode.common.Direction;
 import battlecode.common.GameConstants;
@@ -64,6 +24,18 @@ public class RobotPlayer {
 							rc.spawn(toEnemy);
 						}
 					}
+					
+					if(rc.isActive()) {
+						Robot[] nearbyEnemies = rc.senseNearbyGameObjects(Robot.class, 16, rc.getTeam().equals(Team.A) ? Team.B : Team.A);
+						int attackindex = (int)(Math.random() * nearbyEnemies.length);
+						RobotInfo tokill = rc.senseRobotInfo(nearbyEnemies[attackindex]);
+						MapLocation killplace = tokill.location;
+						if(rc.canAttackSquare(killplace)) {
+							rc.attackSquare(killplace);
+						}
+					}
+					
+					
 				} catch (Exception e) {
 					System.out.println("HQ Exception");
 				}
