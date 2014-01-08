@@ -83,7 +83,7 @@ public class SoldierUtils {
 		if (r.type == RobotType.SOLDIER)
 		{
 			//Full health soldier returns 16.
-			return Math.max(0, 10 - (int)(1.5*r.roundsUntilMovementIdle) +
+      return Math.max(0, 10 - (int) (1.5 * r.actionDelay) +
 					(int)(robotHealthPercent(r)*10)-naiveDistance(currentLocation, r.location));
 		}
 		return 0;
@@ -93,7 +93,8 @@ public class SoldierUtils {
 	{
 		if (r.type == RobotType.SOLDIER)
 		{
-			return Math.max(0, 10 - (int)(1.5*r.roundsUntilAttackIdle) + (int)(robotHealthPercent(r)*10) - naiveDistance(currentLocation, r.location));
+      return Math.max(0, 10 - (int) (1.5 * r.actionDelay) + (int) (robotHealthPercent(r) * 10)
+          - naiveDistance(currentLocation, r.location));
 		}
 		return 25;
 	}
@@ -157,7 +158,7 @@ public class SoldierUtils {
 		int roundsUntilActive = 0;
 		if (r.type == RobotType.SOLDIER)
 		{
-			roundsUntilActive = r.roundsUntilMovementIdle;
+      roundsUntilActive = (int) r.actionDelay;
 		}
 		return (200-(int)(healthPercent*22)-naiveDistance*18+priority+(int)(1.5*roundsUntilActive));
 	}

@@ -47,6 +47,7 @@ public class Utils {
 	public static int MAP_WIDTH, MAP_HEIGHT;
 	public static Team ALLY_TEAM, ENEMY_TEAM;
 	public static MapLocation ALLY_HQ, ENEMY_HQ;
+  public static Direction ENEMY_DIR;
 	public static int HQ_DX, HQ_DY;
 	public static int HQ_DIST;
 	public static Random random;
@@ -98,8 +99,11 @@ public class Utils {
 
 		ALLY_TEAM = rc.getTeam();
 		ENEMY_TEAM = (ALLY_TEAM == Team.A) ? Team.B : Team.A;
+
 		ALLY_HQ = rc.senseHQLocation();
 		ENEMY_HQ = rc.senseEnemyHQLocation();
+
+    ENEMY_DIR = ALLY_HQ.directionTo(ENEMY_HQ);
 
 		HQ_DX = ENEMY_HQ.x - ALLY_HQ.x;
 		HQ_DY = ENEMY_HQ.y - ALLY_HQ.y;
