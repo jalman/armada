@@ -3,15 +3,7 @@ package examplejurgzplayer.utils;
 import java.util.Arrays;
 import java.util.Random;
 
-import battlecode.common.Clock;
-import battlecode.common.Direction;
-import battlecode.common.MapLocation;
-import battlecode.common.Robot;
-import battlecode.common.RobotController;
-import battlecode.common.RobotType;
-import battlecode.common.Team;
-import battlecode.common.TerrainTile;
-import battlecode.common.Upgrade;
+import battlecode.common.*;
 import examplejurgzplayer.messaging.MessagingSystem;
 
 public class Utils {
@@ -54,6 +46,11 @@ public class Utils {
 	public static Random random;
 	public static int birthRound;
 
+  public static MapLocation[] ALLY_PASTR_LOCS, ENEMY_PASTR_LOCS;
+  public static int ALLY_PASTR_COUNT, ENEMY_PASTR_COUNT;
+
+  public static double ALLY_MILK, ENEMY_MILK;
+
 	//this is for messaging
   public static MessagingSystem messagingSystem;
 
@@ -67,11 +64,8 @@ public class Utils {
 	public static final int ENEMY_RADIUS = 4;
 	public static final int ENEMY_RADIUS2 = 16; //ENEMY_RADIUS * ENEMY_RADIUS;
 	public static Robot[] enemyRobots = new Robot[0];
-	public static Team currentMine;
 
-	public static boolean[] UPGRADES_RESEARCHED = new boolean[Upgrade.values().length];
 	public static int siteRange2;
-	public static int mineRange2;
 
 	public static final int[] SQUARES_IN_RANGE =
 		{1, 5, 9, 9, 13, 21, 21, 21, 25, 29,
@@ -133,6 +127,14 @@ public class Utils {
   public static void updateBuildingUtils() {
     enemyRobots =
         RC.senseNearbyGameObjects(Robot.class, currentLocation, ENEMY_RADIUS2, ENEMY_TEAM);
+
+    ALLY_PASTR_LOCS = RC.sensePastrLocations(ALLY_TEAM);
+    ENEMY_PASTR_LOCS = RC.sensePastrLocations(ENEMY_TEAM);
+    ALLY_PASTR_COUNT = ALLY_PASTR_LOCS.length;
+    ENEMY_PASTR_COUNT = ENEMY_PASTR_LOCS.length;
+
+    ALLY_MILK = RC.senseTeamMilkQuantity(ALLY_TEAM);
+    ENEMY_MILK = RC.senseTeamMilkQuantity(ENEMY_TEAM);
   }
 
 	  /**
@@ -142,7 +144,8 @@ public class Utils {
 		currentLocation = RC.getLocation();
 		curX = currentLocation.x;
 		curY = currentLocation.y;
-		enemyRobots = RC.senseNearbyGameObjects(Robot.class, currentLocation, ENEMY_RADIUS2, ENEMY_TEAM);
+
+    updateBuildingUtils();
 	}
 
 	private static int dx, dy;

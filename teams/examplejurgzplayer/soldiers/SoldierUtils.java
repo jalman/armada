@@ -168,14 +168,11 @@ public class SoldierUtils {
 		if (r.type == RobotType.SOLDIER)
 		{
 			return 20;
-		}
-		if (r.type == RobotType.HQ)
+    } else if (r.type == RobotType.PASTR) {
+      return 100;
+    } else if (r.type == RobotType.HQ)
 		{
-			return 70;
-		}
-		else if (r.type == RobotType.HQ)
-		{
-			return 20;
+      return -1000;
 		}
 		else
 		{
