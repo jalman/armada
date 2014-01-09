@@ -18,20 +18,20 @@ public class RobotPlayer {
 			if (rc.getType() == RobotType.HQ) {
 				try {					
 					//Check if a robot is spawnable and spawn one if it is
-					if (rc.isActive() && rc.senseRobotCount() < 25) {
-						Direction toEnemy = rc.getLocation().directionTo(rc.senseEnemyHQLocation());
-						if (rc.senseObjectAtLocation(rc.getLocation().add(toEnemy)) == null) {
-							rc.spawn(toEnemy);
-						}
-					}
-					
-					if(rc.isActive()) {
+					if (rc.isActive()) {
 						Robot[] nearbyEnemies = rc.senseNearbyGameObjects(Robot.class, 16, rc.getTeam().equals(Team.A) ? Team.B : Team.A);
-						int attackindex = (int)(Math.random() * nearbyEnemies.length);
-						RobotInfo tokill = rc.senseRobotInfo(nearbyEnemies[attackindex]);
-						MapLocation killplace = tokill.location;
-						if(rc.canAttackSquare(killplace)) {
-							rc.attackSquare(killplace);
+						if(nearbyEnemies.length == 0 && rc.senseRobotCount() < 25) {
+							Direction toEnemy = rc.getLocation().directionTo(rc.senseEnemyHQLocation());
+							while(rc.senseObjectAtLocation(rc.getLocation().add(toEnemy)) != null) toEnemy = toEnemy.rotateLeft();
+							rc.spawn(toEnemy);
+						} else if (nearbyEnemies.length > 0){
+							rc.setIndicatorString(0, nearbyEnemies.length + "");
+							int attackindex = (int)(Math.random() * nearbyEnemies.length);
+							RobotInfo tokill = rc.senseRobotInfo(nearbyEnemies[attackindex]);
+							MapLocation killplace = tokill.location;
+							if(rc.canAttackSquare(killplace)) {
+								rc.attackSquare(killplace);
+							}
 						}
 					}
 					
@@ -44,33 +44,29 @@ public class RobotPlayer {
 			if (rc.getType() == RobotType.SOLDIER) {
 				try {
 					if (rc.isActive()) {
-						int action = (rc.getRobot().getID()*rand.nextInt(101) + 50)%101;
-						//Construct a PASTR
-						if (action < 1 && rc.getLocation().distanceSquaredTo(rc.senseHQLocation()) > 2) {
+						MapLocation spot = rc.senseHQLocation().add(Direction.EAST, 5);
+						rc.setIndicatorString(2, spot.toString());
+						if(spot.equals(rc.getLocation())) {
 							rc.construct(RobotType.PASTR);
-						//Attack a random nearby enemy
-						} else if (action < 30) {
-							Robot[] nearbyEnemies = rc.senseNearbyGameObjects(Robot.class,10,rc.getTeam().opponent());
-							if (nearbyEnemies.length > 0) {
-								RobotInfo robotInfo = rc.senseRobotInfo(nearbyEnemies[0]);
-								rc.attackSquare(robotInfo.location);
-							}
-						//Move in a random direction
-						} else if (action < 80) {
-							Direction moveDirection = directions[rand.nextInt(8)];
-							if (rc.canMove(moveDirection)) {
-								rc.move(moveDirection);
-							}
-						//Sneak towards the enemy
 						} else {
-							Direction toEnemy = rc.getLocation().directionTo(rc.senseEnemyHQLocation());
-							if (rc.canMove(toEnemy)) {
-								rc.sneak(toEnemy);
+							GameObject atspot = rc.canSenseSquare(spot) ? rc.senseObjectAtLocation(spot) : null;
+							Direction move = Direction.OMNI;
+							move = rc.getLocation().directionTo(spot);
+							if(atspot != null) {
+								if(spot.distanceSquaredTo(rc.getLocation()) <= 5) move = move.opposite();
+								
 							}
+							int count = 0;
+							while(!rc.canMove(move) && count < 9) {
+								move = move.rotateLeft();
+								count++;
+							}
+							if(rc.canMove(move)) rc.move(move);
+							rc.setIndicatorString(1, move.toString());
 						}
 					}
 				} catch (Exception e) {
-					System.out.println("Soldier Exception");
+					e.printStackTrace();
 				}
 			}
 			

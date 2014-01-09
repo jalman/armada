@@ -19,6 +19,12 @@ public class RobotPlayer {
       case SOLDIER:
         robot = new SoldierBehavior();
         break;
+      case PASTR:
+        robot = new PastrBehavior();
+        break;
+      case NOISETOWER:
+        robot = new NoiseTowerBehavior();
+        break;
       default: // change
         robot = new SoldierBehavior();
         break;

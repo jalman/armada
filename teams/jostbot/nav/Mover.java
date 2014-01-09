@@ -1,7 +1,7 @@
-package examplejurgzplayer.nav;
+package jostbot.nav;
 
-import static examplejurgzplayer.utils.Utils.RC;
-import static examplejurgzplayer.utils.Utils.currentLocation;
+import static joshbot.utils.Utils.RC;
+import static joshbot.utils.Utils.currentLocation;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;

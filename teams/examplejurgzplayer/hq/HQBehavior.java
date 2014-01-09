@@ -11,6 +11,7 @@ import static examplejurgzplayer.utils.Utils.currentLocation;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
+import battlecode.common.GameConstants;
 import battlecode.common.MapLocation;
 import battlecode.common.Robot;
 import battlecode.common.RobotInfo;
@@ -23,8 +24,8 @@ public class HQBehavior extends RobotBehavior {
   // HQAction[] buildOrder;
   // int buildOrderProgress = 0;
 
-  int numBots, numNoiseTowers, numPastrs, numCowboys;
-  int CowboyID = 0;
+  int numBots, numNoiseTowers, numPastrs, numSoldiers;
+  int SoldierID = 0;
 
   private final boolean[][] IN_RANGE = {
       {false, false, false, false, false, false, false, false, false},
@@ -124,7 +125,7 @@ public class HQBehavior extends RobotBehavior {
         int[] jplaces = {enemiesY[n] - 1, enemiesY[n], enemiesY[n] + 1};
         for (int i : iplaces) {
           for (int j : jplaces) {
-            if (i <= 0 || i >= 16 || j <= 0 || j >= 16) {
+            if (i <= 0 || i >= 9 || j <= 0 || j >= 9) {
               continue;
             }
 
@@ -207,7 +208,7 @@ public class HQBehavior extends RobotBehavior {
 
     try {
       if (RC.isActive()) {
-        built = buildCowboy();
+        built = buildSoldier();
       }
     } catch (GameActionException e) {
       e.printStackTrace();
@@ -215,25 +216,25 @@ public class HQBehavior extends RobotBehavior {
   }
 
   /**
-   * Tries to build a Cowboy.
+   * Tries to build a Soldier.
    * @return Whether successful.
    * @throws GameActionException
    */
-  boolean buildCowboy() throws GameActionException {
-    return buildCowboy(ALLY_HQ.directionTo(ENEMY_HQ));
+  boolean buildSoldier() throws GameActionException {
+    return buildSoldier(ALLY_HQ.directionTo(ENEMY_HQ));
   }
 
   /**
-   * Tries to build a Cowboy.
+   * Tries to build a Soldier.
    * @param dir The direction in which to build.
    * @return Whether successful.
    * @throws GameActionException
    */
-  boolean buildCowboy(Direction dir) throws GameActionException {
-    if (RC.isActive()) {
-      // Spawn a Cowboy
+  boolean buildSoldier(Direction dir) throws GameActionException {
+    if (RC.isActive() && RC.senseRobotCount() < GameConstants.MAX_ROBOTS) {
+      // Spawn a Soldier
       for (int i = 0; i < 8; i++) {
-        if (goodPlaceToMakeCowboy(dir)) {
+        if (goodPlaceToMakeSoldier(dir)) {
           sendMessagesOnBuild();
           RC.spawn(dir);
           return true;
@@ -245,7 +246,7 @@ public class HQBehavior extends RobotBehavior {
     return false;
   }
 
-  private boolean goodPlaceToMakeCowboy(Direction dir) {
+  private boolean goodPlaceToMakeSoldier(Direction dir) {
     return RC.canMove(dir);
   }
 

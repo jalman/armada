@@ -15,12 +15,12 @@ import battlecode.common.RobotType;
 
 public class SoldierUtils {
 
-  public final static int MAX_SOLDIER_HEALTH = 40;
-  public final static int MAX_ENCAMPMENT_HEALTH = 100;
-  public final static int MAX_HQ_HEALTH = 500;
+  public final static double MAX_SOLDIER_HEALTH = RobotType.SOLDIER.maxHealth;
+  // public final static int MAX_ENCAMPMENT_HEALTH = 100;
+  // public final static int MAX_HQ_HEALTH = 500;
 
 	public static int sensorRadius = ENEMY_RADIUS2;
-	public static int closeEnoughToGoToBattleSquared = 121;
+  public static int closeEnoughToGoToBattleSquared = 64;
 	public static Robot[] enemiesFarAway; // enemies within closeEnoughToGoToBattle of a soldier. Only used to find farawayEnemyTarget
 	public static final int maxNumberOfEnemiesToCheckToFindATarget = 9;
 
@@ -168,14 +168,11 @@ public class SoldierUtils {
 		if (r.type == RobotType.SOLDIER)
 		{
 			return 20;
-		}
-		if (r.type == RobotType.HQ)
+    } else if (r.type == RobotType.PASTR) {
+      return 100;
+    } else if (r.type == RobotType.HQ)
 		{
-			return 70;
-		}
-		else if (r.type == RobotType.HQ)
-		{
-			return 20;
+      return -1000;
 		}
 		else
 		{
@@ -183,17 +180,15 @@ public class SoldierUtils {
 		}
 	}
 
+  public static boolean inRange(MapLocation loc) {
+    return currentLocation.distanceSquaredTo(loc) <= RobotType.SOLDIER.attackRadiusMaxSquared;
+  }
+
 	private static double robotHealthPercent(RobotInfo r) throws GameActionException{
-		if (r.type == RobotType.SOLDIER)
-		{
+    if (r.type == RobotType.SOLDIER) {
       return (r.health / MAX_SOLDIER_HEALTH);
-		}
-		else if (r.type == RobotType.HQ)
-		{
-      return (r.health / MAX_HQ_HEALTH);
-		}
-		else {
-      return (r.health / MAX_ENCAMPMENT_HEALTH);
+    } else {
+      return 0;
 		}
 	}
 
@@ -214,6 +209,7 @@ public class SoldierUtils {
 		}
 		return enemyWeight;
 	}
+
 	public static int setAllyWeight(MapLocation m, int radiusSquared) throws GameActionException
 	{
 		//if we scan from currentLocaiton
@@ -256,7 +252,7 @@ public class SoldierUtils {
 	 * @return robot with highest priority
 	 * @throws GameActionException
 	 */
-	private static MapLocation getHighestPriority(Robot[] arr) throws GameActionException
+  public static MapLocation getHighestPriority(Robot[] arr) throws GameActionException
 	{
 		RobotInfo targetInfo = null;
 		for (int i = 0; i < maxNumberOfEnemiesToCheckToFindATarget && i < arr.length; i++)

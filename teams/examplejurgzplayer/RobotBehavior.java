@@ -14,7 +14,7 @@ public abstract class RobotBehavior {
 	/**
 	 * Called every round.
 	 */
-	public void run() throws GameActionException {}
+  public abstract void run() throws GameActionException;
 
 	/**
 	 * Called at the end of each round.

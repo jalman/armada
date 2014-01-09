@@ -1,4 +1,4 @@
-package examplejurgzplayer.nav;
+package jostbot.nav;
 
 import static examplejurgzplayer.utils.Utils.DIRECTIONS;
 import static examplejurgzplayer.utils.Utils.RC;

@@ -1,4 +1,4 @@
-package examplejurgzplayer.nav;
+package jostbot.nav;
 
 import battlecode.common.Direction;
 import battlecode.common.MapLocation;
