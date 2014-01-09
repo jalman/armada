@@ -1,6 +1,5 @@
 package examplejurgzplayer;
 
-import battlecode.common.Clock;
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 import examplejurgzplayer.hq.HQBehavior;
@@ -25,9 +24,8 @@ public class RobotPlayer {
       case NOISETOWER:
         robot = new NoiseTowerBehavior();
         break;
-      default: // change
-        robot = new SoldierBehavior();
-        break;
+      default: // autokill
+        return;
     }
 
     while (true) {
@@ -37,7 +35,6 @@ public class RobotPlayer {
         robot.endRound();
         rc.yield();
       } catch (GameActionException e) {
-        System.out.println("Round number = " + Clock.getRoundNum());
         e.printStackTrace();
       }
     }

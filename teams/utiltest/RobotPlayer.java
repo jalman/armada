@@ -1,239 +1,88 @@
-package examplejurgzplayer.utils;
+package utiltest;
 
-import java.util.Arrays;
-import java.util.Random;
+import battlecode.common.Clock;
+import battlecode.common.RobotController;
 
-import battlecode.common.*;
-import examplejurgzplayer.messaging.MessagingSystem;
+public class RobotPlayer {
 
-public class Utils {
+	public static void run(RobotController rc) {
+    int n, startBytecodes, spent, sqrt1, sqrt2;
+    int k = 0;
+    String output;
+		while(true) {
+      k++;
+      n = Clock.getRoundNum() + 1;
+      rc.setIndicatorString(0, n + ", " + k);
 
-	//Game constants
-  // public final static int MAX_SOLDIER_ENERGON = 40;
-  // public final static int MAX_ENCAMPMENT_ENERGON = 100;
-  // public final static int MAX_HQ_ENERGON = 500;
-  // public static final RobotType[] ROBOT_TYPE = RobotType.values();
+      output = n + ": ";
 
-	//actual constants
+      startBytecodes = Clock.getBytecodeNum();
+      sqrt1 = sqrt1(n);
+      spent = Clock.getBytecodeNum() - startBytecodes;
+      output += (spent + " (" + sqrt1 + "), ");
 
-  // public static final int[] DX = {-1, -1, -1, 0, 0, 1, 1, 1};
-  // public static final int[] DY = {-1, 0, 1, -1, 1, -1, 0, 1};
-  public static final Direction[] DIRECTIONS = Direction.values();
+      startBytecodes = Clock.getBytecodeNum();
+      sqrt2 = sqrt4(n);
+      spent = Clock.getBytecodeNum() - startBytecodes;
+      output += (spent + " (" + sqrt2 + "), ");
 
-  public static final int[][] d = new int[8][2];
-  static {
-    for (int i = 0; i < 8; i++) {
-      d[i][0] = DIRECTIONS[i].dx;
-      d[i][1] = DIRECTIONS[i].dy;
-    }
-  }
+      if (sqrt1 != sqrt2) {
+        System.out.println("ERROR sqrt1 != sqrt2: " + output);
+        break;
+      }
 
-	// Mining constants
-	public static final int CHECK_MINE_RADIUS_SQUARED = 13; // make sure this matches CHECK_MINE_RADIUS!!!
-	public static final int CHECK_MINE_RADIUS = 4;
+      System.out.println(output);
 
-	//these are set from the beginning of the game
-	public static RobotController RC;
-	public static Robot ROBOT;
-	public static int ID;
-	public static RobotType TYPE;
-	public static int MAP_WIDTH, MAP_HEIGHT;
-	public static Team ALLY_TEAM, ENEMY_TEAM;
-	public static MapLocation ALLY_HQ, ENEMY_HQ;
-  public static Direction ENEMY_DIR;
-	public static int HQ_DX, HQ_DY;
-	public static int HQ_DIST;
-	public static Random random;
-  public static int birthRound, currentRound;
-
-  public static MapLocation[] ALLY_PASTR_LOCS, ENEMY_PASTR_LOCS;
-  public static int ALLY_PASTR_COUNT, ENEMY_PASTR_COUNT;
-
-  public static double ALLY_MILK, ENEMY_MILK;
-
-	//this is for messaging
-  public static MessagingSystem messagingSystem;
-
-	//these might be set at the beginning of the round
-  // public static Strategy strategy = Strategy.NORMAL;
-  // public static Parameters parameters = strategy.parameters.clone();
-
-	public static MapLocation currentLocation;
-	public static int curX, curY;
-  public static double currentCowsHere;
-  // public static double forward;
-	public static final int ENEMY_RADIUS = 4;
-	public static final int ENEMY_RADIUS2 = 16; //ENEMY_RADIUS * ENEMY_RADIUS;
-	public static Robot[] enemyRobots = new Robot[0];
-
-	public static int siteRange2;
-
-	public static final int[] SQUARES_IN_RANGE =
-		{1, 5, 9, 9, 13, 21, 21, 21, 25, 29,
-		37, 37, 37, 45, 45, 45, 49, 57, 61, 61,
-		69, 69, 69, 69, 69, 81, 89, 89, 89, 97,
-		97, 97, 101, 101, 109, 109, 113, 121, 121, 121,
-		129, 137, 137, 137, 137, 145, 145, 145, 145, 149,
-		161, 161, 169, 177, 177, 177, 177, 177, 185, 185,
-		185, 193, 193, 193, 197, 213, 213, 213, 221, 221,
-		221, 221, 225, 233, 241, 241, 241, 241, 241, 241,
-		249, 253, 261, 261, 261, 277, 277, 277, 277, 285,
-		293, 293, 293, 293, 293, 293, 293, 301, 305, 305,
-		317};
-
-
-  public static final MapLocation zeroLoc = new MapLocation(0, 0);
-
-	public static void initUtils(RobotController rc) {
-		RC = rc;
-		ROBOT = rc.getRobot();
-		TYPE = rc.getType();
-		ID = ROBOT.getID();
-
-		MAP_WIDTH = rc.getMapWidth();
-		MAP_HEIGHT = rc.getMapHeight();
-
-		ALLY_TEAM = rc.getTeam();
-		ENEMY_TEAM = (ALLY_TEAM == Team.A) ? Team.B : Team.A;
-
-		ALLY_HQ = rc.senseHQLocation();
-		ENEMY_HQ = rc.senseEnemyHQLocation();
-
-    ENEMY_DIR = ALLY_HQ.directionTo(ENEMY_HQ);
-
-		HQ_DX = ENEMY_HQ.x - ALLY_HQ.x;
-		HQ_DY = ENEMY_HQ.y - ALLY_HQ.y;
-		HQ_DIST = naiveDistance(ALLY_HQ,ENEMY_HQ);
-
-    currentLocation = RC.getLocation();
-    curX = currentLocation.x;
-    curY = currentLocation.y;
-
-		birthRound = Clock.getRoundNum();
-
-		random = new Random(((long)ID<< 32) ^ Clock.getRoundNum());
-
-    messagingSystem = new MessagingSystem();
-
-    if (TYPE == RobotType.SOLDIER) {
-      updateUnitUtils();
-    } else {
-      updateBuildingUtils();
-    }
+			rc.yield();
+		}
 	}
 
   /**
-   * Called at the beginning of each round by buildings.
+   * integer sqrt, by binary search
+   * @param n (assume positive)
+   * @return
    */
-  public static void updateBuildingUtils() {
-    enemyRobots =
-        RC.senseNearbyGameObjects(Robot.class, currentLocation, ENEMY_RADIUS2, ENEMY_TEAM);
-    currentRound = Clock.getRoundNum();
+  public static int sqrt1(int n) {
+    if (n <= 3) return 1;
 
-    ALLY_PASTR_LOCS = RC.sensePastrLocations(ALLY_TEAM);
-    ENEMY_PASTR_LOCS = RC.sensePastrLocations(ENEMY_TEAM);
-    ALLY_PASTR_COUNT = ALLY_PASTR_LOCS.length;
-    ENEMY_PASTR_COUNT = ENEMY_PASTR_LOCS.length;
+	  int lo = 1;
+    int hi = n / 2;
+    int g = 1;
 
-    ALLY_MILK = RC.senseTeamMilkQuantity(ALLY_TEAM);
-    ENEMY_MILK = RC.senseTeamMilkQuantity(ENEMY_TEAM);
-  }
-
-	  /**
-   * Called at the beginning of each round by moving units.
-   */
-  public static void updateUnitUtils() {
-		currentLocation = RC.getLocation();
-		curX = currentLocation.x;
-		curY = currentLocation.y;
-
-    try {
-      currentCowsHere = RC.senseCowsAtLocation(currentLocation);
-    } catch (GameActionException e) {
-      e.printStackTrace();
+    while (lo < hi) {
+      g = (lo + hi + 1) / 2;
+      if (g * g > n) {
+        hi = g - 1;
+      } else if (g * g < n) {
+        lo = g;
+      } else {
+        return g;
+      }
     }
-
-    updateBuildingUtils();
+    return lo;
 	}
 
-	private static int dx, dy;
+  /**
+   * integer sqrt, by newton's method
+   * @param n (assume positive)
+   * @return
+   */
+  public static int sqrt2(int n) {
+    if (n <= 3) return 1;
 
-	public static int naiveDistance(MapLocation loc0, MapLocation loc1) {
-		// call takes 33 bytecodes
-		//		dx = loc0.x > loc1.x ? loc0.x - loc1.x : loc1.x - loc0.x;
-		//		dy = loc0.y > loc1.y ? loc0.y - loc1.y : loc1.y - loc0.y;
-		//		int c = dx > dy ? dx : dy;
-		//		int bc = Clock.getBytecodeNum();
-		dx = loc0.x - loc1.x; // call takes 31 bytecodes
-		dy = loc0.y - loc1.y;
-		dx = dx*dx > dy*dy ? dx : dy;
-		return dx > 0? dx : -dx;
-		//		int c = dx > 0 ? dx : -dx;
-		//		int c = Math.max(Math.max(dx, dy), Math.max(-dx, -dy));
-		//return naiveDistance(loc0.x, loc0.y, loc1.x, loc1.y);
-		//		System.out.println("bc used by naiveDistance: " + (Clock.getBytecodeNum()-bc));
-		//		return c;
-	}
+    double g1 = 1.0, g2 = 0.0;
 
-	public static int naiveDistance(int x1, int y1, int x2, int y2) {
-		dx = x1 > x2 ? x1-x2 : x2-x1;
-		dy = y1 > y2 ? y1-y2 : y2-y1;
-		return dx > dy ? dx : dy;
-		//		dx = x1 - x2;
-		//		dy = y1 - y2;
-		//		dx = dx*dx > dy*dy ? dx : dy;
-		//		return dx > 0 ? dx : -dx;
-		//return Math.max(Math.abs(x1-x2), Math.abs(y1-y2));
-	}
-
-	public static boolean isFirstRound() {
-		return Clock.getRoundNum() == birthRound;
-	}
-
-  public static boolean isPassable(MapLocation loc) {
-    TerrainTile t = RC.senseTerrainTile(loc);
-    return (t == TerrainTile.NORMAL || t == TerrainTile.ROAD);
+    while (true) {
+      g2 = (g1 + n / g1) / 2.0;
+      if (g2 - g1 < 1 && g2 - g1 > 0) {
+        return (int) g1;
+      } else if (g1 - g2 < 1 && g1 - g2 > 0) {
+        return (int) g2;
+      } else {
+        g1 = g2;
+      }
+    }
   }
-
-	/**
-	 * Finds the closest (by naive distance) map location to the target among a set of map locations.
-	 * @param locs The set of map locations.
-	 * @param target The target location.
-	 * @return The closest map location.
-	 */
-	public static MapLocation closest(MapLocation[] locs, MapLocation target) {
-		MapLocation close = null;
-		int distance = Integer.MAX_VALUE;
-
-		for(int i = 0; i < locs.length; i++) {
-			int d = naiveDistance(locs[i], target);
-			if(d < distance) {
-				close = locs[i];
-				distance = d;
-			}
-		}
-
-		return close;
-	}
-
-	public static int clamp(int i, int min, int max) {
-		if(i < min) return min;
-		if(i > max) return max;
-		return i;
-	}
-
-	public static <T> T[] newArray(int length, T... array) {
-		return Arrays.copyOf(array, length);
-	}
-
-	public static int slowSqrt(int n) {
-		int sqrt = 0;
-		while(sqrt * sqrt < n) {
-			sqrt++;
-		}
-
-    return sqrt - 1;
-	}
 
   public static final int[] SQRTS = {0, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4,
       4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7,
@@ -397,63 +246,33 @@ public class Utils {
       60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60,
       60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60};
 
+  public static final int[] SQUARES = {0, 1, 4, 9, 16, 25, 36, 49, 64, 81, 100, 121, 144, 169, 196,
+      225, 256, 289, 324, 361, 400, 441, 484, 529, 576, 625, 676, 729, 784, 841, 900, 961, 1024,
+      1089, 1156, 1225, 1296, 1369, 1444, 1521, 1600, 1681, 1764, 1849, 1936, 2025, 2116, 2209,
+      2304, 2401, 2500, 2601, 2704, 2809, 2916, 3025, 3136, 3249, 3364, 3481, 3600, 3721, 3844,
+      3969, 4096, 4225, 4356, 4489, 4624, 4761, 4900, 5041, 5184, 5329, 5476, 5625, 5776, 5929,
+      6084, 6241, 6400, 6561, 6724, 6889, 7056, 7225, 7396, 7569, 7744, 7921, 8100, 8281, 8464,
+      8649, 8836, 9025, 9216, 9409, 9604, 9801, 10000, 10201, 10404, 10609, 10816, 11025, 11236,
+      11449, 11664, 11881, 12100, 12321, 12544, 12769, 12996, 13225, 13456, 13689, 13924, 14161,
+      14400, 14641, 14884, 15129, 15376, 15625, 15876, 16129, 16384, 16641, 16900, 17161, 17424,
+      17689, 17956, 18225, 18496, 18769, 19044, 19321, 19600, 19881, 20164, 20449, 20736, 21025,
+      21316, 21609, 21904, 22201};
+
   /**
-   * integer sqrt by lookup table
-   * @param n (assume nonnegative)
+   * integer sqrt by binary search and lookup table
+   * @param n (assume positive)
    * @return
    */
-  public static int intsqrt(int n) {
-    if (n < 3721) return SQRTS[n];
+  public static int sqrt3(int n) {
+    return SQRTS[n];
+  }
 
-    int lo = 61;
-    int hi = n / 2;
-    int g = 1;
 
-    while (lo < hi) {
-      g = (lo + hi + 1) / 2;
-      if (g * g > n) {
-        hi = g - 1;
-      } else if (g * g < n) {
-        lo = g;
-      } else {
-        return g;
-      }
+  public static int sqrt4(int n) {
+    int i = 0;
+    while (true) {
+      i++;
+      if (SQUARES[i] > n) return i - 1;
     }
-    return lo;
   }
-
-	public static int getDirTowards(int dx, int dy) {
-		if(dx==0) {
-			if(dy>0) return 4;
-			else return 0;
-		}
-		double slope = ((double)dy)/dx;
-		if(dx>0) {
-			if(slope>2.414) return 4;
-			else if(slope>0.414) return 3;
-			else if(slope>-0.414) return 2;
-			else if(slope>-2.414) return 1;
-			else return 0;
-		} else {
-			if(slope>2.414) return 0;
-			else if(slope>0.414) return 7;
-			else if(slope>-0.414) return 6;
-			else if(slope>-2.414) return 5;
-			else return 4;
-		}
-	}
-
-  public Direction dxdyToDirection(int dx, int dy) {
-    return zeroLoc.directionTo(zeroLoc.add(dx, dy));
-  }
-
-	public static double evaluate(MapLocation loc) {
-		int dot1 = (loc.x - ALLY_HQ.x) * HQ_DX + (loc.y - ALLY_HQ.y) * HQ_DY;
-		int dot2 = (ENEMY_HQ.x - loc.x) * HQ_DX + (ENEMY_HQ.y - loc.y) * HQ_DY;
-
-		if(dot1 < 0) return -5.0;
-		if(dot2 < 0) return 5.0;
-
-		return Math.log((double)dot1 / dot2);
-	}
 }
