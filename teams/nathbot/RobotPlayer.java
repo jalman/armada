@@ -11,6 +11,7 @@ public class RobotPlayer {
 	static Random rand;
 	
 	public static void run(RobotController rc) {
+		Team player = rc.getTeam();
 		Team enemy = rc.getTeam().equals(Team.A) ? Team.B : Team.A;
 		MapLocation origin = new MapLocation(0, 0);
 		
@@ -57,13 +58,12 @@ public class RobotPlayer {
 					if (rc.isActive()) {
 						// c/p kill code
 						Robot[] nearbyEnemies = rc.senseNearbyGameObjects(Robot.class, 10, enemy);
-						//for (int i=0; i<nearbyEnemies.length; ++i) {
-						int attackindex = (int)(Math.random() * nearbyEnemies.length);
-						if (nearbyEnemies.length > 0) {
-							RobotInfo tokill = rc.senseRobotInfo(nearbyEnemies[attackindex]);
+						for (int i=0; i<nearbyEnemies.length; ++i) {
+							RobotInfo tokill = rc.senseRobotInfo(nearbyEnemies[i]);
 							MapLocation killplace = tokill.location;
-							if(rc.canAttackSquare(killplace)) {
+							if(rc.canAttackSquare(killplace) && tokill.type != RobotType.HQ) {
 								rc.attackSquare(killplace);
+								break;
 							}
 						}
 						
@@ -71,7 +71,7 @@ public class RobotPlayer {
 						MapLocation[] m = rc.sensePastrLocations(enemy);
 						rc.setIndicatorString(0, "" + d);
 						if (d < 2) {
-							if (m.length > 0) {
+							if (m.length > 0 && rc.senseNearbyGameObjects(Robot.class, 100000000, player).length >= 6) {
 								int dist = 1000000000, ind = 0;
 								for (int i=0; i<m.length; ++i) {
 									int dd = (m[i].x - loc.x) * (m[i].x - loc.x) + (m[i].y - loc.y) * (m[i].y - loc.y);
@@ -87,8 +87,8 @@ public class RobotPlayer {
 							else {
 								if (d == 0) {
 									rc.broadcast(0, 1);
-									rc.broadcast(1, (myHQ.x + theirHQ.x) / 2);
-									rc.broadcast(2, (myHQ.y + theirHQ.y) / 2);
+									rc.broadcast(1, (myHQ.x + 2*theirHQ.x) / 3);
+									rc.broadcast(2, (myHQ.y + 2*theirHQ.y) / 3);
 								}
 							}
 						}
