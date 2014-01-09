@@ -7,7 +7,8 @@ import battlecode.common.GameActionException;
 import battlecode.common.MapLocation;
 
 public class Mover {
-  private MapLocation dest, here;
+  private MapLocation dest;
+  private MapLocation here;
   private NavAlg navAlg;
   private NavType navType;
 
@@ -33,6 +34,7 @@ public class Mover {
   }
 
   public void setTarget(MapLocation dest) {
+    RC.setIndicatorString(2, dest.x + ", " + dest.y);
     if (!dest.equals(this.dest)) {
       this.dest = dest;
       navAlg.recompute(dest);
@@ -50,8 +52,12 @@ public class Mover {
     return false;
   }
 
-  public void execute() {
+  public void move() {
     execute(false);
+  }
+
+  public void sneak() {
+    execute(true);
   }
 
   /**
@@ -73,29 +79,22 @@ public class Mover {
       Direction d;
       d = navAlg.getNextDir();
       if (d != null && d != Direction.NONE && d != Direction.OMNI) {
-        move(d, sneak);
+        if (RC.canMove(d)) {
+            try {
+              if (sneak) {
+                RC.sneak(d);
+              } else {
+                RC.move(d);
+              }
+            } catch (GameActionException e) {
+              e.printStackTrace();
+            }
+        } else if (currentLocation.distanceSquaredTo(dest) <= 2) {
+          setTarget(currentLocation);
+        }
       }
-
     }
     // System.out.println("Bytecodes used by Mover.execute() = " +
     // Integer.toString(bc-Clock.getBytecodesLeft()));
   }
-
-  public void move(Direction dir, boolean sneak) {
-    if (RC.canMove(dir)) {
-      if (RC.isActive()) {
-        try {
-          if (sneak) {
-            RC.sneak(dir);
-          } else {
-            RC.move(dir);
-          }
-        } catch (GameActionException e) {
-          e.printStackTrace();
-        }
-      }
-    }
-
-  }
-
 }

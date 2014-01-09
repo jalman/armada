@@ -10,6 +10,7 @@ import battlecode.common.Robot;
 import battlecode.common.RobotController;
 import battlecode.common.RobotType;
 import battlecode.common.Team;
+import battlecode.common.TerrainTile;
 import battlecode.common.Upgrade;
 import examplejurgzplayer.messaging.MessagingSystem;
 
@@ -177,6 +178,11 @@ public class Utils {
 	public static boolean isFirstRound() {
 		return Clock.getRoundNum() == birthRound;
 	}
+
+  public static boolean isPassable(MapLocation loc) {
+    TerrainTile t = RC.senseTerrainTile(loc);
+    return (t == TerrainTile.NORMAL || t == TerrainTile.ROAD);
+  }
 
 	/**
 	 * Finds the closest (by naive distance) map location to the target among a set of map locations.

@@ -1,7 +1,7 @@
 package examplejurgzplayer.nav;
 
-import battlecode.common.*;
-import static examplejurgzplayer.utils.Utils.*;
+import battlecode.common.Direction;
+import battlecode.common.MapLocation;
 
 public abstract class NavAlg {
 	protected MapLocation curLoc = null, finish = null;
@@ -15,7 +15,6 @@ public abstract class NavAlg {
 	/*
 	 * Return the next direction to [attempt to] move in.
 	 * 
-	 * Assume finish is neither (current location) nor null. [Covered in NavSystem switch statement]
 	 */
 	abstract public Direction getNextDir();
 }

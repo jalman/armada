@@ -23,7 +23,7 @@ public class BugMoveFun extends NavAlg {
   /** the default direction to trace. Changes every time we trace too far. */
   int defaultTraceDirection = 0;
   /** trace threshold to reset to every time we get a new destination. */
-  static final int INITIAL_TRACE_THRESHOLD = 100;
+  static final int INITIAL_TRACE_THRESHOLD = 25;
   /** number of turns to trace before resetting. */
   int traceThreshold = -1;
   /** if we've hit the edge of the map by tracing in the other direction,
