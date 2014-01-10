@@ -51,6 +51,8 @@ public class Utils {
 
   public static double ALLY_MILK, ENEMY_MILK;
 
+  public static double[][] COW_GROWTH;
+
   //this is for messaging
   public static MessagingSystem messagingSystem;
 
@@ -62,8 +64,8 @@ public class Utils {
   public static int curX, curY;
   public static double currentCowsHere;
   // public static double forward;
-  public static final int ENEMY_RADIUS = 4;
-  public static final int ENEMY_RADIUS2 = 16; //ENEMY_RADIUS * ENEMY_RADIUS;
+  public static final int ENEMY_RADIUS = 6;
+  public static final int ENEMY_RADIUS2 = RobotType.SOLDIER.sensorRadiusSquared;
   public static Robot[] enemyRobots = new Robot[0];
 
   public static int siteRange2;
@@ -108,6 +110,8 @@ public class Utils {
     currentLocation = RC.getLocation();
     curX = currentLocation.x;
     curY = currentLocation.y;
+
+    COW_GROWTH = RC.senseCowGrowth();
 
     birthRound = Clock.getRoundNum();
 

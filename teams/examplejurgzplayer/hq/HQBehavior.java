@@ -26,7 +26,7 @@ public class HQBehavior extends RobotBehavior {
   };
 
   final int IN_RANGE_DIAMETER = IN_RANGE.length;
-  final int IN_RANGE_OFFSET = IN_RANGE.length / 2 - 1;
+  final int IN_RANGE_OFFSET = IN_RANGE.length / 2;
 
   private boolean attackDelay = false;
 

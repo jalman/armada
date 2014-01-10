@@ -1,6 +1,7 @@
 package examplejurgzplayer.soldiers;
 
-import static examplejurgzplayer.soldiers.SoldierUtils.*;
+import static examplejurgzplayer.soldiers.SoldierUtils.getHighestPriority;
+import static examplejurgzplayer.soldiers.SoldierUtils.inRange;
 import static examplejurgzplayer.utils.Utils.*;
 import battlecode.common.*;
 import examplejurgzplayer.RobotBehavior;
@@ -36,7 +37,7 @@ public class SoldierBehavior extends RobotBehavior {
 
   // building info
   boolean buildingFinished; // whether we're done building
-  boolean sneakToBuildingLoc; // whether to sneak to where the building should be built
+  int sneakToBuildingLoc; // whether to sneak to where the building should be built
 
   // map locations
   MapLocation dest;
@@ -58,21 +59,21 @@ public class SoldierBehavior extends RobotBehavior {
     bornRound = Clock.getRoundNum();
     mover = new Mover();
     buildingFinished = false;
-    sneakToBuildingLoc = true;
+    sneakToBuildingLoc = 0;
     panicPastrBuilding = false;
 
     if (ENEMY_PASTR_COUNT > ALLY_PASTR_COUNT + 1) {
       roleIndex = ALLY_PASTR_COUNT % 4;
       role = Role.PASTR;
 
-      mode = Mode.FIND_PASTR_LOC;
+      changeMode(Mode.FIND_PASTR_LOC);
       dest = new MapLocation((ALLY_HQ.x + roleLocList[roleIndex].x) / 2,
           (ALLY_HQ.y + roleLocList[roleIndex].y) / 2);
     } else {
       roleIndex = RC.senseRobotCount() % 4;
       role = roleList[roleIndex];
 
-      mode = Mode.SWEEP_OUT;
+      changeMode(Mode.SWEEP_OUT);
       dest = roleLocList[roleIndex];
 
       initialSweep = true;
@@ -83,8 +84,6 @@ public class SoldierBehavior extends RobotBehavior {
   @Override
   public void beginRound() throws GameActionException {
     updateUnitUtils();
-    updateSoldierUtils();
-
     if (buildingFinished) {
       RobotPlayer.run(RC);
     }
@@ -92,86 +91,86 @@ public class SoldierBehavior extends RobotBehavior {
 
   @Override
   public void run() throws GameActionException {
-    if (currentLocation.distanceSquaredTo(ENEMY_HQ) <= 15) {
+    if (currentLocation.distanceSquaredTo(ENEMY_HQ) <= 25) {
       mover.setTarget(currentLocation.subtract(currentLocation.directionTo(ENEMY_HQ)));
-    } else if (enemyRobots.length > 0) {
-      attack();
     }
 
-    if (mode != Mode.ENGAGE && mode != Mode.ACQUIRE_TARGET) {
+    if (enemyRobots.length > 0) {
+      attack();
+    } else if (mode != Mode.ENGAGE && mode != Mode.ACQUIRE_TARGET) {
       if (ENEMY_MILK - ALLY_MILK > 50000 || ENEMY_PASTR_COUNT > ALLY_PASTR_COUNT) {
-        mode = Mode.ACQUIRE_TARGET;
-      } else if (currentRound > 1800 && ENEMY_PASTR_COUNT == 0 && !panicPastrBuilding) {
+        changeMode(Mode.ACQUIRE_TARGET);
+      } else if (currentRound > 1800 && ENEMY_PASTR_COUNT > 0 && !panicPastrBuilding) {
         if (mode != Mode.BUILD_PASTR && mode != Mode.FIND_PASTR_LOC) {
           if (currentCowsHere < 150) {
             panicPastrBuilding = true;
             dest = ALLY_HQ.subtract(ALLY_HQ.directionTo(ENEMY_HQ));
             mover.setTarget(dest);
-            sneakToBuildingLoc = false;
-            mode = Mode.FIND_PASTR_LOC;
+            sneakToBuildingLoc = 1;
+            changeMode(Mode.FIND_PASTR_LOC);
           } else if (currentCowsHere < 400) {
             panicPastrBuilding = true;
-            dest = ALLY_HQ;
-            mover.setTarget(dest);
-            mode = Mode.RETURN_HOME;
+            mover.setTarget(ALLY_HQ);
+            changeMode(Mode.RETURN_HOME);
           }
         }
       } else if (!initialSweep) {
         MapLocation loc = findRichSquare();
         if (loc != null) {
           mover.setTarget(loc);
+          changeMode(Mode.STAND_RICH_LOC);
         }
-        mode = Mode.STAND_RICH_LOC;
       }
     }
 
     switch (mode) {
       case GOING_TO_MIDDLE:
-        RC.setIndicatorString(0, "Going_to_middle");
         if (mover.arrived()) {
           decideNextMode();
         } else {
-          mover.sneak();
+          mover.movePushHome();
         }
         break;
       case SWEEP_OUT:
-        RC.setIndicatorString(0, "Sweep_out " + role.toString());
         if (mover.arrived()) {
           dest = new MapLocation((2 * ALLY_HQ.x + roleLocList[roleIndex].x) / 3,
               (2 * ALLY_HQ.y + roleLocList[roleIndex].y) / 3);
           mover.setTarget(dest);
-          mode = Mode.RETURN_HOME;
+          changeMode(Mode.RETURN_HOME);
         } else {
-          mover.sneak();
+          mover.movePushHome();
         }
         break;
       case RETURN_HOME:
-        RC.setIndicatorString(0, "Return_home");
         if (mover.arrived()) {
           dest = roleLocList[roleIndex];
           mover.setTarget(dest);
-          mode = Mode.SWEEP_OUT;
+          changeMode(Mode.SWEEP_OUT);
+
           initialSweep = false;
         } else {
-          mover.move();
+          mover.movePushHome();
         }
         break;
       case STAND_RICH_LOC:
-        RC.setIndicatorString(0, "stand_rich_loc " + role.toString());
         if (!mover.arrived()) {
           mover.sneak();
+        } else {
+          RC.setIndicatorString(1, "cows here: " + currentCowsHere);
+          if (currentCowsHere < 500) {
+            mover.setTarget(roleLocList[roleIndex]);
+            changeMode(Mode.SWEEP_OUT);
+          }
         }
         break;
       case FIND_PASTR_LOC:
-        RC.setIndicatorString(0, "find_pastr_loc " + role.toString());
         if (mover.arrived()) {
-          mode = Mode.BUILD_PASTR;
+          changeMode(Mode.BUILD_PASTR);
         } else {
           mover.execute(sneakToBuildingLoc);
         }
         break;
       case BUILD_PASTR:
-        RC.setIndicatorString(0, "build_pastr " + role.toString());
         if (!RC.isConstructing() && RC.isActive()) {
           RC.construct(RobotType.PASTR);
         }
@@ -181,7 +180,6 @@ public class SoldierBehavior extends RobotBehavior {
         }
         break;
       case ACQUIRE_TARGET:
-        RC.setIndicatorString(0, "acquire_target " + role.toString());
         int mindistance = 10000000;
         MapLocation pastrTarget = null;
         for (MapLocation pastrLoc : ENEMY_PASTR_LOCS) {
@@ -194,17 +192,16 @@ public class SoldierBehavior extends RobotBehavior {
 
         if (pastrTarget == null) {
           mover.setTarget(ALLY_HQ);
-          mode = Mode.RETURN_HOME;
+          changeMode(Mode.RETURN_HOME);
         } else {
           mover.setTarget(pastrTarget);
-          mode = Mode.ENGAGE;
+          changeMode(Mode.ENGAGE);
           mover.move();
         }
         break;
       case ENGAGE:
-        RC.setIndicatorString(0, "engage " + role.toString());
-        if(mover.arrived()) {
-          mode = Mode.RETURN_HOME;
+        if (mover.arrived()) {
+          changeMode(Mode.RETURN_HOME);
         } else {
           mover.move();
         }
@@ -212,6 +209,11 @@ public class SoldierBehavior extends RobotBehavior {
       default:
         break;
     }
+  }
+
+  private void changeMode(Mode m) {
+    RC.setIndicatorString(0, currentRound + ": " + m.toString() + " " + role.toString());
+    mode = m;
   }
 
   private void attack() {
@@ -227,44 +229,28 @@ public class SoldierBehavior extends RobotBehavior {
     }
   }
 
-  public static final boolean[][] SOLDIER_SIGHT_RANGE = {
-      {false, false, true, true, true, false, false},
-      {false, true, true, true, true, true, false},
-      {true, true, true, true, true, true, true},
-      {true, true, true, true, true, true, true},
-      {true, true, true, true, true, true, true},
-      {false, true, true, true, true, true, false},
-      {false, false, true, true, true, false, false}
-  };
-  public static final int SOLDIER_SIGHT_DIAMETER = SOLDIER_SIGHT_RANGE.length;
-  public static final int SOLDIER_SIGHT_OFFSET = -3;
-
   private MapLocation findRichSquare() {
-    double maxCows = currentCowsHere, curCows;
+    double maxCows = currentCowsHere + 50 * COW_GROWTH[curX][curY] + 300;// favor staying here
+    double curCows;
 
-    MapLocation current, best = currentLocation;
-    for (int x = 0; x < SOLDIER_SIGHT_DIAMETER; x++) {
-      for (int y = 0; y < SOLDIER_SIGHT_DIAMETER; y++) {
-        if (SOLDIER_SIGHT_RANGE[x][y]) {
-          try {
-            current = new MapLocation(curX + x + SOLDIER_SIGHT_OFFSET, curY + y
-                + SOLDIER_SIGHT_OFFSET);
-            curCows = RC.senseCowsAtLocation(current);
-            if (curCows > maxCows && RC.senseObjectAtLocation(current) == null) {
-              best = current;
-              maxCows = curCows;
-            }
-          } catch (GameActionException e) {
-            e.printStackTrace();
-          }
+    MapLocation best = currentLocation;
+    for (MapLocation current : MapLocation.getAllMapLocationsWithinRadiusSq(currentLocation,
+        RobotType.SOLDIER.sensorRadiusSquared)) {
+      try {
+        if (RC.senseTerrainTile(current) == TerrainTile.OFF_MAP) continue;
+
+        curCows = RC.senseCowsAtLocation(current) + 50 * COW_GROWTH[current.x][current.y];
+        if (curCows > maxCows && RC.senseObjectAtLocation(current) == null) {
+          best = current;
+          maxCows = curCows;
         }
+      } catch (GameActionException e) {
+        e.printStackTrace();
       }
     }
 
     RC.setIndicatorString(1, "max nearby cows: " + maxCows + " at " + best);
-    if (maxCows < 300) {
-      mode = Mode.RETURN_HOME;
-    } else if (maxCows > 500) {
+    if (maxCows > 1000) {
       return best;
     }
 

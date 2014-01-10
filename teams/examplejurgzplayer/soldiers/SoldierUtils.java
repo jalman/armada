@@ -1,23 +1,13 @@
 package examplejurgzplayer.soldiers;
 
-import static examplejurgzplayer.utils.Utils.ALLY_TEAM;
-import static examplejurgzplayer.utils.Utils.ENEMY_RADIUS2;
-import static examplejurgzplayer.utils.Utils.ENEMY_TEAM;
-import static examplejurgzplayer.utils.Utils.RC;
-import static examplejurgzplayer.utils.Utils.currentLocation;
-import static examplejurgzplayer.utils.Utils.enemyRobots;
-import static examplejurgzplayer.utils.Utils.naiveDistance;
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.Robot;
-import battlecode.common.RobotInfo;
-import battlecode.common.RobotType;
+import static examplejurgzplayer.utils.Utils.*;
+import battlecode.common.*;
 
 public class SoldierUtils {
 
   public final static double MAX_SOLDIER_HEALTH = RobotType.SOLDIER.maxHealth;
-  // public final static int MAX_ENCAMPMENT_HEALTH = 100;
-  // public final static int MAX_HQ_HEALTH = 500;
+  public final static double MAX_NOISE_TOWER_HEALTH = RobotType.NOISETOWER.maxHealth;
+  public final static double MAX_PASTR_HEALTH = RobotType.PASTR.maxHealth;
 
 	public static int sensorRadius = ENEMY_RADIUS2;
   public static int closeEnoughToGoToBattleSquared = 64;
@@ -41,8 +31,6 @@ public class SoldierUtils {
 	 * @throws GameActionException
 	 */
 	public static void updateSoldierUtils() throws GameActionException{
-			sensorRadius = 14;
-			closeEnoughToGoToBattleSquared = 90;
   }
 
 	public static void getFarAwayEnemyTarget() throws GameActionException{
@@ -152,32 +140,36 @@ public class SoldierUtils {
 	 */
 	public static int overallPriority(RobotInfo r) throws GameActionException
 	{
-		int naiveDistance = naiveDistance(currentLocation, r.location);
+    if (!inRange(r.location)) {
+      return -100;
+    }
+
+    int distanceSquared = currentLocation.distanceSquaredTo(r.location);
+    int cows = (int) RC.senseCowsAtLocation(r.location);
 		double healthPercent = robotHealthPercent(r);
 		int priority = robotTypePriority(r);
 		int roundsUntilActive = 0;
-		if (r.type == RobotType.SOLDIER)
-		{
+    if (r.type == RobotType.SOLDIER) {
       roundsUntilActive = (int) r.actionDelay;
 		}
-		return (200-(int)(healthPercent*22)-naiveDistance*18+priority+(int)(1.5*roundsUntilActive));
+
+    return (200 - (int) (healthPercent * 20) + 100 / distanceSquared + priority + cows / 20 + (5 * roundsUntilActive));
 	}
 
 	//Helper methods for overallPriority
 	private static int robotTypePriority(RobotInfo r) throws GameActionException{
-		if (r.type == RobotType.SOLDIER)
-		{
-			return 20;
-    } else if (r.type == RobotType.PASTR) {
-      return 100;
-    } else if (r.type == RobotType.HQ)
-		{
-      return -1000;
-		}
-		else
-		{
-			return -30;
-		}
+    switch (r.type) {
+      case SOLDIER:
+        return 20;
+      case PASTR:
+        return 100;
+      case NOISETOWER:
+        return 0;
+      case HQ:
+        return -1000;
+      default:
+        return -30;
+    }
 	}
 
   public static boolean inRange(MapLocation loc) {
@@ -185,11 +177,16 @@ public class SoldierUtils {
   }
 
 	private static double robotHealthPercent(RobotInfo r) throws GameActionException{
-    if (r.type == RobotType.SOLDIER) {
-      return (r.health / MAX_SOLDIER_HEALTH);
-    } else {
-      return 0;
-		}
+    switch (r.type) {
+      case SOLDIER:
+        return r.health / MAX_SOLDIER_HEALTH;
+      case NOISETOWER:
+        return r.health / MAX_NOISE_TOWER_HEALTH;
+      case PASTR:
+        return r.health / MAX_PASTR_HEALTH;
+      default:
+        return 1;
+    }
 	}
 
 	/**
@@ -254,17 +251,25 @@ public class SoldierUtils {
 	 */
   public static MapLocation getHighestPriority(Robot[] arr) throws GameActionException
 	{
-		RobotInfo targetInfo = null;
-		for (int i = 0; i < maxNumberOfEnemiesToCheckToFindATarget && i < arr.length; i++)
+    if (arr.length == 0) return null;
+
+    RobotInfo targetInfo = RC.senseRobotInfo(arr[0]);
+    int maxPriority = overallPriority(targetInfo);
+
+    for (int i = 1; i < maxNumberOfEnemiesToCheckToFindATarget && i < arr.length; i++)
 		{
 			tempRobotInfo = RC.senseRobotInfo(arr[i]);
-			if (targetInfo == null || overallPriority(targetInfo) < overallPriority (tempRobotInfo))
-			{
+      int priority = overallPriority(tempRobotInfo);
+      if (priority > maxPriority) {
 				targetInfo = tempRobotInfo;
+        maxPriority = priority;
 			}
 		}
-		if (targetInfo == null)
+    if (targetInfo == null) {
 			return null;
+    }
+
+    // RC.setIndicatorString(1, "target: " + targetInfo.location + ", priority: " + maxPriority);
 		return targetInfo.location;
 	}
 }
