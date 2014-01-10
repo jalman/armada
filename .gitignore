@@ -3,3 +3,5 @@ releases/
 .settings/*
 .metadata/*
 .classpath
+bots
+replays/

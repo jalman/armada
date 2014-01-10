@@ -1,9 +1,9 @@
-package examplejurgzplayer.hq;
+package team027.hq;
 
-import static examplejurgzplayer.utils.Utils.*;
+import static team027.utils.Utils.*;
 import battlecode.common.*;
-import examplejurgzplayer.RobotBehavior;
-import examplejurgzplayer.utils.Utils;
+import team027.RobotBehavior;
+import team027.utils.Utils;
 
 public class HQBehavior extends RobotBehavior {
 
@@ -54,7 +54,7 @@ public class HQBehavior extends RobotBehavior {
   }
 
   private void tryAttack() {
-    Robot[] robots = RC.senseNearbyGameObjects(Robot.class, 18);
+    Robot[] robots = RC.senseNearbyGameObjects(Robot.class, 16);
     if (!attackDelay && robots.length > 0) {
       attackDelay = true;
       return;
