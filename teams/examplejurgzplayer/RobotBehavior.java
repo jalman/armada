@@ -10,7 +10,7 @@ public abstract class RobotBehavior {
   * Called at the beginning of each round.
   * @return whether it's worth living to the next round.
   */
-  public abstract boolean beginRound() throws GameActionException;
+  public abstract void beginRound() throws GameActionException;
 
 	/**
 	 * Called every round.

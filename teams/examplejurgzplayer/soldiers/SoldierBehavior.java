@@ -81,14 +81,13 @@ public class SoldierBehavior extends RobotBehavior {
   }
 
   @Override
-  public boolean beginRound() throws GameActionException {
+  public void beginRound() throws GameActionException {
     updateUnitUtils();
     updateSoldierUtils();
 
     if (buildingFinished) {
       RobotPlayer.run(RC);
     }
-    return true;
   }
 
   @Override

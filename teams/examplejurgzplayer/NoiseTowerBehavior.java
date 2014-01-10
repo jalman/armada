@@ -10,8 +10,7 @@ public class NoiseTowerBehavior extends RobotBehavior {
 	 * Called at the beginning of each round.
 	 */
   @Override
-  public boolean beginRound() throws GameActionException {
-    return true;
+  public void beginRound() throws GameActionException {
   }
 
 	/**

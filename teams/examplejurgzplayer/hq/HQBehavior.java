@@ -34,12 +34,11 @@ public class HQBehavior extends RobotBehavior {
 }
 
   @Override
-  public boolean beginRound() throws GameActionException {
+  public void beginRound() throws GameActionException {
     Utils.updateBuildingUtils();
     // RC.setIndicatorString(0, generators.size + " generators. " + Double.toString(actualFlux) +
     // " is pow");
     numBots = RC.senseNearbyGameObjects(Robot.class, currentLocation, 10000, ALLY_TEAM).length;
-    return true;
   }
 
   @Override
