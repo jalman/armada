@@ -128,7 +128,7 @@ public class SoldierBehavior extends RobotBehavior {
 
     switch (mode) {
       case GOING_TO_MIDDLE:
-        RC.setIndicatorString(0, "Going to middle");
+        RC.setIndicatorString(0, "Going_to_middle");
         if (mover.arrived()) {
           decideNextMode();
         } else {
@@ -136,7 +136,7 @@ public class SoldierBehavior extends RobotBehavior {
         }
         break;
       case SWEEP_OUT:
-        RC.setIndicatorString(0, "Sweep out " + role.toString());
+        RC.setIndicatorString(0, "Sweep_out " + role.toString());
         if (mover.arrived()) {
           dest = new MapLocation((2 * ALLY_HQ.x + roleLocList[roleIndex].x) / 3,
               (2 * ALLY_HQ.y + roleLocList[roleIndex].y) / 3);
@@ -147,7 +147,7 @@ public class SoldierBehavior extends RobotBehavior {
         }
         break;
       case RETURN_HOME:
-        RC.setIndicatorString(0, "Return home");
+        RC.setIndicatorString(0, "Return_home");
         if (mover.arrived()) {
           dest = roleLocList[roleIndex];
           mover.setTarget(dest);
@@ -158,13 +158,13 @@ public class SoldierBehavior extends RobotBehavior {
         }
         break;
       case STAND_RICH_LOC:
-        RC.setIndicatorString(0, "stand rich loc " + role.toString());
+        RC.setIndicatorString(0, "stand_rich_loc " + role.toString());
         if (!mover.arrived()) {
           mover.sneak();
         }
         break;
       case FIND_PASTR_LOC:
-        RC.setIndicatorString(0, "find pastr loc " + role.toString());
+        RC.setIndicatorString(0, "find_pastr_loc " + role.toString());
         if (mover.arrived()) {
           mode = Mode.BUILD_PASTR;
         } else {
@@ -172,7 +172,7 @@ public class SoldierBehavior extends RobotBehavior {
         }
         break;
       case BUILD_PASTR:
-        RC.setIndicatorString(0, "build pastr " + role.toString());
+        RC.setIndicatorString(0, "build_pastr " + role.toString());
         if (!RC.isConstructing() && RC.isActive()) {
           RC.construct(RobotType.PASTR);
         }
@@ -182,7 +182,7 @@ public class SoldierBehavior extends RobotBehavior {
         }
         break;
       case ACQUIRE_TARGET:
-        RC.setIndicatorString(0, "acquire target " + role.toString());
+        RC.setIndicatorString(0, "acquire_target " + role.toString());
         int mindistance = 10000000;
         MapLocation pastrTarget = null;
         for (MapLocation pastrLoc : ENEMY_PASTR_LOCS) {
