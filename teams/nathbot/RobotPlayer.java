@@ -1,11 +1,14 @@
 package nathbot;
 
+import java.util.Random;
+
 import battlecode.common.Direction;
-import battlecode.common.GameConstants;
+import battlecode.common.MapLocation;
+import battlecode.common.Robot;
 import battlecode.common.RobotController;
+import battlecode.common.RobotInfo;
 import battlecode.common.RobotType;
-import battlecode.common.*;
-import java.util.*;
+import battlecode.common.Team;
 
 public class RobotPlayer {
 	static Random rand;
@@ -55,18 +58,9 @@ public class RobotPlayer {
 			
 			if (rc.getType() == RobotType.SOLDIER) {
 				try {
+					RobotMicro.luge(rc);
+					
 					if (rc.isActive()) {
-						// c/p kill code
-						Robot[] nearbyEnemies = rc.senseNearbyGameObjects(Robot.class, 10, enemy);
-						for (int i=0; i<nearbyEnemies.length; ++i) {
-							RobotInfo tokill = rc.senseRobotInfo(nearbyEnemies[i]);
-							MapLocation killplace = tokill.location;
-							if(rc.canAttackSquare(killplace) && tokill.type != RobotType.HQ) {
-								rc.attackSquare(killplace);
-								break;
-							}
-						}
-						
 						int d = rc.readBroadcast(0);
 						MapLocation[] m = rc.sensePastrLocations(enemy);
 						rc.setIndicatorString(0, "" + d);
