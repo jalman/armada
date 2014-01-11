@@ -28,7 +28,7 @@ public class MessagingSystem {
       SOLDIER = RobotType.SOLDIER.ordinal();
 
   /**
-   * The total number of messages posted by our team. Includes the header message.
+   * The total number of messages posted by our team.
    */
   public int message_index;
 
@@ -41,6 +41,8 @@ public class MessagingSystem {
    * Whether we want to send messages this round.
    */
   private final boolean send_messages = true;
+
+  private boolean first_round = true;
 
   public MessagingSystem() {}
 
@@ -77,9 +79,17 @@ public class MessagingSystem {
 
     int new_index = buffer[0];
 
-    for (int index = message_index; index < new_index; index++) {
-      int type = readMessage(index, buffer);
-      handlers[type].handleMessage(buffer);
+    if (!first_round) {
+      for (int index = message_index; index < new_index; index++) {
+        int type = readMessage(index, buffer);
+        if (handlers[type] != null) {
+          handlers[type].handleMessage(buffer);
+        } else {
+          System.out.println("ERROR: missing message handler for type " + MESSAGE_TYPES[type]);
+        }
+      }
+    } else {
+      first_round = false;
     }
 
     message_index = new_index;

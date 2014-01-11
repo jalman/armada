@@ -11,6 +11,9 @@ public abstract class RobotBehavior {
     initMessageHandlers();
   }
 
+  /**
+   * Override to specify message handlers.
+   */
   protected void initMessageHandlers() {
     handlers = new MessageHandler[MessageType.MESSAGE_TYPES.length];
   }

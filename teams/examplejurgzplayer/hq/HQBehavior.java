@@ -8,6 +8,7 @@ import static examplejurgzplayer.utils.Utils.RC;
 import static examplejurgzplayer.utils.Utils.curX;
 import static examplejurgzplayer.utils.Utils.curY;
 import static examplejurgzplayer.utils.Utils.currentLocation;
+import static examplejurgzplayer.utils.Utils.messagingSystem;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.GameActionException;
@@ -57,6 +58,7 @@ public class HQBehavior extends RobotBehavior {
     // RC.setIndicatorString(0, generators.size + " generators. " + Double.toString(actualFlux) +
     // " is pow");
     numBots = RC.senseNearbyGameObjects(Robot.class, currentLocation, 10000, ALLY_TEAM).length;
+    messagingSystem.beginRound(handlers);
   }
 
   @Override
@@ -66,8 +68,8 @@ public class HQBehavior extends RobotBehavior {
   }
 
   @Override
-  public void endRound() {
-
+  public void endRound() throws GameActionException {
+    messagingSystem.endRound();
   }
 
   private void tryAttack() {

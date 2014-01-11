@@ -28,6 +28,8 @@ import battlecode.common.RobotType;
 import battlecode.common.TerrainTile;
 import examplejurgzplayer.RobotBehavior;
 import examplejurgzplayer.RobotPlayer;
+import examplejurgzplayer.messaging.MessageHandler;
+import examplejurgzplayer.messaging.MessageType;
 import examplejurgzplayer.nav.Mover;
 
 public class SoldierBehavior extends RobotBehavior {
@@ -104,6 +106,14 @@ public class SoldierBehavior extends RobotBehavior {
   @Override
   protected void initMessageHandlers() {
     super.initMessageHandlers();
+
+    handlers[MessageType.ATTACK_LOCATION.ordinal()] = new MessageHandler() {
+      @Override
+      public void handleMessage(int[] message) {
+        MapLocation loc = new MapLocation(message[0], message[1]);
+        // TODO: attack!
+      }
+    };
   }
 
   @Override
