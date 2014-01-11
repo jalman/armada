@@ -1,5 +1,6 @@
 package examplejurgzplayer.messaging;
 
+import static examplejurgzplayer.messaging.MessageType.MESSAGE_TYPES;
 import static examplejurgzplayer.utils.Utils.RC;
 import battlecode.common.GameActionException;
 import battlecode.common.GameConstants;
@@ -20,8 +21,6 @@ public class MessagingSystem {
 
   private static final int HEADER_MESSAGE_INDEX = GameConstants.BROADCAST_MAX_CHANNELS / BLOCK_SIZE;
   private static final int MAX_MESSAGE_INDEX = HEADER_MESSAGE_INDEX;
-
-  private static final MessageType[] MESSAGE_TYPE = MessageType.values();
 
   public static final double BROADCAST_COST = 10;
 
@@ -56,7 +55,7 @@ public class MessagingSystem {
     int channel = (index % MAX_MESSAGE_INDEX) * BLOCK_SIZE;
 
     int type = RC.readBroadcast(channel++);
-    final int length = MESSAGE_TYPE[type].length;
+    final int length = MESSAGE_TYPES[type].length;
 
     for (int i = 0; i < length; i++) {
       block[i] = RC.readBroadcast(channel++);

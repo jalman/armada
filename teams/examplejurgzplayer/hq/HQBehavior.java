@@ -1,7 +1,21 @@
 package examplejurgzplayer.hq;
 
-import static examplejurgzplayer.utils.Utils.*;
-import battlecode.common.*;
+import static examplejurgzplayer.utils.Utils.ALLY_HQ;
+import static examplejurgzplayer.utils.Utils.ALLY_TEAM;
+import static examplejurgzplayer.utils.Utils.ENEMY_HQ;
+import static examplejurgzplayer.utils.Utils.ENEMY_TEAM;
+import static examplejurgzplayer.utils.Utils.RC;
+import static examplejurgzplayer.utils.Utils.curX;
+import static examplejurgzplayer.utils.Utils.curY;
+import static examplejurgzplayer.utils.Utils.currentLocation;
+import battlecode.common.Clock;
+import battlecode.common.Direction;
+import battlecode.common.GameActionException;
+import battlecode.common.GameConstants;
+import battlecode.common.MapLocation;
+import battlecode.common.Robot;
+import battlecode.common.RobotInfo;
+import battlecode.common.RobotType;
 import examplejurgzplayer.RobotBehavior;
 import examplejurgzplayer.utils.Utils;
 
@@ -30,8 +44,12 @@ public class HQBehavior extends RobotBehavior {
 
   private boolean attackDelay = false;
 
-  public HQBehavior() {
-}
+  public HQBehavior() {}
+
+  @Override
+  protected void initMessageHandlers() {
+    super.initMessageHandlers();
+  }
 
   @Override
   public void beginRound() throws GameActionException {

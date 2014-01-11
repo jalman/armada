@@ -2,13 +2,33 @@ package examplejurgzplayer.soldiers;
 
 import static examplejurgzplayer.soldiers.SoldierUtils.getHighestPriority;
 import static examplejurgzplayer.soldiers.SoldierUtils.inRange;
-import static examplejurgzplayer.utils.Utils.*;
-import battlecode.common.*;
+import static examplejurgzplayer.utils.Utils.ALLY_HQ;
+import static examplejurgzplayer.utils.Utils.ALLY_MILK;
+import static examplejurgzplayer.utils.Utils.ALLY_PASTR_COUNT;
+import static examplejurgzplayer.utils.Utils.COW_GROWTH;
+import static examplejurgzplayer.utils.Utils.ENEMY_HQ;
+import static examplejurgzplayer.utils.Utils.ENEMY_MILK;
+import static examplejurgzplayer.utils.Utils.ENEMY_PASTR_COUNT;
+import static examplejurgzplayer.utils.Utils.ENEMY_PASTR_LOCS;
+import static examplejurgzplayer.utils.Utils.HQ_DX;
+import static examplejurgzplayer.utils.Utils.HQ_DY;
+import static examplejurgzplayer.utils.Utils.RC;
+import static examplejurgzplayer.utils.Utils.curX;
+import static examplejurgzplayer.utils.Utils.curY;
+import static examplejurgzplayer.utils.Utils.currentCowsHere;
+import static examplejurgzplayer.utils.Utils.currentLocation;
+import static examplejurgzplayer.utils.Utils.currentRound;
+import static examplejurgzplayer.utils.Utils.enemyRobots;
+import static examplejurgzplayer.utils.Utils.messagingSystem;
+import static examplejurgzplayer.utils.Utils.updateUnitUtils;
+import battlecode.common.Clock;
+import battlecode.common.GameActionException;
+import battlecode.common.MapLocation;
+import battlecode.common.RobotType;
+import battlecode.common.TerrainTile;
 import examplejurgzplayer.RobotBehavior;
 import examplejurgzplayer.RobotPlayer;
 import examplejurgzplayer.nav.Mover;
-
-
 
 public class SoldierBehavior extends RobotBehavior {
 
@@ -82,11 +102,17 @@ public class SoldierBehavior extends RobotBehavior {
   }
 
   @Override
+  protected void initMessageHandlers() {
+    super.initMessageHandlers();
+  }
+
+  @Override
   public void beginRound() throws GameActionException {
     updateUnitUtils();
     if (buildingFinished) {
       RobotPlayer.run(RC);
     }
+    messagingSystem.beginRound(handlers);
   }
 
   @Override
@@ -262,7 +288,7 @@ public class SoldierBehavior extends RobotBehavior {
   }
 
   @Override
-  public void endRound() {
-
+  public void endRound() throws GameActionException {
+    messagingSystem.endRound();
   }
 }
