@@ -12,7 +12,6 @@ import battlecode.common.RobotType;
 import battlecode.common.Team;
 import battlecode.common.TerrainTile;
 import battlecode.common.Upgrade;
-import examplejurgzplayer.messaging.MessagingSystem;
 
 public class Utils {
 
@@ -55,7 +54,7 @@ public class Utils {
 	public static int birthRound;
 
 	//this is for messaging
-  public static MessagingSystem messagingSystem;
+//  public static MessagingSystem messagingSystem;
 
 	//these might be set at the beginning of the round
   // public static Strategy strategy = Strategy.NORMAL;
@@ -118,7 +117,7 @@ public class Utils {
 
 		random = new Random(((long)ID<< 32) ^ Clock.getRoundNum());
 
-    messagingSystem = new MessagingSystem();
+//    messagingSystem = new MessagingSystem();
 
     if (TYPE == RobotType.SOLDIER) {
       updateUnitUtils();

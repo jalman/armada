@@ -1,8 +1,14 @@
 package joshbot;
 
+import static joshbot.soldiers.SoldierUtils.getHighestPriority;
+import static joshbot.soldiers.SoldierUtils.inRange;
+import static joshbot.utils.Utils.RC;
+import static joshbot.utils.Utils.enemyRobots;
 import battlecode.common.*;
 
 import java.util.*;
+
+import joshbot.utils.Utils;
 
 public class RobotPlayer {
 	static Random rand;
@@ -12,8 +18,10 @@ public class RobotPlayer {
 		Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 		
 		int a=0, b=20; //for noise
+		Utils.initUtils(rc);
 		
 		while(true) {
+			Utils.updateUnitUtils();
 			if (rc.getType() == RobotType.HQ) {
 				try {					
 					//Check if a robot is spawnable and spawn one if it is
@@ -36,15 +44,18 @@ public class RobotPlayer {
 					
 					
 				} catch (Exception e) {
-					System.out.println("HQ Exception");
+					e.printStackTrace();
 				}
 			}
 			
 			if (rc.getType() == RobotType.SOLDIER) {
 				try {
 					if (rc.isActive()) {
-						MapLocation spot = rc.senseHQLocation().add(rc.senseHQLocation().directionTo(rc.senseEnemyHQLocation()));
-						MapLocation spot2 = spot.add(rc.senseHQLocation().directionTo(rc.senseEnemyHQLocation()).rotateLeft().rotateLeft());
+						attack();
+					}
+					if (rc.isActive()) {
+						MapLocation spot = rc.senseHQLocation().add(rc.senseHQLocation().directionTo(rc.senseEnemyHQLocation()).opposite());
+						MapLocation spot2 = spot.add(rc.senseHQLocation().directionTo(spot).rotateLeft());
 						if(spot.equals(rc.getLocation())) {
 							rc.construct(RobotType.PASTR);
 						} else {
@@ -69,7 +80,7 @@ public class RobotPlayer {
 								move = move.rotateLeft();
 								count++;
 							}
-							if(rc.canMove(move)) rc.sneak(move);
+							if(rc.isActive() && rc.canMove(move)) rc.sneak(move);
 							rc.setIndicatorString(1, move.toString());
 						}
 					}
@@ -80,15 +91,22 @@ public class RobotPlayer {
 			
 			if (rc.getType() == RobotType.NOISETOWER) {
 				try {
-					rc.attackSquare(rc.getLocation().add(directions[a], b));
+					MapLocation target = rc.getLocation().add(directions[a], b);
+					if(rc.canAttackSquare(target)) rc.attackSquare(target);
 					if(b>1) b--;
 					else {
 						a++;
 						a%=8;
-						if(a%2 == 0) b = 20;
-						else b = 14;
+						int c = 14;
+						if(a%2 == 0) c = 20;
+						for(b = 1; b <= c; b++) {
+							TerrainTile check = rc.senseTerrainTile(rc.getLocation().add(directions[a], b));
+							if(check == TerrainTile.OFF_MAP) {
+								b--;
+								break;
+							}
+						}
 					}
-					
 					
 				} catch (GameActionException e) {
 					e.printStackTrace();
@@ -98,4 +116,17 @@ public class RobotPlayer {
 			rc.yield();
 		}
 	}
+	
+	  private static void attack() {
+		    try {
+		      if (RC.isActive()) {
+		        MapLocation loc = getHighestPriority(enemyRobots);
+		        if (loc != null && inRange(loc)) {
+		          RC.attackSquare(loc);
+		        }
+		      }
+		    } catch (GameActionException e) {
+		      e.printStackTrace();
+		    }
+		  }
 }
