@@ -1,11 +1,11 @@
-package vladbot.hq;
+package examplejurgzplayer.hq;
 
-import static vladbot.utils.Utils.*;
+import static examplejurgzplayer.utils.Utils.*;
 import battlecode.common.*;
-import vladbot.RobotBehavior;
-import vladbot.messaging.MessageHandler;
-import vladbot.messaging.MessagingSystem.MessageType;
-import vladbot.utils.Utils;
+import examplejurgzplayer.RobotBehavior;
+import examplejurgzplayer.messaging.MessageHandler;
+import examplejurgzplayer.messaging.MessagingSystem.MessageType;
+import examplejurgzplayer.utils.Utils;
 
 public class HQBehavior extends RobotBehavior {
 

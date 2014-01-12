@@ -1,7 +1,7 @@
-package vladbot.utils;
+package examplejurgzplayer.utils;
 
-import vladbot.utils.BucketPriorityQueue.BucketNode;
-import vladbot.utils.PriorityQueue.Node;
+import examplejurgzplayer.utils.BucketPriorityQueue.BucketNode;
+import examplejurgzplayer.utils.PriorityQueue.Node;
 
 /**
  * A one-pass priority queue using buckets.

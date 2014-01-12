@@ -21,10 +21,10 @@
  * $Id$
  */
 //package com.bluemarsh.graphmaker.core.util;
-package vladbot.utils;
+package examplejurgzplayer.utils;
 
-import vladbot.utils.FibonacciHeap.FibonacciNode;
-import vladbot.utils.PriorityQueue.Node;
+import examplejurgzplayer.utils.FibonacciHeap.FibonacciNode;
+import examplejurgzplayer.utils.PriorityQueue.Node;
 
 /**
  * This class implements a Fibonacci heap data structure. Much of the

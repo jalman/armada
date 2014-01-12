@@ -1,6 +1,6 @@
-package vladbot.nav;
+package examplejurgzplayer.nav;
 
-import static vladbot.utils.Utils.*;
+import static examplejurgzplayer.utils.Utils.*;
 import battlecode.common.*;
 
 public class Mover {

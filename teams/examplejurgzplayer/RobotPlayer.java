@@ -1,10 +1,10 @@
-package vladbot;
+package examplejurgzplayer;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
-import vladbot.hq.HQBehavior;
-import vladbot.soldiers.SoldierBehavior;
-import vladbot.utils.Utils;
+import examplejurgzplayer.hq.HQBehavior;
+import examplejurgzplayer.soldiers.SoldierBehavior;
+import examplejurgzplayer.utils.Utils;
 
 public class RobotPlayer {
   public static void run(RobotController rc) {

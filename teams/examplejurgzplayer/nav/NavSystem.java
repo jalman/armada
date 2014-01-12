@@ -1,9 +1,9 @@
-package vladbot.nav;
-/*package vladbot.nav;
+package examplejurgzplayer.nav;
+/*package examplejurgzplayer.nav;
 
 import battlecode.common.*;
-import vladbot.RobotBehavior;
-import vladbot.nav.*;
+import examplejurgzplayer.RobotBehavior;
+import examplejurgzplayer.nav.*;
 
 public class NavSystem {
 	private RobotController rc;

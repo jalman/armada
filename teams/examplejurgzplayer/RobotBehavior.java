@@ -1,8 +1,8 @@
-package vladbot;
+package examplejurgzplayer;
 
 import battlecode.common.GameActionException;
-import vladbot.messaging.MessageHandler;
-import vladbot.messaging.MessagingSystem;
+import examplejurgzplayer.messaging.MessageHandler;
+import examplejurgzplayer.messaging.MessagingSystem;
 
 public abstract class RobotBehavior {
   protected MessageHandler[] handlers;

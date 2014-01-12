@@ -1,4 +1,4 @@
-package vladbot.utils;
+package examplejurgzplayer.utils;
 
 public class OnePassQueue<T> {
 	

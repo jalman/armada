@@ -1,6 +1,6 @@
-package vladbot.utils;
+package examplejurgzplayer.utils;
 
-import vladbot.utils.PriorityQueue.Node;
+import examplejurgzplayer.utils.PriorityQueue.Node;
 
 public interface PriorityQueue<V, N extends Node<V>> {
 	public N insert(int key, V value);

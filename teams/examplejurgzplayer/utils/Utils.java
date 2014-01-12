@@ -1,10 +1,10 @@
-package vladbot.utils;
+package examplejurgzplayer.utils;
 
 import java.util.Arrays;
 import java.util.Random;
 
 import battlecode.common.*;
-import vladbot.messaging.MessagingSystem;
+import examplejurgzplayer.messaging.MessagingSystem;
 
 public class Utils {
 

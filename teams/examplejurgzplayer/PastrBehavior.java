@@ -1,4 +1,4 @@
-package vladbot;
+package examplejurgzplayer;
 
 import battlecode.common.GameActionException;
 

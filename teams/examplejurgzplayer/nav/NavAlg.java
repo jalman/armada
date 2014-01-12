@@ -1,4 +1,4 @@
-package vladbot.nav;
+package examplejurgzplayer.nav;
 
 import battlecode.common.Direction;
 import battlecode.common.MapLocation;

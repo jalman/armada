@@ -1,14 +1,14 @@
-package vladbot.soldiers;
+package examplejurgzplayer.soldiers;
 
-import static vladbot.soldiers.SoldierUtils.getHighestPriority;
-import static vladbot.soldiers.SoldierUtils.inRange;
-import static vladbot.utils.Utils.*;
+import static examplejurgzplayer.soldiers.SoldierUtils.getHighestPriority;
+import static examplejurgzplayer.soldiers.SoldierUtils.inRange;
+import static examplejurgzplayer.utils.Utils.*;
 import battlecode.common.*;
-import vladbot.RobotBehavior;
-import vladbot.RobotPlayer;
-import vladbot.messaging.MessageHandler;
-import vladbot.messaging.MessagingSystem.MessageType;
-import vladbot.nav.Mover;
+import examplejurgzplayer.RobotBehavior;
+import examplejurgzplayer.RobotPlayer;
+import examplejurgzplayer.messaging.MessageHandler;
+import examplejurgzplayer.messaging.MessagingSystem.MessageType;
+import examplejurgzplayer.nav.Mover;
 
 public class SoldierBehavior extends RobotBehavior {
 

@@ -1,6 +1,6 @@
-package vladbot.messaging;
+package examplejurgzplayer.messaging;
 
-import static vladbot.utils.Utils.RC;
+import static examplejurgzplayer.utils.Utils.RC;
 import battlecode.common.*;
 
 /**

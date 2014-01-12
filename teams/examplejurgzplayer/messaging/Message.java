@@ -1,6 +1,6 @@
-package vladbot.messaging;
+package examplejurgzplayer.messaging;
 
-import vladbot.messaging.MessagingSystem.MessageType;
+import examplejurgzplayer.messaging.MessagingSystem.MessageType;
 
 public class Message {
   public static final int MAX_SIZE = 10;

@@ -1,6 +1,6 @@
-package vladbot.soldiers;
+package examplejurgzplayer.soldiers;
 
-import static vladbot.utils.Utils.*;
+import static examplejurgzplayer.utils.Utils.*;
 import battlecode.common.*;
 
 public class SoldierUtils {

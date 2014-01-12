@@ -5,4 +5,4 @@ inpkg=${1%/}
 outpkg=$2
 
 cp $inpkg $outpkg -r
-perl -pi -e "s/$inpkg/$outpkg/g" `grep -ril $inpkg .`
+perl -pi -e "s/$inpkg/$outpkg/g" `grep -ril $inpkg $outpkg`

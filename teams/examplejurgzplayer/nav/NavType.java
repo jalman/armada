@@ -1,4 +1,4 @@
-package vladbot.nav;
+package examplejurgzplayer.nav;
 
 public enum NavType {
 
