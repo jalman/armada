@@ -241,7 +241,7 @@ public class SoldierBehavior extends RobotBehavior {
     try {
       if (RC.isActive()) {
         MapLocation loc = getHighestPriority(enemyRobots);
-        messagingSystem.writeAttackMessage(loc, 100);
+        // messagingSystem.writeAttackMessage(loc, 100);
         if (inRange(loc)) {
           RC.attackSquare(loc);
         }
