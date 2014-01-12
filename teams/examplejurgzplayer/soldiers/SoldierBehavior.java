@@ -1,7 +1,6 @@
 package examplejurgzplayer.soldiers;
 
-import static examplejurgzplayer.soldiers.SoldierUtils.getHighestPriority;
-import static examplejurgzplayer.soldiers.SoldierUtils.inRange;
+import static examplejurgzplayer.soldiers.SoldierUtils.luge;
 import static examplejurgzplayer.utils.Utils.*;
 import battlecode.common.*;
 import examplejurgzplayer.RobotBehavior;
@@ -13,12 +12,12 @@ import examplejurgzplayer.nav.Mover;
 public class SoldierBehavior extends RobotBehavior {
 
   enum Role {
-    LEFTLEFT, LEFTRIGHT, RIGHTLEFT, RIGHTRIGHT, PASTR
+    LEFTLEFT, LEFTRIGHT, RIGHTLEFT, RIGHTRIGHT, PASTR, NONE
   };
 
   enum Mode {
     GOING_TO_MIDDLE, SWEEP_OUT, RETURN_HOME, STAND_RICH_LOC, FIND_PASTR_LOC,
-    BUILD_PASTR, ACQUIRE_TARGET, ENGAGE,
+    BUILD_PASTR, ACQUIRE_TARGET, ENGAGE, BIRTH_DECIDE_MODE
   };
 
   // basic data
@@ -66,23 +65,8 @@ public class SoldierBehavior extends RobotBehavior {
   static final MapLocation[] roleLocList = {leftleft, leftright, rightleft, rightright};
 
   public SoldierBehavior() {
-    if (ENEMY_PASTR_COUNT > ALLY_PASTR_COUNT + 1) {
-      roleIndex = ALLY_PASTR_COUNT % 4;
-      role = Role.PASTR;
-
-      changeMode(Mode.FIND_PASTR_LOC);
-      dest = new MapLocation((ALLY_HQ.x + roleLocList[roleIndex].x) / 2,
-          (ALLY_HQ.y + roleLocList[roleIndex].y) / 2);
-    } else {
-      roleIndex = RC.senseRobotCount() % 4;
-      role = roleList[roleIndex];
-
-      changeMode(Mode.SWEEP_OUT);
-      dest = roleLocList[roleIndex];
-
-      initialSweep = true;
-    }
-    mover.setTarget(dest);
+    role = Role.NONE;
+    changeMode(Mode.BIRTH_DECIDE_MODE);
   }
 
   @Override
@@ -108,19 +92,18 @@ public class SoldierBehavior extends RobotBehavior {
 
   @Override
   public void run() throws GameActionException {
-    if (enemyRobots.length > 0) {
+    if (luge()) { // luge = micro
       // set mode to ATTACK or something
-      attack();
+      return;
       // send message?
-    } else if (mode != Mode.ENGAGE && mode != Mode.ACQUIRE_TARGET) {
-      // try to find a pasture to attack
-      if (ENEMY_MILK - ALLY_MILK > 50000 || ENEMY_PASTR_COUNT > ALLY_PASTR_COUNT) {
-        changeMode(Mode.ACQUIRE_TARGET);
-      } else {
-        // try to build pastures if late in game
-        // probably deprecated (doesn't happen)
-        if (currentRound > 1800 && ENEMY_PASTR_COUNT > 0 && !panicPastrBuilding) {
-          if (mode != Mode.BUILD_PASTR && mode != Mode.FIND_PASTR_LOC) {
+    } else if (mode != Mode.ENGAGE && mode != Mode.ACQUIRE_TARGET && mode != Mode.BIRTH_DECIDE_MODE
+        && mode != Mode.FIND_PASTR_LOC && mode != Mode.BUILD_PASTR) {
+        if (ENEMY_MILK - ALLY_MILK > 50000 || ENEMY_PASTR_COUNT > ALLY_PASTR_COUNT) {
+          changeMode(Mode.ACQUIRE_TARGET);
+        } else {
+          // try to build pastures if late in game
+          // probably deprecated (doesn't happen)
+          if (currentRound > 1800 && ENEMY_PASTR_COUNT > ALLY_PASTR_COUNT && !panicPastrBuilding) {
             if (currentCowsHere < 150) {
               panicPastrBuilding = true;
               dest = ALLY_HQ.subtract(ALLY_HQ.directionTo(ENEMY_HQ));
@@ -132,19 +115,39 @@ public class SoldierBehavior extends RobotBehavior {
               mover.setTarget(ALLY_HQ);
               changeMode(Mode.RETURN_HOME);
             }
-          }
-        } else if (!initialSweep) {
-          // stand on rich squares
-          MapLocation loc = findRichSquare();
-          if (loc != null) {
-            mover.setTarget(loc);
-            changeMode(Mode.STAND_RICH_LOC);
+          } else if (!initialSweep) {
+            // stand on rich squares
+            MapLocation loc = findRichSquare();
+            if (loc != null) {
+              mover.setTarget(loc);
+              changeMode(Mode.STAND_RICH_LOC);
+            }
           }
         }
-      }
     }
 
     switch (mode) {
+      case BIRTH_DECIDE_MODE:
+        int robotNum = RC.senseRobotCount();
+        if (ENEMY_PASTR_COUNT > ALLY_PASTR_COUNT + 1
+            || (robotNum + currentRound / 100 > 22 && ENEMY_PASTR_COUNT > ALLY_PASTR_COUNT)) {
+          roleIndex = ALLY_PASTR_COUNT % 4;
+          role = Role.PASTR;
+          changeMode(Mode.FIND_PASTR_LOC);
+          dest = new MapLocation((ALLY_HQ.x + roleLocList[roleIndex].x) / 2,
+              (ALLY_HQ.y + roleLocList[roleIndex].y) / 2);
+        } else {
+          roleIndex = robotNum % 4;
+          role = roleList[roleIndex];
+
+          changeMode(Mode.SWEEP_OUT);
+          dest = roleLocList[roleIndex];
+
+          initialSweep = true;
+        }
+        mover.setTarget(dest);
+        mover.move();
+        break;
       case GOING_TO_MIDDLE:
         if (mover.arrived()) {
           decideNextMode();
@@ -235,20 +238,6 @@ public class SoldierBehavior extends RobotBehavior {
   private void changeMode(Mode m) {
     RC.setIndicatorString(0, currentRound + ": " + m.toString() + " " + role.toString());
     mode = m;
-  }
-
-  private void attack() {
-    try {
-      if (RC.isActive()) {
-        MapLocation loc = getHighestPriority(enemyRobots);
-        // messagingSystem.writeAttackMessage(loc, 100);
-        if (inRange(loc)) {
-          RC.attackSquare(loc);
-        }
-      }
-    } catch (GameActionException e) {
-      e.printStackTrace();
-    }
   }
 
   private MapLocation findRichSquare() {

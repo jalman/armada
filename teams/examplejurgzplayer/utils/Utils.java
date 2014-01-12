@@ -66,7 +66,7 @@ public class Utils {
   // public static double forward;
   public static final int ENEMY_RADIUS = 6;
   public static final int ENEMY_RADIUS2 = RobotType.SOLDIER.sensorRadiusSquared;
-  public static Robot[] enemyRobots = new Robot[0];
+  // public static Robot[] enemyRobots = new Robot[0];
 
   public static int siteRange2;
 
@@ -130,8 +130,8 @@ public class Utils {
    * Called at the beginning of each round by buildings.
    */
   public static void updateBuildingUtils() {
-    enemyRobots =
-        RC.senseNearbyGameObjects(Robot.class, currentLocation, ENEMY_RADIUS2, ENEMY_TEAM);
+    // enemyRobots =
+    // RC.senseNearbyGameObjects(Robot.class, currentLocation, ENEMY_RADIUS2, ENEMY_TEAM);
     currentRound = Clock.getRoundNum();
 
     ALLY_PASTR_LOCS = RC.sensePastrLocations(ALLY_TEAM);
@@ -164,29 +164,29 @@ public class Utils {
 
   public static int naiveDistance(MapLocation loc0, MapLocation loc1) {
     // call takes 33 bytecodes
-    //    dx = loc0.x > loc1.x ? loc0.x - loc1.x : loc1.x - loc0.x;
-    //    dy = loc0.y > loc1.y ? loc0.y - loc1.y : loc1.y - loc0.y;
-    //    int c = dx > dy ? dx : dy;
+    // dx = loc0.x > loc1.x ? loc0.x - loc1.x : loc1.x - loc0.x;
+    // dy = loc0.y > loc1.y ? loc0.y - loc1.y : loc1.y - loc0.y;
+    // int c = dx > dy ? dx : dy;
     //    int bc = Clock.getBytecodeNum();
     dx = loc0.x - loc1.x; // call takes 31 bytecodes
     dy = loc0.y - loc1.y;
-    dx = dx*dx > dy*dy ? dx : dy;
-    return dx > 0? dx : -dx;
-    //    int c = dx > 0 ? dx : -dx;
-    //    int c = Math.max(Math.max(dx, dy), Math.max(-dx, -dy));
+    dx = dx * dx > dy * dy ? dx : dy;
+    return dx > 0 ? dx : -dx;
+    // int c = dx > 0 ? dx : -dx;
+    // int c = Math.max(Math.max(dx, dy), Math.max(-dx, -dy));
     //return naiveDistance(loc0.x, loc0.y, loc1.x, loc1.y);
     //    System.out.println("bc used by naiveDistance: " + (Clock.getBytecodeNum()-bc));
     //    return c;
   }
 
   public static int naiveDistance(int x1, int y1, int x2, int y2) {
-    dx = x1 > x2 ? x1-x2 : x2-x1;
-    dy = y1 > y2 ? y1-y2 : y2-y1;
+    dx = x1 > x2 ? x1 - x2 : x2 - x1;
+    dy = y1 > y2 ? y1 - y2 : y2 - y1;
     return dx > dy ? dx : dy;
-    //    dx = x1 - x2;
-    //    dy = y1 - y2;
-    //    dx = dx*dx > dy*dy ? dx : dy;
-    //    return dx > 0 ? dx : -dx;
+    // dx = x1 - x2;
+    // dy = y1 - y2;
+    // dx = dx*dx > dy*dy ? dx : dy;
+    // return dx > 0 ? dx : -dx;
     //return Math.max(Math.abs(x1-x2), Math.abs(y1-y2));
   }
 
@@ -427,12 +427,13 @@ public class Utils {
   }
 
   public static int getDirTowards(int dx, int dy) {
-    if(dx==0) {
-      if(dy>0) return 4;
+    if (dx == 0) {
+      if (dy > 0)
+        return 4;
       else return 0;
     }
-    double slope = ((double)dy)/dx;
-    if(dx>0) {
+    double slope = ((double) dy) / dx;
+    if (dx > 0) {
       if(slope>2.414) return 4;
       else if(slope>0.414) return 3;
       else if(slope>-0.414) return 2;
