@@ -2,8 +2,7 @@ package joshbot;
 
 import static joshbot.soldiers.SoldierUtils.getHighestPriority;
 import static joshbot.soldiers.SoldierUtils.inRange;
-import static joshbot.utils.Utils.RC;
-import static joshbot.utils.Utils.enemyRobots;
+import static joshbot.utils.Utils.*;
 import battlecode.common.*;
 
 import java.util.*;
@@ -12,12 +11,15 @@ import joshbot.utils.Utils;
 
 public class RobotPlayer {
 	static Random rand;
+	public static final int[] yrangefornoise = { 20, 19, 19, 19, 19, 19, 19, 18, 18, 17, 17, 16, 16, 15, 14, 13, 12, 10,
+		8, 6, 0 };
 	
 	public static void run(RobotController rc) {
 		rand = new Random();
 		Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 		
 		int a=0, b=20; //for noise
+		double[][] cows = null; double[] cowsindir = new double[8];
 		Utils.initUtils(rc);
 		
 		while(true) {
@@ -57,23 +59,22 @@ public class RobotPlayer {
 						MapLocation spot = rc.senseHQLocation().add(rc.senseHQLocation().directionTo(rc.senseEnemyHQLocation()).opposite());
 						MapLocation spot2 = spot.add(rc.senseHQLocation().directionTo(spot).rotateLeft());
 						if(spot.equals(rc.getLocation())) {
-							rc.construct(RobotType.PASTR);
+							rc.construct(RobotType.NOISETOWER);
 						} else {
 							GameObject atspot = rc.canSenseSquare(spot) ? rc.senseObjectAtLocation(spot) : null;
-							Direction move = Direction.OMNI;
-							move = rc.getLocation().directionTo(spot);
+							Direction move = rc.getLocation().directionTo(spot);
 							if(atspot != null) {
 								if(spot2.equals(rc.getLocation())) {
-									rc.construct(RobotType.NOISETOWER);
+									rc.construct(RobotType.PASTR);
 								}
-								GameObject atspot2 = rc.canSenseSquare(spot) ? rc.senseObjectAtLocation(spot2) : null;
+								GameObject atspot2 = rc.canSenseSquare(spot2) ? rc.senseObjectAtLocation(spot2) : null;
 								rc.setIndicatorString(2, "asdf" + spot2);
 								if(atspot2 == null) {
 									move = rc.getLocation().directionTo(spot2);
 									rc.setIndicatorString(2, "asdffdsa" + spot2);
 								}
-								else if(spot.distanceSquaredTo(rc.getLocation()) <= 8) move = move.opposite();
-								
+								else if(spot.distanceSquaredTo(rc.getLocation()) <= 24) move = move.opposite();
+								if(atspot != null && atspot2 != null) joshbot.nathbot.RobotPlayer.run(rc);
 							}
 							int count = 0;
 							while(!rc.canMove(move) && count < 9) {
@@ -91,17 +92,46 @@ public class RobotPlayer {
 			
 			if (rc.getType() == RobotType.NOISETOWER) {
 				try {
-					MapLocation target = rc.getLocation().add(directions[a], b);
-					if(rc.canAttackSquare(target)) rc.attackSquare(target);
-					if(b>1) b--;
+
+//					if(cows == null) {
+//						cows = rc.senseCowGrowth();
+//						for(int x = -20; x <= 20; x++) {
+//							int range = yrangefornoise[Math.abs(x)];
+//							for(int y = - range; y <= range; y++) {
+//								cowsindir[Utils.getDirTowards(x,y)] += cows[curX+x][curY+y];
+//							}
+//						}
+//					}
+//					
+					
+					
+					if(a%2 == 0) {
+						MapLocation target = rc.getLocation().add(directions[a %8], b);
+						if(rc.canAttackSquare(target)) rc.attackSquare(target);
+						rc.yield();
+						target = target.add(directions[(a+3) %8]).add(directions[(a+2) %8], 2);
+						if(rc.canAttackSquare(target)) rc.attackSquare(target);
+						rc.yield();
+						target = target.add(directions[(a+6) %8], 6);
+						if(rc.canAttackSquare(target)) rc.attackSquare(target);
+					} else {
+						MapLocation target = rc.getLocation().add(directions[a %8], b);
+						if(rc.canAttackSquare(target)) rc.attackSquare(target);
+						rc.yield();
+						target = target.add(directions[(a+3) %8]).add(directions[(a+2) %8], 2);
+						if(rc.canAttackSquare(target)) rc.attackSquare(target);
+						rc.yield();
+						target = target.add(directions[(a+6) %8], 6);
+						if(rc.canAttackSquare(target)) rc.attackSquare(target);
+					}
+					
+					if(b>4) b--;
 					else {
 						a++;
 						a%=8;
-						int c = 14;
-						if(a%2 == 0) c = 20;
-						for(b = 1; b <= c; b++) {
+						for(b = 1; b <= 20; b++) {
 							TerrainTile check = rc.senseTerrainTile(rc.getLocation().add(directions[a], b));
-							if(check == TerrainTile.OFF_MAP) {
+							if(check == TerrainTile.OFF_MAP || check == TerrainTile.VOID) {
 								b--;
 								break;
 							}
