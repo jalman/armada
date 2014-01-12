@@ -143,6 +143,11 @@ public class MessagingSystem {
     message_written = true;
   }
 
+  /**
+   * Reads the new messages at the beginning of the round.
+   * @param handlers Array of functions mapping message type to function to call for that message.
+   * @throws GameActionException
+   */
   public void beginRound(MessageHandler[] handlers) throws GameActionException {
     if (!first_round) {
       readMessages(handlers);
@@ -154,7 +159,7 @@ public class MessagingSystem {
   }
 
   /**
-   * Rewrites the header message. Should be called at the end of each round by any robot that uses messaging.
+   * Rewrites the global message index, if necessary.
    * @throws GameActionException
    */
   public void endRound() throws GameActionException {
@@ -193,7 +198,7 @@ public class MessagingSystem {
   }
 
   /**
-   * Announce a robot's birth. (Usually an encampment.)
+   * Announce a robot's birth.
    * @param loc: location of birth
    * @param id: id of new robot
    * @param type: type of new robot
