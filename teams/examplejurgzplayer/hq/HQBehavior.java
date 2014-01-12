@@ -56,8 +56,8 @@ public class HQBehavior extends RobotBehavior {
 
   @Override
   public void run() throws GameActionException {
-    tryAttack();
     macro();
+    tryAttack();
   }
 
   @Override
@@ -202,14 +202,10 @@ public class HQBehavior extends RobotBehavior {
    * Handle upgrades and robots.
    */
   private void macro() {
-    if (!RC.isActive()) return;
-
     boolean built = false;
 
     try {
-      if (RC.isActive()) {
-        built = buildSoldier();
-      }
+      built = buildSoldier();
     } catch (GameActionException e) {
       e.printStackTrace();
     }
