@@ -2,34 +2,12 @@ package examplejurgzplayer.soldiers;
 
 import static examplejurgzplayer.soldiers.SoldierUtils.getHighestPriority;
 import static examplejurgzplayer.soldiers.SoldierUtils.inRange;
-import static examplejurgzplayer.utils.Utils.ALLY_HQ;
-import static examplejurgzplayer.utils.Utils.ALLY_MILK;
-import static examplejurgzplayer.utils.Utils.ALLY_PASTR_COUNT;
-import static examplejurgzplayer.utils.Utils.COW_GROWTH;
-import static examplejurgzplayer.utils.Utils.ENEMY_HQ;
-import static examplejurgzplayer.utils.Utils.ENEMY_MILK;
-import static examplejurgzplayer.utils.Utils.ENEMY_PASTR_COUNT;
-import static examplejurgzplayer.utils.Utils.ENEMY_PASTR_LOCS;
-import static examplejurgzplayer.utils.Utils.HQ_DX;
-import static examplejurgzplayer.utils.Utils.HQ_DY;
-import static examplejurgzplayer.utils.Utils.RC;
-import static examplejurgzplayer.utils.Utils.curX;
-import static examplejurgzplayer.utils.Utils.curY;
-import static examplejurgzplayer.utils.Utils.currentCowsHere;
-import static examplejurgzplayer.utils.Utils.currentLocation;
-import static examplejurgzplayer.utils.Utils.currentRound;
-import static examplejurgzplayer.utils.Utils.enemyRobots;
-import static examplejurgzplayer.utils.Utils.messagingSystem;
-import static examplejurgzplayer.utils.Utils.updateUnitUtils;
-import battlecode.common.Clock;
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotType;
-import battlecode.common.TerrainTile;
+import static examplejurgzplayer.utils.Utils.*;
+import battlecode.common.*;
 import examplejurgzplayer.RobotBehavior;
 import examplejurgzplayer.RobotPlayer;
 import examplejurgzplayer.messaging.MessageHandler;
-import examplejurgzplayer.messaging.MessageType;
+import examplejurgzplayer.messaging.MessagingSystem.MessageType;
 import examplejurgzplayer.nav.Mover;
 
 public class SoldierBehavior extends RobotBehavior {
@@ -40,26 +18,36 @@ public class SoldierBehavior extends RobotBehavior {
 
   enum Mode {
     GOING_TO_MIDDLE, SWEEP_OUT, RETURN_HOME, STAND_RICH_LOC, FIND_PASTR_LOC,
-    BUILD_PASTR, ACQUIRE_TARGET, ENGAGE
+    BUILD_PASTR, ACQUIRE_TARGET, ENGAGE,
   };
 
   // basic data
-  int bornRound;
-  Mover mover;
+  int bornRound = Clock.getRoundNum();
+  Mover mover = new Mover();
 
   // state machine stuff
   Mode mode;
   int roleIndex;
   Role role;
 
+  /**
+   * true if this is the first sweep attempt, false afterwards.
+   */
+  boolean initialSweep;
 
-  boolean initialSweep; // true if this is the first sweep attempt, false aftewards.
+  /**
+   * true if we're panicking to build pastures at the end
+   */
+  boolean panicPastrBuilding;
 
-  boolean panicPastrBuilding; // true if we're panicking to build pastrs at the end
-
-  // building info
-  boolean buildingFinished; // whether we're done building
-  int sneakToBuildingLoc; // whether to sneak to where the building should be built
+  /**
+   * whether we're done building
+   */
+  boolean buildingFinished = false;
+  /**
+   * whether to sneak to where the building should be built
+   */
+  int sneakToBuildingLoc = 0;
 
   // map locations
   MapLocation dest;
@@ -78,12 +66,6 @@ public class SoldierBehavior extends RobotBehavior {
   static final MapLocation[] roleLocList = {leftleft, leftright, rightleft, rightright};
 
   public SoldierBehavior() {
-    bornRound = Clock.getRoundNum();
-    mover = new Mover();
-    buildingFinished = false;
-    sneakToBuildingLoc = 0;
-    panicPastrBuilding = false;
-
     if (ENEMY_PASTR_COUNT > ALLY_PASTR_COUNT + 1) {
       roleIndex = ALLY_PASTR_COUNT % 4;
       role = Role.PASTR;
@@ -105,8 +87,6 @@ public class SoldierBehavior extends RobotBehavior {
 
   @Override
   protected void initMessageHandlers() {
-    super.initMessageHandlers();
-
     handlers[MessageType.ATTACK_LOCATION.ordinal()] = new MessageHandler() {
       @Override
       public void handleMessage(int[] message) {
@@ -119,6 +99,7 @@ public class SoldierBehavior extends RobotBehavior {
   @Override
   public void beginRound() throws GameActionException {
     updateUnitUtils();
+    // turn into a pasture or noise tower
     if (buildingFinished) {
       RobotPlayer.run(RC);
     }
@@ -127,34 +108,38 @@ public class SoldierBehavior extends RobotBehavior {
 
   @Override
   public void run() throws GameActionException {
-    if (currentLocation.distanceSquaredTo(ENEMY_HQ) <= 25) {
-      mover.setTarget(currentLocation.subtract(currentLocation.directionTo(ENEMY_HQ)));
-    }
-
     if (enemyRobots.length > 0) {
+      // set mode to ATTACK or something
       attack();
+      // send message?
     } else if (mode != Mode.ENGAGE && mode != Mode.ACQUIRE_TARGET) {
+      // try to find a pasture to attack
       if (ENEMY_MILK - ALLY_MILK > 50000 || ENEMY_PASTR_COUNT > ALLY_PASTR_COUNT) {
         changeMode(Mode.ACQUIRE_TARGET);
-      } else if (currentRound > 1800 && ENEMY_PASTR_COUNT > 0 && !panicPastrBuilding) {
-        if (mode != Mode.BUILD_PASTR && mode != Mode.FIND_PASTR_LOC) {
-          if (currentCowsHere < 150) {
-            panicPastrBuilding = true;
-            dest = ALLY_HQ.subtract(ALLY_HQ.directionTo(ENEMY_HQ));
-            mover.setTarget(dest);
-            sneakToBuildingLoc = 1;
-            changeMode(Mode.FIND_PASTR_LOC);
-          } else if (currentCowsHere < 400) {
-            panicPastrBuilding = true;
-            mover.setTarget(ALLY_HQ);
-            changeMode(Mode.RETURN_HOME);
+      } else {
+        // try to build pastures if late in game
+        // probably deprecated (doesn't happen)
+        if (currentRound > 1800 && ENEMY_PASTR_COUNT > 0 && !panicPastrBuilding) {
+          if (mode != Mode.BUILD_PASTR && mode != Mode.FIND_PASTR_LOC) {
+            if (currentCowsHere < 150) {
+              panicPastrBuilding = true;
+              dest = ALLY_HQ.subtract(ALLY_HQ.directionTo(ENEMY_HQ));
+              mover.setTarget(dest);
+              sneakToBuildingLoc = 1;
+              changeMode(Mode.FIND_PASTR_LOC);
+            } else if (currentCowsHere < 400) {
+              panicPastrBuilding = true;
+              mover.setTarget(ALLY_HQ);
+              changeMode(Mode.RETURN_HOME);
+            }
           }
-        }
-      } else if (!initialSweep) {
-        MapLocation loc = findRichSquare();
-        if (loc != null) {
-          mover.setTarget(loc);
-          changeMode(Mode.STAND_RICH_LOC);
+        } else if (!initialSweep) {
+          // stand on rich squares
+          MapLocation loc = findRichSquare();
+          if (loc != null) {
+            mover.setTarget(loc);
+            changeMode(Mode.STAND_RICH_LOC);
+          }
         }
       }
     }
@@ -256,6 +241,7 @@ public class SoldierBehavior extends RobotBehavior {
     try {
       if (RC.isActive()) {
         MapLocation loc = getHighestPriority(enemyRobots);
+        messagingSystem.writeAttackMessage(loc, 100);
         if (inRange(loc)) {
           RC.attackSquare(loc);
         }

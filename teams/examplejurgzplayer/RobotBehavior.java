@@ -2,21 +2,20 @@ package examplejurgzplayer;
 
 import battlecode.common.GameActionException;
 import examplejurgzplayer.messaging.MessageHandler;
-import examplejurgzplayer.messaging.MessageType;
+import examplejurgzplayer.messaging.MessagingSystem;
 
 public abstract class RobotBehavior {
   protected MessageHandler[] handlers;
 
   public RobotBehavior() {
+    handlers = new MessageHandler[MessagingSystem.MESSAGE_TYPES.length];
     initMessageHandlers();
   }
 
   /**
    * Override to specify message handlers.
    */
-  protected void initMessageHandlers() {
-    handlers = new MessageHandler[MessageType.MESSAGE_TYPES.length];
-  }
+  protected void initMessageHandlers() {}
 
   /**
    * Called at the beginning of each round.

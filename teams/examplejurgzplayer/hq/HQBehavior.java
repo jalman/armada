@@ -1,23 +1,10 @@
 package examplejurgzplayer.hq;
 
-import static examplejurgzplayer.utils.Utils.ALLY_HQ;
-import static examplejurgzplayer.utils.Utils.ALLY_TEAM;
-import static examplejurgzplayer.utils.Utils.ENEMY_HQ;
-import static examplejurgzplayer.utils.Utils.ENEMY_TEAM;
-import static examplejurgzplayer.utils.Utils.RC;
-import static examplejurgzplayer.utils.Utils.curX;
-import static examplejurgzplayer.utils.Utils.curY;
-import static examplejurgzplayer.utils.Utils.currentLocation;
-import static examplejurgzplayer.utils.Utils.messagingSystem;
-import battlecode.common.Clock;
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.GameConstants;
-import battlecode.common.MapLocation;
-import battlecode.common.Robot;
-import battlecode.common.RobotInfo;
-import battlecode.common.RobotType;
+import static examplejurgzplayer.utils.Utils.*;
+import battlecode.common.*;
 import examplejurgzplayer.RobotBehavior;
+import examplejurgzplayer.messaging.MessageHandler;
+import examplejurgzplayer.messaging.MessagingSystem.MessageType;
 import examplejurgzplayer.utils.Utils;
 
 public class HQBehavior extends RobotBehavior {
@@ -49,7 +36,13 @@ public class HQBehavior extends RobotBehavior {
 
   @Override
   protected void initMessageHandlers() {
-    super.initMessageHandlers();
+    handlers[MessageType.ATTACK_LOCATION.ordinal()] = new MessageHandler() {
+      @Override
+      public void handleMessage(int[] message) {
+        // MapLocation loc = new MapLocation(message[0], message[1]);
+        // TODO: attack!
+      }
+    };
   }
 
   @Override

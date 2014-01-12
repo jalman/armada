@@ -1,11 +1,7 @@
 package examplejurgzplayer.messaging;
 
-import static examplejurgzplayer.messaging.MessageType.MESSAGE_TYPES;
 import static examplejurgzplayer.utils.Utils.RC;
-import battlecode.common.GameActionException;
-import battlecode.common.GameConstants;
-import battlecode.common.MapLocation;
-import battlecode.common.RobotType;
+import battlecode.common.*;
 
 /**
  * Efficiently send and receive messages.
@@ -14,13 +10,48 @@ import battlecode.common.RobotType;
 public class MessagingSystem {
 
   /**
+   * The types of messages that can be sent.
+   * @author vlad
+   */
+  public enum MessageType {
+
+    HEADER(1),
+    STRATEGY(1),
+    PARAMETERS(2),
+    ATTACK_LOCATION(3),
+    TASK_TAKEN(3),
+    MICRO_INFO(3),
+    BIRTH_INFO(4),
+    SOLDIER_ID(1);
+
+    /**
+     * Number of integers that comprise this message.
+     */
+    public final int length;
+
+    private MessageType(int length) {
+      this.length = length;
+    }
+  }
+
+  public static final MessageType[] MESSAGE_TYPES = MessageType.values();
+
+  /**
    * Needs to be larger than any message size.
    */
   public static final int MESSAGE_SIZE = 6;
   public static final int BLOCK_SIZE = 1 + MESSAGE_SIZE;
 
-  private static final int HEADER_MESSAGE_INDEX = GameConstants.BROADCAST_MAX_CHANNELS / BLOCK_SIZE;
-  private static final int MAX_MESSAGE_INDEX = HEADER_MESSAGE_INDEX;
+  private static final int RESERVED_CHANNELS = 100;
+  private static final int MESSAGE_CHANNELS = GameConstants.BROADCAST_MAX_CHANNELS
+      - RESERVED_CHANNELS;
+  private static final int MAX_MESSAGE_INDEX = MESSAGE_CHANNELS / BLOCK_SIZE;
+
+  public enum ReservedMessage {
+    MESSAGE_INDEX, ;
+
+    final int channel = MESSAGE_CHANNELS + this.ordinal();
+  }
 
   public static final double BROADCAST_COST = 10;
 
@@ -45,6 +76,10 @@ public class MessagingSystem {
   private boolean first_round = true;
 
   public MessagingSystem() {}
+
+  public int readReservedMessage(ReservedMessage rm) throws GameActionException {
+    return RC.readBroadcast(rm.channel);
+  }
 
   /**
    * Reads a single message from the global message board.
@@ -71,46 +106,21 @@ public class MessagingSystem {
    * @throws GameActionException
    */
   private void readMessages(MessageHandler[] handlers) throws GameActionException {
+    int new_index = readReservedMessage(ReservedMessage.MESSAGE_INDEX);
+
     int[] buffer = new int[MESSAGE_SIZE];
-    if (readMessage(HEADER_MESSAGE_INDEX, buffer) != MessageType.HEADER.ordinal()) {
-      System.out.println("Cannot read header message!");
-      return;
-    }
 
-    int new_index = buffer[0];
-
-    if (!first_round) {
-      for (int index = message_index; index < new_index; index++) {
-        int type = readMessage(index, buffer);
-        if (handlers[type] != null) {
-          handlers[type].handleMessage(buffer);
-        } else {
-          System.out.println("ERROR: missing message handler for type " + MESSAGE_TYPES[type]);
-        }
+    for (int index = message_index; index < new_index; index++) {
+      int type = readMessage(index, buffer);
+      if (handlers[type] != null) {
+        handlers[type].handleMessage(buffer);
+      } else {
+        System.out.println("ERROR?: missing message handler for type " + MESSAGE_TYPES[type]
+            + " at index " + index);
       }
-    } else {
-      first_round = false;
     }
 
     message_index = new_index;
-  }
-
-  /**
-   * Writes a message to the global radio.
-   * @param index The index at which to write the message.
-   * @param message The message data.
-   * @throws GameActionException
-   */
-  private void writeMessageAtIndex(int index, int type, int... message) throws GameActionException {
-    int channel = (index % MAX_MESSAGE_INDEX) * BLOCK_SIZE;
-
-    RC.broadcast(channel++, type);
-
-    for (int i = 0; i < message.length; i++) {
-      RC.broadcast(channel++, message[i]);
-    }
-
-    message_written = true;
   }
 
   /**
@@ -122,14 +132,25 @@ public class MessagingSystem {
   public void writeMessage(int type, int... message) throws GameActionException {
     if (!send_messages) return;
 
-    writeMessageAtIndex(message_index++, type, message);
+    int channel = (message_index++ % MAX_MESSAGE_INDEX) * BLOCK_SIZE;
+
+    RC.broadcast(channel++, type);
+
+    for (int i = 0; i < message.length; i++) {
+      RC.broadcast(channel++, message[i]);
+    }
 
     message_written = true;
   }
 
   public void beginRound(MessageHandler[] handlers) throws GameActionException {
-    readMessages(handlers);
-    message_written = false;
+    if (!first_round) {
+      readMessages(handlers);
+      message_written = false;
+    } else {
+      message_index = readReservedMessage(ReservedMessage.MESSAGE_INDEX);
+      first_round = false;
+    }
   }
 
   /**
@@ -138,13 +159,17 @@ public class MessagingSystem {
    */
   public void endRound() throws GameActionException {
     if (message_written) {
-      writeHeaderMessage(message_index);
+      writeMessageIndex();
       message_written = false;
     }
   }
 
-  private void writeHeaderMessage(int total_messages) throws GameActionException {
-    writeMessageAtIndex(HEADER_MESSAGE_INDEX, MessageType.HEADER.ordinal(), total_messages);
+  /**
+   * Writes the message index. Should be called if this robot has written any messages.
+   * @throws GameActionException
+   */
+  private void writeMessageIndex() throws GameActionException {
+    RC.broadcast(ReservedMessage.MESSAGE_INDEX.channel, message_index);
   }
 
   /**
