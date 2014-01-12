@@ -1,4 +1,4 @@
-package jostbot.nav;
+package joshbot.nav;
 
 import static vladbot.utils.Utils.DIRECTIONS;
 import static vladbot.utils.Utils.RC;

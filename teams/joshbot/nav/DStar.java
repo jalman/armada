@@ -1,4 +1,4 @@
-package jostbot.nav;
+package joshbot.nav;
 
 import battlecode.common.MapLocation;
 

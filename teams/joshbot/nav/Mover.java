@@ -1,4 +1,4 @@
-package jostbot.nav;
+package joshbot.nav;
 
 import static joshbot.utils.Utils.RC;
 import static joshbot.utils.Utils.currentLocation;

@@ -1,4 +1,4 @@
-package jostbot.nav;
+package joshbot.nav;
 /*package vladbot.nav;
 
 import battlecode.common.*;
