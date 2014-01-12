@@ -1,11 +1,7 @@
 package examplejurgzplayer.nav;
 
-import static examplejurgzplayer.utils.Utils.DIRECTIONS;
-import static examplejurgzplayer.utils.Utils.RC;
-import static examplejurgzplayer.utils.Utils.d;
-import battlecode.common.Clock;
-import battlecode.common.Direction;
-import battlecode.common.MapLocation;
+import static examplejurgzplayer.utils.Utils.*;
+import battlecode.common.*;
 
 public class BugMoveFun extends NavAlg {
 
@@ -78,16 +74,26 @@ public class BugMoveFun extends NavAlg {
 
   @Override
   public Direction getNextDir() {
-    here = RC.getLocation();
-    int hx = here.x, hy = here.y;
     Direction dir;
 
     boolean movable[] = new boolean[8];
-    for(int i=0; i<8; i++) {
-      dir = DIRECTIONS[i];
-      movable[i] = RC.canMove(dir);
+    if (currentLocation.distanceSquaredTo(ENEMY_HQ) <= 35) {
+      Direction dirToEnemy = currentLocation.directionTo(ENEMY_HQ);
+      // assume that direction from curLoc to enemy hq is same as direction from (squares adjacent to curLoc) to enemy hq
+
+      for(int i=0; i<8; i++) {
+        dir = DIRECTIONS[i];
+        movable[i] =
+            RC.canMove(dir)
+                && currentLocation.add(dir).add(dirToEnemy).distanceSquaredTo(ENEMY_HQ) > 15;
+      }
+    } else {
+      for(int i=0; i<8; i++) {
+        dir = DIRECTIONS[i];
+        movable[i] = RC.canMove(dir);
+      }
     }
-    int[] toMove = computeMove(hx, hy, movable);
+    int[] toMove = computeMove(curX, curY, movable);
     if (toMove == null) return Direction.NONE;
     return DIRECTIONS[getDirTowards(toMove[0], toMove[1])];
   }
