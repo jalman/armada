@@ -36,7 +36,6 @@ public class RobotPlayer {
 							while(rc.senseObjectAtLocation(rc.getLocation().add(toEnemy)) != null) toEnemy = toEnemy.rotateLeft();
 							rc.spawn(toEnemy);
 						}
-
 					}
 					
 					
@@ -52,7 +51,7 @@ public class RobotPlayer {
 					}
 					if (rc.isActive()) {
 						MapLocation spot = rc.senseHQLocation().add(rc.senseHQLocation().directionTo(rc.senseEnemyHQLocation()).opposite());
-						MapLocation spot2 = spot.add(rc.senseHQLocation().directionTo(spot).rotateLeft());
+						MapLocation spot2 = rc.senseHQLocation().add(rc.senseHQLocation().directionTo(spot).rotateLeft());
 						if(spot.equals(rc.getLocation())) {
 							rc.construct(RobotType.NOISETOWER);
 						} else {
@@ -124,7 +123,8 @@ public class RobotPlayer {
 					else {
 						a++;
 						a%=8;
-						for(b = 1; b <= 20; b++) {
+						int c = a%2 == 0 ? 20 : 14;
+						for(b = 1; b <= c; b++) {
 							TerrainTile check = rc.senseTerrainTile(rc.getLocation().add(directions[a], b));
 							if(check == TerrainTile.OFF_MAP) {
 								b--;

@@ -31,7 +31,7 @@ public class RobotMicro {
 						RobotInfo tokill = rc.senseRobotInfo(nearbyEnemies[i]);
 						MapLocation killplace = tokill.location;
 						if(rc.canAttackSquare(killplace) && tokill.type != RobotType.HQ) {
-							rc.attackSquare(killplace);
+							if(rc.isActive()) rc.attackSquare(killplace);
 							break;
 						}
 					}
