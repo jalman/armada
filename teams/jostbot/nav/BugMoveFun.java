@@ -1,8 +1,8 @@
 package jostbot.nav;
 
-import static examplejurgzplayer.utils.Utils.DIRECTIONS;
-import static examplejurgzplayer.utils.Utils.RC;
-import static examplejurgzplayer.utils.Utils.d;
+import static vladbot.utils.Utils.DIRECTIONS;
+import static vladbot.utils.Utils.RC;
+import static vladbot.utils.Utils.d;
 import battlecode.common.Clock;
 import battlecode.common.Direction;
 import battlecode.common.MapLocation;

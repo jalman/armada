@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# should be called from inside teams/
+inpkg=${1%/}
+outpkg=$2
+
+cp $inpkg $outpkg -r
+perl -pi -e "s/$inpkg/$outpkg/g" `grep -ril $inpkg .`
