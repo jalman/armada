@@ -15,12 +15,12 @@ public class RobotMicro {
 		MapLocation myHQ = rc.senseHQLocation();
 		MapLocation theirHQ = rc.senseEnemyHQLocation();
 
-		Robot[] nearbyTeam = rc.senseNearbyGameObjects(Robot.class, 10, player);
-		Robot[] nearbyEnemies = rc.senseNearbyGameObjects(Robot.class, 10, enemy);
+		Robot[] nearbyTeam = rc.senseNearbyGameObjects(Robot.class, 17, player);
+		Robot[] nearbyEnemies = rc.senseNearbyGameObjects(Robot.class, 17, enemy);
 		
 		MapLocation loc = rc.getLocation();
 		
-		if (nearbyTeam.length >= nearbyEnemies.length) {
+		if (nearbyTeam.length+1 >= nearbyEnemies.length) {
 			if (nearbyEnemies.length == 0) {
 				//navigate towards where we want to go
 				return false;
@@ -36,7 +36,8 @@ public class RobotMicro {
 						}
 					}
 					catch (GameActionException e) {
-						System.out.println("exception!");
+						e.printStackTrace();
+						System.out.println("exception!1");
 					}
 				}
 				return true;
@@ -52,7 +53,8 @@ public class RobotMicro {
 					dy += tokill.location.y;
 				}
 				catch (GameActionException e) {
-					System.out.println("exception!");
+					e.printStackTrace();
+					System.out.println("exception!2");
 				}
 			}
 			dx /= nearbyEnemies.length;
@@ -74,7 +76,8 @@ public class RobotMicro {
 				}
 			}
 			catch (GameActionException e) {
-				System.out.println("exception!");
+				e.printStackTrace();
+				System.out.println("exception!3");
 			}
 		}
 		return true;
