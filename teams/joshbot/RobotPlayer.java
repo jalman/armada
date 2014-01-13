@@ -47,7 +47,7 @@ public class RobotPlayer {
 			if (rc.getType() == RobotType.SOLDIER) {
 				try {
 					if (rc.isActive()) {
-						attack();
+						joshbot.nathbot.RobotMicro.luge(rc);
 					}
 					if (rc.isActive()) {
 						MapLocation spot = rc.senseHQLocation().add(rc.senseHQLocation().directionTo(rc.senseEnemyHQLocation()).opposite());
@@ -67,8 +67,7 @@ public class RobotPlayer {
 									move = rc.getLocation().directionTo(spot2);
 									rc.setIndicatorString(2, "asdffdsa" + spot2);
 								}
-								else if(spot.distanceSquaredTo(rc.getLocation()) <= 24) move = move.opposite();
-								if(atspot != null && atspot2 != null) joshbot.nathbot.RobotPlayer.run(rc);
+								else if(spot.distanceSquaredTo(rc.getLocation()) <= 4) move = move.opposite();
 							}
 							int count = 0;
 							while(!rc.canMove(move) && count < 9) {
@@ -99,25 +98,25 @@ public class RobotPlayer {
 //					
 					
 					
-					if(a%2 == 0) {
+//					if(a%2 == 0) {
 						MapLocation target = rc.getLocation().add(directions[a %8], b);
 						if(rc.canAttackSquare(target)) rc.attackSquare(target);
-						rc.yield();
-						target = target.add(directions[(a+3) %8]).add(directions[(a+2) %8], 2);
-						if(rc.canAttackSquare(target)) rc.attackSquare(target);
-						rc.yield();
-						target = target.add(directions[(a+6) %8], 6);
-						if(rc.canAttackSquare(target)) rc.attackSquare(target);
-					} else {
-						MapLocation target = rc.getLocation().add(directions[a %8], b);
-						if(rc.canAttackSquare(target)) rc.attackSquare(target);
-						rc.yield();
-						target = target.add(directions[(a+3) %8]).add(directions[(a+2) %8], 2);
-						if(rc.canAttackSquare(target)) rc.attackSquare(target);
-						rc.yield();
-						target = target.add(directions[(a+6) %8], 6);
-						if(rc.canAttackSquare(target)) rc.attackSquare(target);
-					}
+//						rc.yield();
+//						target = target.add(directions[(a+3) %8]).add(directions[(a+2) %8], 2);
+//						if(rc.canAttackSquare(target)) rc.attackSquare(target);
+//						rc.yield();
+//						target = target.add(directions[(a+6) %8], 6);
+//						if(rc.canAttackSquare(target)) rc.attackSquare(target);
+//					} else {
+//						MapLocation target = rc.getLocation().add(directions[a %8], b);
+//						if(rc.canAttackSquare(target)) rc.attackSquare(target);
+//						rc.yield();
+//						target = target.add(directions[(a+3) %8]).add(directions[(a+2) %8], 2);
+//						if(rc.canAttackSquare(target)) rc.attackSquare(target);
+//						rc.yield();
+//						target = target.add(directions[(a+6) %8], 6);
+//						if(rc.canAttackSquare(target)) rc.attackSquare(target);
+//					}
 					
 					if(b>4) b--;
 					else {
