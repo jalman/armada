@@ -1,11 +1,10 @@
 package vladbot.hq;
 
 import static vladbot.utils.Utils.*;
-import battlecode.common.*;
 import vladbot.RobotBehavior;
 import vladbot.messaging.MessageHandler;
 import vladbot.messaging.MessagingSystem.MessageType;
-import vladbot.utils.Utils;
+import battlecode.common.*;
 
 public class HQBehavior extends RobotBehavior {
 
@@ -32,22 +31,25 @@ public class HQBehavior extends RobotBehavior {
 
   private boolean attackDelay = false;
 
+  int[][] enemyLastSeen = new int[GameConstants.MAP_MAX_WIDTH][GameConstants.MAP_MAX_HEIGHT];
+
   public HQBehavior() {}
 
   @Override
   protected void initMessageHandlers() {
-    handlers[MessageType.ATTACK_LOCATION.ordinal()] = new MessageHandler() {
+    super.initMessageHandlers();
+    handlers[MessageType.ENEMY_BOT.type] = new MessageHandler() {
       @Override
       public void handleMessage(int[] message) {
-        // MapLocation loc = new MapLocation(message[0], message[1]);
-        // TODO: attack!
+        MapLocation loc = new MapLocation(message[0], message[1]);
+        enemyLastSeen[loc.x][loc.y] = currentRound;
       }
     };
   }
 
   @Override
   public void beginRound() throws GameActionException {
-    Utils.updateBuildingUtils();
+    updateBuildingUtils();
     // RC.setIndicatorString(0, generators.size + " generators. " + Double.toString(actualFlux) +
     // " is pow");
     numBots = RC.senseNearbyGameObjects(Robot.class, currentLocation, 10000, ALLY_TEAM).length;
@@ -56,6 +58,7 @@ public class HQBehavior extends RobotBehavior {
 
   @Override
   public void run() throws GameActionException {
+    postMilkStats();
     macro();
     tryAttack();
   }
@@ -63,6 +66,15 @@ public class HQBehavior extends RobotBehavior {
   @Override
   public void endRound() throws GameActionException {
     messagingSystem.endRound();
+  }
+
+  void postMilkStats() throws GameActionException {
+    messagingSystem.writeMilkInfo(ALLY_PASTR_COUNT, ENEMY_PASTR_COUNT,
+        (int) ALLY_MILK, (int) ENEMY_MILK);
+  }
+
+  private void strategize() {
+
   }
 
   private void tryAttack() {

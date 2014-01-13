@@ -3,95 +3,50 @@ package vladbot.soldiers;
 import static vladbot.soldiers.SoldierUtils.getHighestPriority;
 import static vladbot.soldiers.SoldierUtils.inRange;
 import static vladbot.utils.Utils.*;
-import battlecode.common.*;
 import vladbot.RobotBehavior;
-import vladbot.RobotPlayer;
 import vladbot.messaging.MessageHandler;
 import vladbot.messaging.MessagingSystem.MessageType;
 import vladbot.nav.Mover;
+import vladbot.utils.ArraySet;
+import battlecode.common.*;
 
 public class SoldierBehavior extends RobotBehavior {
 
-  enum Role {
-    LEFTLEFT, LEFTRIGHT, RIGHTLEFT, RIGHTRIGHT, PASTR
+  enum Mode {
+    COMBAT, RUN, FARM, EXPLORE
   };
 
-  enum Mode {
-    GOING_TO_MIDDLE, SWEEP_OUT, RETURN_HOME, STAND_RICH_LOC, FIND_PASTR_LOC,
-    BUILD_PASTR, ACQUIRE_TARGET, ENGAGE,
-  };
+  // state machine stuff
+  Mode mode;
+  MapLocation target;
 
   // basic data
   int bornRound = Clock.getRoundNum();
   Mover mover = new Mover();
 
-  // state machine stuff
-  Mode mode;
-  int roleIndex;
-  Role role;
+  ArraySet<MapLocation> messagedEnemyRobots = new ArraySet<MapLocation>(100);
+  int[][] enemyLastSeen = new int[GameConstants.MAP_MAX_WIDTH][GameConstants.MAP_MAX_HEIGHT];
 
-  /**
-   * true if this is the first sweep attempt, false afterwards.
-   */
-  boolean initialSweep;
-
-  /**
-   * true if we're panicking to build pastures at the end
-   */
-  boolean panicPastrBuilding;
-
-  /**
-   * whether we're done building
-   */
-  boolean buildingFinished = false;
-  /**
-   * whether to sneak to where the building should be built
-   */
-  int sneakToBuildingLoc = 0;
-
-  // map locations
-  MapLocation dest;
-
-  static final MapLocation middle = new MapLocation(ALLY_HQ.x + HQ_DX / 2, ALLY_HQ.y + HQ_DY / 2);
-  static final MapLocation leftleft = new MapLocation(ALLY_HQ.x + HQ_DX / 3 - HQ_DY / 3,
-      ALLY_HQ.y + HQ_DY / 3 + HQ_DX / 3);
-  static final MapLocation leftright = new MapLocation(ALLY_HQ.x + HQ_DX / 3 - HQ_DY / 5,
-      ALLY_HQ.y + HQ_DY / 3 + HQ_DX / 5);
-  static final MapLocation rightleft = new MapLocation(ALLY_HQ.x + HQ_DX / 3 + HQ_DY / 5,
-      ALLY_HQ.y + HQ_DY / 3 - HQ_DX / 5);
-  static final MapLocation rightright = new MapLocation(ALLY_HQ.x + HQ_DX / 3 + HQ_DY / 3,
-      ALLY_HQ.y + HQ_DY / 3 - HQ_DX / 3);
-
-  static final Role[] roleList = {Role.LEFTLEFT, Role.LEFTRIGHT, Role.RIGHTLEFT, Role.RIGHTRIGHT};
-  static final MapLocation[] roleLocList = {leftleft, leftright, rightleft, rightright};
-
-  public SoldierBehavior() {
-    if (ENEMY_PASTR_COUNT > ALLY_PASTR_COUNT + 1) {
-      roleIndex = ALLY_PASTR_COUNT % 4;
-      role = Role.PASTR;
-
-      changeMode(Mode.FIND_PASTR_LOC);
-      dest = new MapLocation((ALLY_HQ.x + roleLocList[roleIndex].x) / 2,
-          (ALLY_HQ.y + roleLocList[roleIndex].y) / 2);
-    } else {
-      roleIndex = RC.senseRobotCount() % 4;
-      role = roleList[roleIndex];
-
-      changeMode(Mode.SWEEP_OUT);
-      dest = roleLocList[roleIndex];
-
-      initialSweep = true;
-    }
-    mover.setTarget(dest);
-  }
+  public SoldierBehavior() {}
 
   @Override
   protected void initMessageHandlers() {
-    handlers[MessageType.ATTACK_LOCATION.ordinal()] = new MessageHandler() {
+    super.initMessageHandlers();
+
+    handlers[MessageType.ATTACK_LOCATION.type] = new MessageHandler() {
+      @Override
+      public void handleMessage(int[] message) {
+        // MapLocation loc = new MapLocation(message[0], message[1]);
+        // mover.setTarget(loc);
+      }
+    };
+
+    handlers[MessageType.ENEMY_BOT.type] = new MessageHandler() {
       @Override
       public void handleMessage(int[] message) {
         MapLocation loc = new MapLocation(message[0], message[1]);
-        // TODO: attack!
+        enemyLastSeen[loc.x][loc.y] = currentRound;
+        messagedEnemyRobots.insert(loc);
       }
     };
   }
@@ -99,156 +54,67 @@ public class SoldierBehavior extends RobotBehavior {
   @Override
   public void beginRound() throws GameActionException {
     updateUnitUtils();
-    // turn into a pasture or noise tower
-    if (buildingFinished) {
-      RobotPlayer.run(RC);
-    }
+    messagedEnemyRobots.clear();
     messagingSystem.beginRound(handlers);
   }
 
   @Override
+  public void endRound() throws GameActionException {
+    messagingSystem.endRound();
+  }
+
+  @Override
   public void run() throws GameActionException {
+    think();
+    System.out.println(mode + " " + target);
+    act();
+  }
+
+  private void think() {
     if (enemyRobots.length > 0) {
-      // set mode to ATTACK or something
-      attack();
-      // send message?
-    } else if (mode != Mode.ENGAGE && mode != Mode.ACQUIRE_TARGET) {
-      // try to find a pasture to attack
-      if (ENEMY_MILK - ALLY_MILK > 50000 || ENEMY_PASTR_COUNT > ALLY_PASTR_COUNT) {
-        changeMode(Mode.ACQUIRE_TARGET);
-      } else {
-        // try to build pastures if late in game
-        // probably deprecated (doesn't happen)
-        if (currentRound > 1800 && ENEMY_PASTR_COUNT > 0 && !panicPastrBuilding) {
-          if (mode != Mode.BUILD_PASTR && mode != Mode.FIND_PASTR_LOC) {
-            if (currentCowsHere < 150) {
-              panicPastrBuilding = true;
-              dest = ALLY_HQ.subtract(ALLY_HQ.directionTo(ENEMY_HQ));
-              mover.setTarget(dest);
-              sneakToBuildingLoc = 1;
-              changeMode(Mode.FIND_PASTR_LOC);
-            } else if (currentCowsHere < 400) {
-              panicPastrBuilding = true;
-              mover.setTarget(ALLY_HQ);
-              changeMode(Mode.RETURN_HOME);
-            }
-          }
-        } else if (!initialSweep) {
-          // stand on rich squares
-          MapLocation loc = findRichSquare();
-          if (loc != null) {
-            mover.setTarget(loc);
-            changeMode(Mode.STAND_RICH_LOC);
-          }
-        }
-      }
+      setMode(Mode.COMBAT);
+      return;
     }
 
-    switch (mode) {
-      case GOING_TO_MIDDLE:
-        if (mover.arrived()) {
-          decideNextMode();
-        } else {
-          mover.movePushHome();
-        }
-        break;
-      case SWEEP_OUT:
-        if (mover.arrived()) {
-          dest = new MapLocation((2 * ALLY_HQ.x + roleLocList[roleIndex].x) / 3,
-              (2 * ALLY_HQ.y + roleLocList[roleIndex].y) / 3);
-          mover.setTarget(dest);
-          changeMode(Mode.RETURN_HOME);
-        } else {
-          mover.movePushHome();
-        }
-        break;
-      case RETURN_HOME:
-        if (mover.arrived()) {
-          dest = roleLocList[roleIndex];
-          mover.setTarget(dest);
-          changeMode(Mode.SWEEP_OUT);
+    MapLocation closest = closestMessagedEnemyRobot();
+    if (closest != null) {
+      target = closest;
+      setMode(Mode.RUN);
+      return;
+    }
 
-          initialSweep = false;
-        } else {
-          mover.movePushHome();
-        }
-        break;
-      case STAND_RICH_LOC:
-        if (!mover.arrived()) {
-          mover.sneak();
-        } else {
-          RC.setIndicatorString(1, "cows here: " + currentCowsHere);
-          if (currentCowsHere < 500) {
-            mover.setTarget(roleLocList[roleIndex]);
-            changeMode(Mode.SWEEP_OUT);
-          }
-        }
-        break;
-      case FIND_PASTR_LOC:
-        if (mover.arrived()) {
-          changeMode(Mode.BUILD_PASTR);
-        } else {
-          mover.execute(sneakToBuildingLoc);
-        }
-        break;
-      case BUILD_PASTR:
-        if (!RC.isConstructing() && RC.isActive()) {
-          RC.construct(RobotType.PASTR);
-        }
+    /*
+     * MapLocation rich = findRichSquare();
+     * if (rich != null) {
+     * target = rich;
+     * setMode(Mode.FARM);
+     * return;
+     * }
+     */
 
-        if (RC.getConstructingRounds() == 0) {
-          buildingFinished = true;
-        }
-        break;
-      case ACQUIRE_TARGET:
-        int mindistance = 10000000;
-        MapLocation pastrTarget = null;
-        for (MapLocation pastrLoc : ENEMY_PASTR_LOCS) {
-          int d = currentLocation.distanceSquaredTo(pastrLoc);
-          if (d < mindistance) {
-            mindistance = d;
-            pastrTarget = pastrLoc;
-          }
-        }
-
-        if (pastrTarget == null) {
-          mover.setTarget(ALLY_HQ);
-          changeMode(Mode.RETURN_HOME);
-        } else {
-          mover.setTarget(pastrTarget);
-          changeMode(Mode.ENGAGE);
-          mover.move();
-        }
-        break;
-      case ENGAGE:
-        if (mover.arrived()) {
-          changeMode(Mode.RETURN_HOME);
-        } else {
-          mover.move();
-        }
-        break;
-      default:
-        break;
+    if (mover.arrived()) {
+      target = findExploreLocation();
+      setMode(Mode.EXPLORE);
     }
   }
 
-  private void changeMode(Mode m) {
-    RC.setIndicatorString(0, currentRound + ": " + m.toString() + " " + role.toString());
+  private void setMode(Mode m) {
+    RC.setIndicatorString(0, m.toString());
     mode = m;
   }
 
-  private void attack() {
-    try {
-      if (RC.isActive()) {
-        MapLocation loc = getHighestPriority(enemyRobots);
-        messagingSystem.writeAttackMessage(loc, 100);
-        if (inRange(loc)) {
-          RC.attackSquare(loc);
-        }
+  private MapLocation closestMessagedEnemyRobot() {
+    MapLocation closest = null;
+    int min = Integer.MAX_VALUE;
+    for (int i = 0; i < messagedEnemyRobots.size; i++) {
+      MapLocation loc = messagedEnemyRobots.get(i);
+      int d = currentLocation.distanceSquaredTo(loc);
+      if (d < min) {
+        min = d;
+        closest = loc;
       }
-    } catch (GameActionException e) {
-      e.printStackTrace();
     }
+    return closest;
   }
 
   private MapLocation findRichSquare() {
@@ -279,12 +145,42 @@ public class SoldierBehavior extends RobotBehavior {
     return null;
   }
 
-  private void decideNextMode() {
-
+  /**
+   * TODO: Make this smarter.
+   * @return Place to explore to.
+   */
+  private MapLocation findExploreLocation() {
+    return ALLY_HQ.add(HQ_DX / 2, HQ_DY / 2);
   }
 
-  @Override
-  public void endRound() throws GameActionException {
-    messagingSystem.endRound();
+  private void act() throws GameActionException {
+    switch (mode) {
+      case COMBAT:
+        attack();
+        break;
+      case RUN:
+        mover.setTarget(target);
+        mover.move();
+        break;
+      case FARM:
+        mover.setTarget(target);
+        mover.execute(Mover.SNEAK);
+        break;
+      case EXPLORE:
+        mover.setTarget(target);
+        mover.move();
+        break;
+    }
   }
+
+  private void attack() throws GameActionException {
+    if (RC.isActive()) {
+      MapLocation loc = getHighestPriority(enemyRobots);
+      // messagingSystem.writeAttackMessage(loc, 100);
+      if (inRange(loc)) {
+        RC.attackSquare(loc);
+      }
+    }
+  }
+
 }

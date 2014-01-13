@@ -1,8 +1,9 @@
 package vladbot;
 
-import battlecode.common.GameActionException;
+import static vladbot.utils.Utils.*;
 import vladbot.messaging.MessageHandler;
 import vladbot.messaging.MessagingSystem;
+import battlecode.common.GameActionException;
 
 public abstract class RobotBehavior {
   protected MessageHandler[] handlers;
@@ -15,7 +16,17 @@ public abstract class RobotBehavior {
   /**
    * Override to specify message handlers.
    */
-  protected void initMessageHandlers() {}
+  protected void initMessageHandlers() {
+    handlers[MessagingSystem.MessageType.MILK_INFO.type] = new MessageHandler() {
+      @Override
+      public void handleMessage(int[] message) {
+        ALLY_PASTR_COUNT = message[0];
+        ENEMY_PASTR_COUNT = message[1];
+        ALLY_MILK = message[2];
+        ENEMY_MILK = message[3];
+      }
+    };
+  }
 
   /**
    * Called at the beginning of each round.

@@ -15,14 +15,15 @@ public class MessagingSystem {
    */
   public enum MessageType {
 
-    HEADER(1),
-    STRATEGY(1),
     PARAMETERS(2),
     ATTACK_LOCATION(3),
-    TASK_TAKEN(3),
     MICRO_INFO(3),
     BIRTH_INFO(4),
-    SOLDIER_ID(1);
+    SOLDIER_ID(1),
+    ENEMY_BOT(2),
+    MILK_INFO(4);
+
+    public final int type = this.ordinal();
 
     /**
      * Number of integers that comprise this message.
@@ -115,8 +116,9 @@ public class MessagingSystem {
       if (handlers[type] != null) {
         handlers[type].handleMessage(buffer);
       } else {
-        System.out.println("ERROR?: missing message handler for type " + MESSAGE_TYPES[type]
-            + " at index " + index);
+        // print error message?
+        // System.out.println("ERROR?: missing message handler for type " + MESSAGE_TYPES[type]
+        // + " at index " + index);
       }
     }
 
@@ -179,7 +181,16 @@ public class MessagingSystem {
    * @throws GameActionException
    */
   public void writeAttackMessage(MapLocation loc, int priority) throws GameActionException {
-    writeMessage(MessageType.ATTACK_LOCATION.ordinal(), loc.x, loc.y, priority);
+    writeMessage(MessageType.ATTACK_LOCATION.type, loc.x, loc.y, priority);
+  }
+
+  /**
+   * Announce sighting of enemy bot.
+   * @param loc
+   * @throws GameActionException
+   */
+  public void writeEnemyBotMessage(MapLocation loc) throws GameActionException {
+    writeMessage(MessageType.ENEMY_BOT.type, loc.x, loc.y);
   }
 
   /**
@@ -189,7 +200,7 @@ public class MessagingSystem {
    * @throws GameActionException
    */
   public void writeMicroMessage(MapLocation loc, int goIn) throws GameActionException {
-    writeMessage(MessageType.MICRO_INFO.ordinal(), loc.x, loc.y, goIn);
+    writeMessage(MessageType.MICRO_INFO.type, loc.x, loc.y, goIn);
   }
 
   /**
@@ -200,7 +211,7 @@ public class MessagingSystem {
    * @throws GameActionException
    */
   public void writeBirthMessage(MapLocation loc, int id, int type) throws GameActionException {
-    writeMessage(MessageType.BIRTH_INFO.ordinal(), loc.x, loc.y, id, type);
+    writeMessage(MessageType.BIRTH_INFO.type, loc.x, loc.y, id, type);
   }
 
   /**
@@ -209,6 +220,19 @@ public class MessagingSystem {
    * @throws GameActionException
    */
   public void writeSoldierID(int soldierID) throws GameActionException {
-    writeMessage(MessageType.SOLDIER_ID.ordinal(), soldierID);
+    writeMessage(MessageType.SOLDIER_ID.type, soldierID);
+  }
+
+  /**
+   * Used by the HQ to save soldier bytecodes.
+   * @param allyPastrCount
+   * @param enemyPastrCount
+   * @param allyMilk
+   * @param enemyMilk
+   * @throws GameActionException
+   */
+  public void writeMilkInfo(int allyPastrCount, int enemyPastrCount, int allyMilk, int enemyMilk)
+      throws GameActionException {
+    writeMessage(MessageType.MILK_INFO.type, allyPastrCount, enemyPastrCount, allyMilk, enemyMilk);
   }
 }
