@@ -2,15 +2,15 @@ package sandboxplayer.soldiers;
 
 import static sandboxplayer.soldiers.SoldierUtils.luge;
 import static sandboxplayer.utils.Utils.*;
-import battlecode.common.*;
 import sandboxplayer.RobotBehavior;
 import sandboxplayer.RobotPlayer;
 import sandboxplayer.messaging.MessageHandler;
 import sandboxplayer.messaging.MessagingSystem.MessageType;
 import sandboxplayer.nav.Mover;
+import battlecode.common.*;
 
 public class SoldierBehavior extends RobotBehavior {
-	
+
 	public static boolean shouldjosh = true;
 
   enum Role {
@@ -19,7 +19,7 @@ public class SoldierBehavior extends RobotBehavior {
 
   enum Mode {
     GOING_TO_MIDDLE, SWEEP_OUT, RETURN_HOME, STAND_RICH_LOC, FIND_PASTR_LOC,
-    BUILD_PASTR, ACQUIRE_TARGET, ENGAGE, BIRTH_DECIDE_MODE
+    BUILD_PASTR, ACQUIRE_TARGET, ENGAGE, BIRTH_DECIDE_MODE, DEFEND_PASTR
   };
 
   // basic data
@@ -91,26 +91,24 @@ public class SoldierBehavior extends RobotBehavior {
     }
     messagingSystem.beginRound(handlers);
   }
-  
+
   public boolean joshbotbuild() throws GameActionException {
 	  if(!RC.isActive()) return true;
-	  
-		MapLocation spot = RC.senseHQLocation().add(RC.senseHQLocation().directionTo(RC.senseEnemyHQLocation()).opposite());
-		MapLocation spot2 = RC.senseHQLocation().add(RC.senseHQLocation().directionTo(spot).rotateLeft());
-		if(spot.equals(RC.getLocation())) {
+
+    MapLocation spot = ALLY_HQ.add(ALLY_HQ.directionTo(ENEMY_HQ).opposite());
+    MapLocation spot2 = ALLY_HQ.add(ALLY_HQ.directionTo(spot).rotateLeft());
+    if (spot.equals(currentLocation)) {
 			RC.construct(RobotType.NOISETOWER);
 		} else {
 			GameObject atspot = RC.canSenseSquare(spot) ? RC.senseObjectAtLocation(spot) : null;
-			Direction move = RC.getLocation().directionTo(spot);
+      Direction move = currentLocation.directionTo(spot);
 			if(atspot != null) {
-				if(spot2.equals(RC.getLocation())) {
+        if (spot2.equals(currentLocation)) {
 					RC.construct(RobotType.PASTR);
 				}
 				GameObject atspot2 = RC.canSenseSquare(spot2) ? RC.senseObjectAtLocation(spot2) : null;
-				RC.setIndicatorString(2, "asdf" + spot2);
 				if(atspot2 == null) {
-					move = RC.getLocation().directionTo(spot2);
-					RC.setIndicatorString(2, "asdffdsa" + spot2);
+          move = currentLocation.directionTo(spot2);
 				}
 				else return false;
 			}
@@ -121,7 +119,7 @@ public class SoldierBehavior extends RobotBehavior {
 			}
 			RC.move(move);
 		}
-		
+
 		return true;
   }
 
@@ -135,9 +133,7 @@ public class SoldierBehavior extends RobotBehavior {
     	if(!joshbotbuild()) {
     		shouldjosh = false;
     	}
-    }
-    else if (mode != Mode.ENGAGE && mode != Mode.ACQUIRE_TARGET && mode != Mode.BIRTH_DECIDE_MODE
-        && mode != Mode.FIND_PASTR_LOC && mode != Mode.BUILD_PASTR) {
+    } else if (isIdle()) {
         if (ENEMY_MILK - ALLY_MILK > 50000 || ENEMY_PASTR_COUNT > ALLY_PASTR_COUNT) {
           changeMode(Mode.ACQUIRE_TARGET);
         } else {
@@ -155,7 +151,7 @@ public class SoldierBehavior extends RobotBehavior {
               mover.setTarget(ALLY_HQ);
               changeMode(Mode.RETURN_HOME);
             }
-          } else if (!initialSweep) {
+        } else if (!initialSweep && ALLY_PASTR_COUNT == 0) {
             // stand on rich squares
             MapLocation loc = findRichSquare();
             if (loc != null) {
@@ -188,13 +184,13 @@ public class SoldierBehavior extends RobotBehavior {
         mover.setTarget(dest);
         mover.move();
         break;
-      case GOING_TO_MIDDLE:
-        if (mover.arrived()) {
-          decideNextMode();
-        } else {
-          mover.movePushHome();
-        }
-        break;
+      // case GOING_TO_MIDDLE:
+      // if (mover.arrived()) {
+      // decideNextMode();
+      // } else {
+      // mover.movePushHome();
+      // }
+      // break;
       case SWEEP_OUT:
         if (mover.arrived()) {
           dest = new MapLocation((2 * ALLY_HQ.x + roleLocList[roleIndex].x) / 3,
@@ -215,6 +211,8 @@ public class SoldierBehavior extends RobotBehavior {
         } else {
           mover.movePushHome();
         }
+        break;
+      case DEFEND_PASTR:
         break;
       case STAND_RICH_LOC:
         if (!mover.arrived()) {
@@ -280,6 +278,9 @@ public class SoldierBehavior extends RobotBehavior {
     mode = m;
   }
 
+  private boolean isIdle() {
+    return (mode == Mode.SWEEP_OUT || mode == Mode.RETURN_HOME || mode == Mode.STAND_RICH_LOC || mode == Mode.DEFEND_PASTR);
+  }
   private MapLocation findRichSquare() {
     double maxCows = currentCowsHere + 50 * COW_GROWTH[curX][curY] + 300;// favor staying here
     double curCows;

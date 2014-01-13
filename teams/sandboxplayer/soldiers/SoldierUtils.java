@@ -25,8 +25,8 @@ public class SoldierUtils {
   // micro
   public static boolean luge() throws GameActionException {
     Robot[] nearbyEnemies = RC.senseNearbyGameObjects(Robot.class, 24, ENEMY_TEAM);
-	Robot[] enemiesInRange = RC.senseNearbyGameObjects(Robot.class, 10, ENEMY_TEAM);
-	
+    Robot[] enemiesInRange = RC.senseNearbyGameObjects(Robot.class, 10, ENEMY_TEAM);
+
     // sense every round -- maybe send messages on non-active rounds?
 
     if (nearbyEnemies.length == 0) { // no enemies: don't micro
@@ -83,30 +83,30 @@ public class SoldierUtils {
         nearbyEnemyInfo[i] = ri;
       }
       RC.setIndicatorString(1, "" + Clock.getRoundNum() + "," + enemyWeight);
-      
+
       int callX = RC.readBroadcast(3), callY = RC.readBroadcast(4);
       MapLocation callLoc = new MapLocation(callX, callY);
       if (RC.canSenseSquare(callLoc) && RC.senseObjectAtLocation(callLoc) == null) {
-      	RC.broadcast(3, -10000);
+        RC.broadcast(3, -10000);
         RC.broadcast(4, -10000);
-    	  
       }
       boolean isHelpingOut = false;
-      
+
       if ( (callX - currentLocation.x) * (callX - currentLocation.x) + (callY - currentLocation.y) * (callY - currentLocation.y) < 8*8) {
-    	  isHelpingOut = true;
+        isHelpingOut = true;
       }
-    	  
+
       if (nearbyTeam.length + 1 >= enemyWeight || isHelpingOut) {
-    	  if (isHelpingOut) {
-    		  RC.setIndicatorString(2, "helping out to kill guy at " + callX + "," + callY);
-    	  }
+        if (isHelpingOut) {
+          RC.setIndicatorString(2, "helping out to kill guy at " + callX + "," + callY);
+        }
         if (RC.isActive()) { // willing to attack!
-		  if ((nearbyEnemies.length == 0 || nearbyTeam.length-1 >= nearbyEnemies.length || isHelpingOut) && enemiesInRange.length == 0) {
-			  //willing to move forward and attack!
-			  return false; //jurgz should take a look at this ...
-		  }
-          
+          if ((nearbyEnemies.length == 0 || nearbyTeam.length - 1 >= nearbyEnemies.length || isHelpingOut)
+              && enemiesInRange.length == 0) {
+            // willing to move forward and attack!
+            return false; // jurgz should take a look at this ...
+          }
+
           MapLocation target = getHighestPriority(nearbyEnemyInfo);
           if (target == null) {
             if (nearestPastrLoc != null) {
@@ -119,25 +119,25 @@ public class SoldierUtils {
               }
             }
             else if (currentLocation.distanceSquaredTo(ENEMY_HQ) <= 100) {
-            	// copy-pasted from above.
-            	// if we're near the HQ but have nothing to do just randomly kill shit
-            	 MapLocation cowTarget =
-            	            getMostCowsLoc(
-            	                MapLocation.getAllMapLocationsWithinRadiusSq(
-            	                    currentLocation.add(currentLocation.directionTo(ENEMY_HQ)), 5),
-            	                //
-            	                500);
-            	 if (cowTarget != null && RC.canAttackSquare(cowTarget)
-            	     && RC.senseObjectAtLocation(cowTarget) == null) {
-            	     RC.attackSquare(cowTarget);
-            	     return true;
-            	 }
+              // copy-pasted from above.
+              // if we're near the HQ but have nothing to do just randomly kill shit
+              MapLocation cowTarget =
+                  getMostCowsLoc(
+                      MapLocation.getAllMapLocationsWithinRadiusSq(
+                          currentLocation.add(currentLocation.directionTo(ENEMY_HQ)), 5),
+                      //
+                      500);
+              if (cowTarget != null && RC.canAttackSquare(cowTarget)
+                  && RC.senseObjectAtLocation(cowTarget) == null) {
+                RC.attackSquare(cowTarget);
+                return true;
+              }
             }
           } else if (RC.canAttackSquare(target)) {
             RC.attackSquare(target);
             if (callX != target.x || callY != target.y) {
-            	RC.broadcast(3, target.x);
-                RC.broadcast(4, target.y);
+              RC.broadcast(3, target.x);
+              RC.broadcast(4, target.y);
             }
           }
         }
