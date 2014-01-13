@@ -101,7 +101,7 @@ public class SoldierUtils {
           RC.setIndicatorString(2, "helping out to kill guy at " + callX + "," + callY);
         }
         if (RC.isActive()) { // willing to attack!
-          if ((nearbyEnemies.length == 0 || nearbyTeam.length - 1 >= nearbyEnemies.length || isHelpingOut)
+          if ((nearbyEnemies.length == 0 || nearbyTeam.length - 1 >= enemyWeight || isHelpingOut)
               && enemiesInRange.length == 0) {
             // willing to move forward and attack!
             return false; // jurgz should take a look at this ...
