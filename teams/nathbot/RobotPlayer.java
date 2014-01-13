@@ -2,13 +2,7 @@ package nathbot;
 
 import java.util.Random;
 
-import battlecode.common.Direction;
-import battlecode.common.MapLocation;
-import battlecode.common.Robot;
-import battlecode.common.RobotController;
-import battlecode.common.RobotInfo;
-import battlecode.common.RobotType;
-import battlecode.common.Team;
+import battlecode.common.*;
 
 public class RobotPlayer {
 	static Random rand;
@@ -58,14 +52,23 @@ public class RobotPlayer {
 			
 			if (rc.getType() == RobotType.SOLDIER) {
 				try {
-					RobotMicro.luge(rc);
+					if (RobotMicro.luge(rc)) {
+						if (rc.isActive()) {
+							try {
+								rc.yield();
+							}
+							catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
+					}
 					
 					if (rc.isActive()) {
 						int d = rc.readBroadcast(0);
 						MapLocation[] m = rc.sensePastrLocations(enemy);
 						rc.setIndicatorString(0, "" + d);
 						if (d < 2) {
-							if (m.length > 0 && rc.senseNearbyGameObjects(Robot.class, 100000000, player).length >= 6) {
+							if (m.length > 0 && rc.senseNearbyGameObjects(Robot.class, 100000000, player).length >= 7) {
 								int dist = 1000000000, ind = 0;
 								for (int i=0; i<m.length; ++i) {
 									int dd = (m[i].x - loc.x) * (m[i].x - loc.x) + (m[i].y - loc.y) * (m[i].y - loc.y);
@@ -81,8 +84,12 @@ public class RobotPlayer {
 							else {
 								if (d == 0) {
 									rc.broadcast(0, 1);
-									rc.broadcast(1, (myHQ.x + 2*theirHQ.x) / 3);
-									rc.broadcast(2, (myHQ.y + 2*theirHQ.y) / 3);
+									rc.broadcast(1, (2*myHQ.x + 1*theirHQ.x) / 3);
+									rc.broadcast(2, (2*myHQ.y + 1*theirHQ.y) / 3);
+								}
+								else if (d == 1 && Clock.getRoundNum() == 200) {
+									rc.broadcast(1, (1*myHQ.x + 2*theirHQ.x) / 3);
+									rc.broadcast(2, (1*myHQ.y + 2*theirHQ.y) / 3);
 								}
 							}
 						}

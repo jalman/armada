@@ -80,6 +80,7 @@ public class SoldierUtils {
         }
         nearbyEnemyInfo[i] = ri;
       }
+      RC.setIndicatorString(1, "" + Clock.getRoundNum() + "," + enemyWeight);
 
       if (nearbyTeam.length + 1 >= enemyWeight) {
         if (RC.isActive()) { // attack!
@@ -93,6 +94,21 @@ public class SoldierUtils {
               if (cowTarget != null && RC.canAttackSquare(cowTarget)) {
                 RC.attackSquare(cowTarget);
               }
+            }
+            else if (currentLocation.distanceSquaredTo(ENEMY_HQ) <= 100) {
+            	// copy-pasted from above.
+            	// if we're near the HQ but have nothing to do just randomly kill shit
+            	 MapLocation cowTarget =
+            	            getMostCowsLoc(
+            	                MapLocation.getAllMapLocationsWithinRadiusSq(
+            	                    currentLocation.add(currentLocation.directionTo(ENEMY_HQ)), 5),
+            	                //
+            	                500);
+            	 if (cowTarget != null && RC.canAttackSquare(cowTarget)
+            	     && RC.senseObjectAtLocation(cowTarget) == null) {
+            	     RC.attackSquare(cowTarget);
+            	     return true;
+            	 }
             }
           } else if (RC.canAttackSquare(target)) {
             RC.attackSquare(target);
