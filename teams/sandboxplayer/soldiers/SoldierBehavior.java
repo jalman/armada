@@ -10,6 +10,8 @@ import sandboxplayer.messaging.MessagingSystem.MessageType;
 import sandboxplayer.nav.Mover;
 
 public class SoldierBehavior extends RobotBehavior {
+	
+	public static boolean shouldjosh = true;
 
   enum Role {
     LEFTLEFT, LEFTRIGHT, RIGHTLEFT, RIGHTRIGHT, PASTR, NONE
@@ -89,6 +91,39 @@ public class SoldierBehavior extends RobotBehavior {
     }
     messagingSystem.beginRound(handlers);
   }
+  
+  public boolean joshbotbuild() throws GameActionException {
+	  if(!RC.isActive()) return true;
+	  
+		MapLocation spot = RC.senseHQLocation().add(RC.senseHQLocation().directionTo(RC.senseEnemyHQLocation()).opposite());
+		MapLocation spot2 = RC.senseHQLocation().add(RC.senseHQLocation().directionTo(spot).rotateLeft());
+		if(spot.equals(RC.getLocation())) {
+			RC.construct(RobotType.NOISETOWER);
+		} else {
+			GameObject atspot = RC.canSenseSquare(spot) ? RC.senseObjectAtLocation(spot) : null;
+			Direction move = RC.getLocation().directionTo(spot);
+			if(atspot != null) {
+				if(spot2.equals(RC.getLocation())) {
+					RC.construct(RobotType.PASTR);
+				}
+				GameObject atspot2 = RC.canSenseSquare(spot2) ? RC.senseObjectAtLocation(spot2) : null;
+				RC.setIndicatorString(2, "asdf" + spot2);
+				if(atspot2 == null) {
+					move = RC.getLocation().directionTo(spot2);
+					RC.setIndicatorString(2, "asdffdsa" + spot2);
+				}
+				else return false;
+			}
+			int count = 0;
+			while(!RC.canMove(move) && count < 9) {
+				move = move.rotateLeft();
+				count++;
+			}
+			RC.move(move);
+		}
+		
+		return true;
+  }
 
   @Override
   public void run() throws GameActionException {
@@ -96,7 +131,12 @@ public class SoldierBehavior extends RobotBehavior {
       // set mode to ATTACK or something
       return;
       // send message?
-    } else if (mode != Mode.ENGAGE && mode != Mode.ACQUIRE_TARGET && mode != Mode.BIRTH_DECIDE_MODE
+    } else if(shouldjosh) {
+    	if(!joshbotbuild()) {
+    		shouldjosh = false;
+    	}
+    }
+    else if (mode != Mode.ENGAGE && mode != Mode.ACQUIRE_TARGET && mode != Mode.BIRTH_DECIDE_MODE
         && mode != Mode.FIND_PASTR_LOC && mode != Mode.BUILD_PASTR) {
         if (ENEMY_MILK - ALLY_MILK > 50000 || ENEMY_PASTR_COUNT > ALLY_PASTR_COUNT) {
           changeMode(Mode.ACQUIRE_TARGET);
