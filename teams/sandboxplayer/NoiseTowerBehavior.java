@@ -9,7 +9,7 @@ import static sandboxplayer.utils.Utils.*;
 public class NoiseTowerBehavior extends RobotBehavior {
 	
 
-	int a=0, b=20; //for noise
+	int a=0, b=0; //for noise
 	double[][] cows = null; double[] cowsindir = new double[8];
 	Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 	public static final int[] yrangefornoise = { 20, 19, 19, 19, 19, 19, 19, 18, 18, 17, 17, 16, 16, 15, 14, 13, 12, 10,
@@ -68,8 +68,9 @@ public class NoiseTowerBehavior extends RobotBehavior {
 		a%=8;
 		int c = a%2 == 0 ? 20 : 14;
 		for(b = 1; b <= c; b++) {
-			TerrainTile check = RC.senseTerrainTile(RC.getLocation().add(directions[a], b));
-			if(check == TerrainTile.OFF_MAP) {
+			MapLocation checkingplace = RC.getLocation().add(directions[a], b);
+			TerrainTile check = RC.senseTerrainTile(checkingplace);
+			if(check == TerrainTile.OFF_MAP || checkingplace.distanceSquaredTo(ENEMY_HQ) < 16) {
 				b--;
 				break;
 			}

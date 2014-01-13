@@ -19,7 +19,7 @@ public class RobotPlayer {
 		rand = new Random();
 		Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 		
-		int a=0, b=20; //for noise
+		int a=0, b=0; //for noise
 		double[][] cows = null; double[] cowsindir = new double[8];
 		Utils.initUtils(rc);
 		
@@ -124,8 +124,9 @@ public class RobotPlayer {
 						a%=8;
 						int c = a%2 == 0 ? 20 : 14;
 						for(b = 1; b <= c; b++) {
-							TerrainTile check = rc.senseTerrainTile(rc.getLocation().add(directions[a], b));
-							if(check == TerrainTile.OFF_MAP) {
+							MapLocation checkingplace = RC.getLocation().add(directions[a], b);
+							TerrainTile check = RC.senseTerrainTile(checkingplace);
+							if(check == TerrainTile.OFF_MAP || checkingplace.distanceSquaredTo(ENEMY_HQ) < 16) {
 								b--;
 								break;
 							}
