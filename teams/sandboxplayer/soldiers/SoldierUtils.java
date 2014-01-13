@@ -83,10 +83,26 @@ public class SoldierUtils {
         nearbyEnemyInfo[i] = ri;
       }
       RC.setIndicatorString(1, "" + Clock.getRoundNum() + "," + enemyWeight);
-
-      if (nearbyTeam.length + 1 >= enemyWeight) {
+      
+      int callX = RC.readBroadcast(3), callY = RC.readBroadcast(4);
+      MapLocation callLoc = new MapLocation(callX, callY);
+      if (RC.canSenseSquare(callLoc) && RC.senseObjectAtLocation(callLoc) == null) {
+      	RC.broadcast(3, -10000);
+        RC.broadcast(4, -10000);
+    	  
+      }
+      boolean isHelpingOut = false;
+      
+      if ( (callX - currentLocation.x) * (callX - currentLocation.x) + (callY - currentLocation.y) * (callY - currentLocation.y) < 8*8) {
+    	  isHelpingOut = true;
+      }
+    	  
+      if (nearbyTeam.length + 1 >= enemyWeight || isHelpingOut) {
+    	  if (isHelpingOut) {
+    		  RC.setIndicatorString(2, "helping out to kill guy at " + callX + "," + callY);
+    	  }
         if (RC.isActive()) { // willing to attack!
-		  if ((nearbyEnemies.length == 0 || nearbyTeam.length-1 >= nearbyEnemies.length) && enemiesInRange.length == 0) {
+		  if ((nearbyEnemies.length == 0 || nearbyTeam.length-1 >= nearbyEnemies.length || isHelpingOut) && enemiesInRange.length == 0) {
 			  //willing to move forward and attack!
 			  return false; //jurgz should take a look at this ...
 		  }
@@ -119,6 +135,10 @@ public class SoldierUtils {
             }
           } else if (RC.canAttackSquare(target)) {
             RC.attackSquare(target);
+            if (callX != target.x || callY != target.y) {
+            	RC.broadcast(3, target.x);
+                RC.broadcast(4, target.y);
+            }
           }
         }
       } else {
