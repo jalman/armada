@@ -33,6 +33,7 @@ public class Mover {
   }
 
   public void setTarget(MapLocation dest) {
+    RC.setIndicatorString(2, dest.x + ", " + dest.y);
     if (!dest.equals(this.dest)) {
       this.dest = dest;
       navAlg.recompute(dest);
@@ -40,7 +41,6 @@ public class Mover {
   }
 
   public MapLocation getTarget() {
-    RC.setIndicatorString(2, dest.x + ", " + dest.y);
     return dest;
   }
 

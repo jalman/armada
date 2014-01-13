@@ -134,7 +134,8 @@ public class SoldierBehavior extends RobotBehavior {
     		shouldjosh = false;
     	}
     } else if (isIdle()) {
-        if (ENEMY_MILK - ALLY_MILK > 50000 || ENEMY_PASTR_COUNT > ALLY_PASTR_COUNT) {
+      if (ENEMY_MILK > ALLY_MILK
+          || (ENEMY_PASTR_COUNT >= ALLY_PASTR_COUNT && ENEMY_PASTR_COUNT > 0)) {
           changeMode(Mode.ACQUIRE_TARGET);
         } else {
           // try to build pastures if late in game
@@ -172,6 +173,9 @@ public class SoldierBehavior extends RobotBehavior {
           changeMode(Mode.FIND_PASTR_LOC);
           dest = new MapLocation((ALLY_HQ.x + roleLocList[roleIndex].x) / 2,
               (ALLY_HQ.y + roleLocList[roleIndex].y) / 2);
+        } else if (ALLY_PASTR_COUNT > ENEMY_PASTR_COUNT) {
+          dest = ALLY_PASTR_LOCS[(robotNum + currentRound) % ALLY_PASTR_LOCS.length];
+          changeMode(Mode.DEFEND_PASTR);
         } else {
           roleIndex = robotNum % 4;
           role = roleList[roleIndex];
@@ -212,13 +216,11 @@ public class SoldierBehavior extends RobotBehavior {
           mover.movePushHome();
         }
         break;
-      case DEFEND_PASTR:
-        break;
       case STAND_RICH_LOC:
         if (!mover.arrived()) {
           mover.sneak();
         } else {
-          RC.setIndicatorString(1, "cows here: " + currentCowsHere);
+          // RC.setIndicatorString(1, "cows here: " + currentCowsHere);
           if (currentCowsHere < 500) {
             mover.setTarget(roleLocList[roleIndex]);
             changeMode(Mode.SWEEP_OUT);
@@ -239,6 +241,11 @@ public class SoldierBehavior extends RobotBehavior {
 
         if (RC.getConstructingRounds() == 0) {
           buildingFinished = true;
+        }
+        break;
+      case DEFEND_PASTR:
+        if (!mover.arrived()) {
+          mover.sneak();
         }
         break;
       case ACQUIRE_TARGET:
@@ -281,6 +288,7 @@ public class SoldierBehavior extends RobotBehavior {
   private boolean isIdle() {
     return (mode == Mode.SWEEP_OUT || mode == Mode.RETURN_HOME || mode == Mode.STAND_RICH_LOC || mode == Mode.DEFEND_PASTR);
   }
+
   private MapLocation findRichSquare() {
     double maxCows = currentCowsHere + 50 * COW_GROWTH[curX][curY] + 300;// favor staying here
     double curCows;
@@ -301,7 +309,7 @@ public class SoldierBehavior extends RobotBehavior {
       }
     }
 
-    RC.setIndicatorString(1, "max nearby cows: " + maxCows + " at " + best);
+    // RC.setIndicatorString(1, "max nearby cows: " + maxCows + " at " + best);
     if (maxCows > 1000) {
       return best;
     }
