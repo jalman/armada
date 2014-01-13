@@ -82,7 +82,6 @@ public class RobotMicro {
 			Direction newDir = loc.directionTo(new MapLocation(2*loc.x - dx, 2*loc.y - dy));
 			
 			try {
-				rc.setIndicatorString(2, "" + rc.isActive() + "," + rc.canMove(newDir) + "," + newDir.dx + "," + newDir.dy + "," + Clock.getRoundNum());
 				if (rc.isActive() && newDir != Direction.NONE && newDir != Direction.OMNI) {
 					if (rc.canMove(newDir)) {
 						rc.move(newDir);
