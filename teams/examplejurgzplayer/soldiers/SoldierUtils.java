@@ -25,6 +25,8 @@ public class SoldierUtils {
   // micro
   public static boolean luge() throws GameActionException {
     Robot[] nearbyEnemies = RC.senseNearbyGameObjects(Robot.class, 24, ENEMY_TEAM);
+	Robot[] enemiesInRange = RC.senseNearbyGameObjects(Robot.class, 10, ENEMY_TEAM);
+	
     // sense every round -- maybe send messages on non-active rounds?
 
     if (nearbyEnemies.length == 0) { // no enemies: don't micro
@@ -83,7 +85,12 @@ public class SoldierUtils {
       RC.setIndicatorString(1, "" + Clock.getRoundNum() + "," + enemyWeight);
 
       if (nearbyTeam.length + 1 >= enemyWeight) {
-        if (RC.isActive()) { // attack!
+        if (RC.isActive()) { // willing to attack!
+		  if ((nearbyEnemies.length == 0 || nearbyTeam.length-1 >= nearbyEnemies.length) && enemiesInRange.length == 0) {
+			  //willing to move forward and attack!
+			  return false; //jurgz should take a look at this ...
+		  }
+          
           MapLocation target = getHighestPriority(nearbyEnemyInfo);
           if (target == null) {
             if (nearestPastrLoc != null) {
