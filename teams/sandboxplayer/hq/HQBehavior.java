@@ -48,11 +48,11 @@ public class HQBehavior extends RobotBehavior {
 	  }
 
 	  try {
-		  RC.broadcast(JOSHBOT_CHANNEL, totalcows > 150 ? 1 : 0);
+		  RC.broadcast(JOSHBOT_CHANNEL, totalcows > 150 && 10*totalcows + MAP_HEIGHT*MAP_WIDTH + 10*HQ_DIST*HQ_DIST > 11000 ? 1 : 0);
 	  } catch (GameActionException e) {
 		  e.printStackTrace();
 	  }
-	  System.out.println(totalcows);
+	  //System.out.println(totalcows + " " + (10*totalcows + MAP_HEIGHT*MAP_WIDTH + 10*HQ_DIST*HQ_DIST));
 	  
 	  
 }
