@@ -22,6 +22,11 @@ public class SoldierUtils {
   public static int enemyWeight;
   public static int allyWeight;
 
+  /**
+   * Channel for help messages. Message format: 256*X + Y.
+   */
+  public static final int HELP_CHANNEL = 65500;
+
   // micro
   public static boolean luge() throws GameActionException {
     Robot[] nearbyEnemies = RC.senseNearbyGameObjects(Robot.class, 24, ENEMY_TEAM);
@@ -84,16 +89,20 @@ public class SoldierUtils {
       }
       RC.setIndicatorString(1, "" + Clock.getRoundNum() + "," + enemyWeight);
 
-      int callX = RC.readBroadcast(3), callY = RC.readBroadcast(4);
-      MapLocation callLoc = new MapLocation(callX, callY);
-      if (RC.canSenseSquare(callLoc) && RC.senseObjectAtLocation(callLoc) == null) {
-        RC.broadcast(3, -10000);
-        RC.broadcast(4, -10000);
-      }
+      int help_message = RC.readBroadcast(HELP_CHANNEL);
+      int callX = help_message / 256, callY = help_message % 256;
       boolean isHelpingOut = false;
 
-      if ( (callX - currentLocation.x) * (callX - currentLocation.x) + (callY - currentLocation.y) * (callY - currentLocation.y) < 8*8) {
-        isHelpingOut = true;
+      if (help_message > 0) {
+        MapLocation callLoc = new MapLocation(callX, callY);
+        if (RC.canSenseSquare(callLoc) && RC.senseObjectAtLocation(callLoc) == null) {
+          RC.broadcast(65513, -1);
+        }
+
+        if ((callX - currentLocation.x) * (callX - currentLocation.x) + (callY - currentLocation.y)
+            * (callY - currentLocation.y) < 8 * 8) {
+          isHelpingOut = true;
+        }
       }
 
       if (nearbyTeam.length + 1 >= enemyWeight || isHelpingOut) {
@@ -136,8 +145,7 @@ public class SoldierUtils {
           } else if (RC.canAttackSquare(target)) {
             RC.attackSquare(target);
             if (callX != target.x || callY != target.y) {
-              RC.broadcast(3, target.x);
-              RC.broadcast(4, target.y);
+              RC.broadcast(HELP_CHANNEL, 256 * target.x + target.y);
             }
           }
         }
@@ -186,7 +194,7 @@ public class SoldierUtils {
       return -10000;
     }
 
-    int distanceSquared = currentLocation.distanceSquaredTo(r.location);
+    int distance = naiveDistance(currentLocation, r.location);
     // int cows = (int) RC.senseCowsAtLocation(r.location);
     double healthPercent = robotHealthPercent(r);
     int priority = robotTypePriority(r);
@@ -195,7 +203,7 @@ public class SoldierUtils {
       roundsUntilActive = (int) r.actionDelay;
     }
 
-    return (200 - (int) (healthPercent * 50) + 100 / distanceSquared + priority - (5 * roundsUntilActive));
+    return (5000 - (int) (healthPercent * 50) + 50 / distance + priority - (5 * roundsUntilActive));
   }
 
   // Helper method to get "weight" of enemy robots (determining whether to move toward/away)

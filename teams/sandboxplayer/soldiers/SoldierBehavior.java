@@ -66,6 +66,10 @@ public class SoldierBehavior extends RobotBehavior {
   static final Role[] roleList = {Role.LEFTLEFT, Role.LEFTRIGHT, Role.RIGHTLEFT, Role.RIGHTRIGHT};
   static final MapLocation[] roleLocList = {leftleft, leftright, rightleft, rightright};
 
+  public final MapLocation[] cornerPastrLocs = {new MapLocation(2, 2),
+      new MapLocation(MAP_WIDTH - 3, 2), new MapLocation(MAP_WIDTH - 3, MAP_HEIGHT - 3),
+      new MapLocation(2, MAP_HEIGHT - 3)};
+
   public SoldierBehavior() {
     role = Role.NONE;
     changeMode(Mode.BIRTH_DECIDE_MODE);
@@ -175,9 +179,22 @@ public class SoldierBehavior extends RobotBehavior {
             || (robotNum + currentRound / 100 > 22 && ENEMY_PASTR_COUNT > ALLY_PASTR_COUNT)) {
           roleIndex = ALLY_PASTR_COUNT % 4;
           role = Role.PASTR;
+
+          MapLocation bestCorner = null;
+          int maxDist = 10000000;
+          if(ALLY_HQ.distanceSquaredTo(ENEMY_HQ) <= 200) {
+            for (int i = 3; i >= 0; i--) {
+              int dist = ALLY_HQ.distanceSquaredTo(cornerPastrLocs[i]);
+              if (dist < maxDist) {
+                bestCorner = cornerPastrLocs[i];
+                maxDist = dist;
+              }
+              dest = bestCorner;
+            }
+          } else {
+            dest = ENEMY_HQ;
+          }
           changeMode(Mode.FIND_PASTR_LOC);
-          dest = new MapLocation((ALLY_HQ.x + roleLocList[roleIndex].x) / 2,
-              (ALLY_HQ.y + roleLocList[roleIndex].y) / 2);
         } else if (ALLY_PASTR_COUNT > ENEMY_PASTR_COUNT) {
           dest = ALLY_PASTR_LOCS[(robotNum + currentRound) % ALLY_PASTR_LOCS.length];
           changeMode(Mode.DEFEND_PASTR);
@@ -233,10 +250,41 @@ public class SoldierBehavior extends RobotBehavior {
         }
         break;
       case FIND_PASTR_LOC:
-        if (mover.arrived()) {
+        // "gradient ascent": for each direction to move, find cow growth
+        // of squares in radius^2 2 (instead of 5...). Move in direction of greatest thereof.
+
+        double bestGrowth = -1,
+        hereGrowth = COW_GROWTH[curX][curY];
+        if (hereGrowth == 0) {
+          mover.move();
+          break;
+        }
+
+        MapLocation bestGrowthLoc = null;
+        for (int i = 7; i >= 0; i--) {
+          MapLocation squareToCheck = currentLocation.add(DIRECTIONS[i]);
+          double curGrowth = COW_GROWTH[squareToCheck.x][squareToCheck.y];
+          hereGrowth += curGrowth;
+          if (squareToCheck.x < 2 || squareToCheck.x >= MAP_WIDTH - 2
+              || squareToCheck.y < 2 || squareToCheck.y >= MAP_WIDTH - 2
+              || RC.senseTerrainTile(squareToCheck) == TerrainTile.VOID) {
+            continue;
+          }
+          for (int j = 7; j >= 0; j--) {
+            MapLocation neighboringSquareToCheck = currentLocation.add(DIRECTIONS[i]);
+            curGrowth += COW_GROWTH[neighboringSquareToCheck.x][neighboringSquareToCheck.y];
+          }
+          if (curGrowth > bestGrowth) {
+            bestGrowth = curGrowth;
+            bestGrowthLoc = squareToCheck;
+          }
+        }
+
+        if (hereGrowth >= bestGrowth) {
           changeMode(Mode.BUILD_PASTR);
         } else {
-          mover.execute(sneakToBuildingLoc);
+          mover.setTarget(bestGrowthLoc);
+          mover.move();
         }
         break;
       case BUILD_PASTR:
@@ -255,8 +303,10 @@ public class SoldierBehavior extends RobotBehavior {
         break;
       case ACQUIRE_TARGET:
         int mindistance = 10000000;
-        MapLocation pastrTarget = null;
-        for (MapLocation pastrLoc : ENEMY_PASTR_LOCS) {
+        MapLocation pastrLoc,
+        pastrTarget = null;
+        for (int i = ENEMY_PASTR_LOCS.length - 1; i >= 0; i--) {
+          pastrLoc = ENEMY_PASTR_LOCS[i];
           int d = currentLocation.distanceSquaredTo(pastrLoc);
           if (d < mindistance) {
             mindistance = d;
@@ -298,10 +348,12 @@ public class SoldierBehavior extends RobotBehavior {
     double maxCows = currentCowsHere + 50 * COW_GROWTH[curX][curY] + 300;// favor staying here
     double curCows;
 
-    MapLocation best = currentLocation;
-    for (MapLocation current : MapLocation.getAllMapLocationsWithinRadiusSq(currentLocation,
-        RobotType.SOLDIER.sensorRadiusSquared)) {
+    MapLocation current, best = currentLocation;
+    MapLocation[] toCheck = MapLocation.getAllMapLocationsWithinRadiusSq(currentLocation,
+        RobotType.SOLDIER.sensorRadiusSquared);
+    for (int i=toCheck.length-1; i>=0; i--) {
       try {
+        current = toCheck[i];
         if (RC.senseTerrainTile(current) == TerrainTile.OFF_MAP) continue;
 
         curCows = RC.senseCowsAtLocation(current) + 50 * COW_GROWTH[current.x][current.y];
