@@ -31,8 +31,32 @@ public class HQBehavior extends RobotBehavior {
   final int IN_RANGE_OFFSET = IN_RANGE.length / 2;
 
   private boolean attackDelay = false;
+  
+  public static final int[] yrangefornoise = { 20, 19, 19, 19, 19, 19, 19, 18, 18, 17, 17, 16, 16, 15, 14, 13, 12, 10,
+		8, 6, 0 };
 
-  public HQBehavior() {}
+  public HQBehavior() {
+
+	  
+	  //pick a strategy
+	  double totalcows = 0.0;
+	  for(int x = Math.max(-20, -curX); x <= Math.min(20, MAP_WIDTH - 1 - curX); x++) {
+		  int range = yrangefornoise[Math.abs(x)];
+		  for(int y = Math.max(- range, -curY); y <= Math.min(range, MAP_HEIGHT - 1 - curY); y++) {
+			  totalcows += COW_GROWTH[curX+x][curY+y];
+		  }
+	  }
+
+	  try {
+		  RC.broadcast(JOSHBOT_CHANNEL, totalcows > 150 ? 1 : 0);
+	  } catch (GameActionException e) {
+		  e.printStackTrace();
+	  }
+	  System.out.println(totalcows);
+	  
+	  
+}
+  
 
   @Override
   protected void initMessageHandlers() {

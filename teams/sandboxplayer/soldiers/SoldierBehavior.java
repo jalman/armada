@@ -11,7 +11,7 @@ import battlecode.common.*;
 
 public class SoldierBehavior extends RobotBehavior {
 
-	public static boolean shouldjosh = true;
+	public static boolean shouldjosh;
 
   enum Role {
     LEFTLEFT, LEFTRIGHT, RIGHTLEFT, RIGHTRIGHT, PASTR, NONE
@@ -69,6 +69,11 @@ public class SoldierBehavior extends RobotBehavior {
   public SoldierBehavior() {
     role = Role.NONE;
     changeMode(Mode.BIRTH_DECIDE_MODE);
+    try {
+		shouldjosh = RC.readBroadcast(JOSHBOT_CHANNEL) == 1;
+	} catch (GameActionException e) {
+		e.printStackTrace();
+	}
   }
 
   @Override
