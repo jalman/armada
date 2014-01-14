@@ -1,16 +1,15 @@
 package team027.nav;
 
-import static team027.utils.Utils.RC;
-import static team027.utils.Utils.currentLocation;
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
+import static team027.utils.Utils.*;
+import battlecode.common.*;
 
 public class Mover {
   private MapLocation dest;
   private MapLocation here;
   private NavAlg navAlg;
   private NavType navType;
+
+  public static final int SNEAK = 0, RUN = 1, PUSH_HOME = 2;
 
   public Mover() {
     this.dest = null;
@@ -53,19 +52,23 @@ public class Mover {
   }
 
   public void move() {
-    execute(false);
+    execute(RUN);
   }
 
   public void sneak() {
-    execute(true);
+    execute(SNEAK);
+  }
+
+  public void movePushHome() {
+    execute(PUSH_HOME);
   }
 
   /**
    * Try to move.
-   * @param sneak: sneak if true, run if false
+   * @param sneak:
    * @return
    */
-  public void execute(boolean sneak) {
+  public void execute(int sneak) {
     // int bc = Clock.getBytecodesLeft();
     // RC.setIndicatorString(1, "my x = " + Integer.toString(RC.getLocation().x) + ", my y = " +
     // Integer.toString(RC.getLocation().y)
@@ -81,10 +84,27 @@ public class Mover {
       if (d != null && d != Direction.NONE && d != Direction.OMNI) {
         if (RC.canMove(d)) {
             try {
-              if (sneak) {
+            switch (sneak) {
+              case SNEAK:
+                // RC.setIndicatorString(2, dest.x + ", " + dest.y + ": sneak");
                 RC.sneak(d);
-              } else {
+                break;
+              case RUN:
+                // RC.setIndicatorString(2, dest.x + ", " + dest.y + ": run");
                 RC.move(d);
+                break;
+              case PUSH_HOME:
+                // RC.setIndicatorString(2, dest.x + ", " + dest.y + ": push_home");
+                Direction awayFromHome = currentLocation.directionTo(ALLY_HQ).opposite();
+                if (d == awayFromHome || d == awayFromHome.rotateLeft()
+                    || d == awayFromHome.rotateRight()) {
+                  RC.sneak(d);
+                } else {
+                  RC.move(d);
+                }
+                break;
+              default:
+                break;
               }
             } catch (GameActionException e) {
               e.printStackTrace();

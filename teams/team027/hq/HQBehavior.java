@@ -3,6 +3,8 @@ package team027.hq;
 import static team027.utils.Utils.*;
 import battlecode.common.*;
 import team027.RobotBehavior;
+import team027.messaging.MessageHandler;
+import team027.messaging.MessagingSystem.MessageType;
 import team027.utils.Utils;
 
 public class HQBehavior extends RobotBehavior {
@@ -26,35 +28,69 @@ public class HQBehavior extends RobotBehavior {
   };
 
   final int IN_RANGE_DIAMETER = IN_RANGE.length;
-  final int IN_RANGE_OFFSET = IN_RANGE.length / 2 - 1;
+  final int IN_RANGE_OFFSET = IN_RANGE.length / 2;
 
   private boolean attackDelay = false;
+  
+  public static final int[] yrangefornoise = { 20, 19, 19, 19, 19, 19, 19, 18, 18, 17, 17, 16, 16, 15, 14, 13, 12, 10,
+		8, 6, 0 };
 
   public HQBehavior() {
+
+	  
+	  //pick a strategy
+	  double totalcows = 0.0;
+	  for(int x = Math.max(-20, -curX); x <= Math.min(20, MAP_WIDTH - 1 - curX); x++) {
+		  int range = yrangefornoise[Math.abs(x)];
+		  for(int y = Math.max(- range, -curY); y <= Math.min(range, MAP_HEIGHT - 1 - curY); y++) {
+			  totalcows += COW_GROWTH[curX+x][curY+y];
+		  }
+	  }
+
+	  try {
+		  RC.broadcast(JOSHBOT_CHANNEL, totalcows > 150 && 10*totalcows + MAP_HEIGHT*MAP_WIDTH + 10*HQ_DIST*HQ_DIST > 11000 ? 1 : 0);
+	  } catch (GameActionException e) {
+		  e.printStackTrace();
+	  }
+	  //System.out.println(totalcows + " " + (10*totalcows + MAP_HEIGHT*MAP_WIDTH + 10*HQ_DIST*HQ_DIST));
+	  
+	  
 }
+  
 
   @Override
-  public boolean beginRound() throws GameActionException {
+  protected void initMessageHandlers() {
+    handlers[MessageType.ATTACK_LOCATION.ordinal()] = new MessageHandler() {
+      @Override
+      public void handleMessage(int[] message) {
+        // MapLocation loc = new MapLocation(message[0], message[1]);
+        // TODO: attack!
+      }
+    };
+  }
+
+  @Override
+  public void beginRound() throws GameActionException {
     Utils.updateBuildingUtils();
     // RC.setIndicatorString(0, generators.size + " generators. " + Double.toString(actualFlux) +
     // " is pow");
     numBots = RC.senseNearbyGameObjects(Robot.class, currentLocation, 10000, ALLY_TEAM).length;
-    return true;
+    messagingSystem.beginRound(handlers);
   }
 
   @Override
   public void run() throws GameActionException {
-    tryAttack();
     macro();
+    tryAttack();
   }
 
   @Override
-  public void endRound() {
-
+  public void endRound() throws GameActionException {
+    messagingSystem.endRound();
   }
 
   private void tryAttack() {
-    Robot[] robots = RC.senseNearbyGameObjects(Robot.class, 16);
+    Robot[] robots = RC.senseNearbyGameObjects(Robot.class, 18);
     if (!attackDelay && robots.length > 0) {
       attackDelay = true;
       return;
@@ -190,14 +226,10 @@ public class HQBehavior extends RobotBehavior {
    * Handle upgrades and robots.
    */
   private void macro() {
-    if (!RC.isActive()) return;
-
     boolean built = false;
 
     try {
-      if (RC.isActive()) {
-        built = buildSoldier();
-      }
+      built = buildSoldier();
     } catch (GameActionException e) {
       e.printStackTrace();
     }

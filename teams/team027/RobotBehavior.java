@@ -1,24 +1,36 @@
 package team027;
 
 import battlecode.common.GameActionException;
+import team027.messaging.MessageHandler;
+import team027.messaging.MessagingSystem;
 
 public abstract class RobotBehavior {
-	public RobotBehavior() {
-	}
+  protected MessageHandler[] handlers;
 
-	    /**
-  * Called at the beginning of each round.
-  * @return whether it's worth living to the next round.
-  */
-  public abstract boolean beginRound() throws GameActionException;
+  public RobotBehavior() {
+    handlers = new MessageHandler[MessagingSystem.MESSAGE_TYPES.length];
+    initMessageHandlers();
+  }
 
-	/**
-	 * Called every round.
-	 */
+  /**
+   * Override to specify message handlers.
+   */
+  protected void initMessageHandlers() {}
+
+  /**
+   * Called at the beginning of each round.
+   * @return whether it's worth living to the next round.
+   */
+  public abstract void beginRound() throws GameActionException;
+
+  /**
+   * Called every round.
+   */
   public abstract void run() throws GameActionException;
 
-	/**
-	 * Called at the end of each round.
-	 */
-	public abstract void endRound();
+  /**
+   * Called at the end of each round.
+   * @throws GameActionException
+   */
+  public abstract void endRound() throws GameActionException;
 }

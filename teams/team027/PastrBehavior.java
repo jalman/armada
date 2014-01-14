@@ -1,6 +1,5 @@
 package team027;
 
-import static team027.utils.Utils.RC;
 import battlecode.common.GameActionException;
 
 public class PastrBehavior extends RobotBehavior {
@@ -17,11 +16,7 @@ public class PastrBehavior extends RobotBehavior {
 	 * Called at the beginning of each round.
 	 */
   @Override
-  public boolean beginRound() throws GameActionException {
-    if (RC.getHealth() < 20) {
-      return false;
-    }
-    return true;
+  public void beginRound() throws GameActionException {
   }
 
 	/**
