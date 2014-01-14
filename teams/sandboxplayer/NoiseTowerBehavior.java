@@ -62,7 +62,7 @@ public class NoiseTowerBehavior extends RobotBehavior {
 //		if(rc.canAttackSquare(target)) rc.attackSquare(target);
 //	}
 	
-	if(b>4) b--;
+	if(b>7) b--;
 	else {
 		a++;
 		a%=8;
