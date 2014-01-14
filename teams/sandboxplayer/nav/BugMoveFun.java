@@ -77,7 +77,7 @@ public class BugMoveFun extends NavAlg {
     Direction dir;
 
     boolean movable[] = new boolean[8];
-    if (currentLocation.distanceSquaredTo(ENEMY_HQ) <= 35) {
+    if (AVOID_ENEMY_HQ && currentLocation.distanceSquaredTo(ENEMY_HQ) <= 35) {
       // Direction dirToEnemy = currentLocation.directionTo(ENEMY_HQ);
       // assume that direction from curLoc to enemy hq is same as direction from (squares adjacent to curLoc) to enemy hq
 
