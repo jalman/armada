@@ -66,7 +66,7 @@ public class SoldierBehavior extends RobotBehavior {
   @Override
   public void run() throws GameActionException {
     think();
-    System.out.println(mode + " " + target);
+    // System.out.println(mode + " " + target);
     act();
   }
 
@@ -92,7 +92,7 @@ public class SoldierBehavior extends RobotBehavior {
      * }
      */
 
-    if (mover.arrived()) {
+    if (mover.arrived() || mode != Mode.EXPLORE) {
       target = findExploreLocation();
       setMode(Mode.EXPLORE);
     }
@@ -177,7 +177,7 @@ public class SoldierBehavior extends RobotBehavior {
     if (RC.isActive()) {
       MapLocation loc = getHighestPriority(enemyRobots);
       // messagingSystem.writeAttackMessage(loc, 100);
-      if (inRange(loc)) {
+      if (loc != null && inRange(loc)) {
         RC.attackSquare(loc);
       }
     }
