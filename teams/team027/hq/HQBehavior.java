@@ -37,7 +37,7 @@ public class HQBehavior extends RobotBehavior {
 
   public HQBehavior() {
 
-	  
+/*	  
 	  //pick a strategy
 	  double totalcows = 0.0;
 	  for(int x = Math.max(-20, -curX); x <= Math.min(20, MAP_WIDTH - 1 - curX); x++) {
@@ -53,7 +53,7 @@ public class HQBehavior extends RobotBehavior {
 		  e.printStackTrace();
 	  }
 	  //System.out.println(totalcows + " " + (10*totalcows + MAP_HEIGHT*MAP_WIDTH + 10*HQ_DIST*HQ_DIST));
-	  
+	  */
 	  
 }
   

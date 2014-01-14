@@ -73,11 +73,13 @@ public class SoldierBehavior extends RobotBehavior {
   public SoldierBehavior() {
     role = Role.NONE;
     changeMode(Mode.BIRTH_DECIDE_MODE);
-    try {
+    
+    shouldjosh = true;
+/*    try {
 		shouldjosh = RC.readBroadcast(JOSHBOT_CHANNEL) == 1;
 	} catch (GameActionException e) {
 		e.printStackTrace();
-	}
+	}*/
   }
 
   @Override
