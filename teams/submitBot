@@ -1,0 +1,4 @@
+#!/bin/sh
+rm -r team027/
+./copyBot $1 team027
+jar cf team027.jar team027/
