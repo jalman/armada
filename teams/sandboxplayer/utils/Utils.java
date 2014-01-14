@@ -1,14 +1,13 @@
 package sandboxplayer.utils;
 
-import java.util.Arrays;
-import java.util.Random;
+import java.util.*;
 
-import sandboxplayer.messaging.MessagingSystem;
+import sandboxplayer.messaging.*;
 import battlecode.common.*;
 
 public class Utils {
-		
-	public static final int JOSHBOT_CHANNEL = 65531;
+
+  public static final int JOSHBOT_CHANNEL = 65531;
 
   //Game constants
   // public final static int MAX_SOLDIER_ENERGON = 40;
@@ -134,7 +133,7 @@ public class Utils {
     ENEMY_MILK = RC.senseTeamMilkQuantity(ENEMY_TEAM);
   }
 
-    /**
+  /**
    * Called at the beginning of each round by moving units.
    */
   public static void updateUnitUtils() {
@@ -264,5 +263,9 @@ public class Utils {
     if(dot2 < 0) return 5.0;
 
     return Math.log((double)dot1 / dot2);
+  }
+
+  public static boolean inRangeOfEnemyHQ(MapLocation loc) {
+    return loc.distanceSquaredTo(ENEMY_HQ) <= RobotType.HQ.attackRadiusMaxSquared;
   }
 }
