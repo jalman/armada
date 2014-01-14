@@ -1,6 +1,6 @@
 package sandboxplayer.nav;
 
-import static vladbot.utils.Utils.*;
+import static sandboxplayer.utils.Utils.*;
 import battlecode.common.*;
 
 public class Mover {
