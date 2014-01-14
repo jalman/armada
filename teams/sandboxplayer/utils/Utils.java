@@ -3,8 +3,8 @@ package sandboxplayer.utils;
 import java.util.Arrays;
 import java.util.Random;
 
-import battlecode.common.*;
 import sandboxplayer.messaging.MessagingSystem;
+import battlecode.common.*;
 
 public class Utils {
 		
@@ -77,8 +77,6 @@ public class Utils {
   public static final MapLocation zeroLoc = new MapLocation(0, 0);
 
   public static void initUtils(RobotController rc) {
-
-	  
     RC = rc;
     ROBOT = rc.getRobot();
     TYPE = rc.getType();
@@ -231,7 +229,6 @@ public class Utils {
 
     return sqrt - 1;
   }
-
 
   public static int getDirTowards(int dx, int dy) {
     if (dx == 0) {

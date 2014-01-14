@@ -29,7 +29,7 @@ public class SoldierUtils {
 
   // micro
   public static boolean luge() throws GameActionException {
-    Robot[] nearbyEnemies = RC.senseNearbyGameObjects(Robot.class, 24, ENEMY_TEAM);
+    Robot[] nearbyEnemies = RC.senseNearbyGameObjects(Robot.class, 35, ENEMY_TEAM);
     Robot[] enemiesInRange = RC.senseNearbyGameObjects(Robot.class, 10, ENEMY_TEAM);
 
     // sense every round -- maybe send messages on non-active rounds?
@@ -51,7 +51,7 @@ public class SoldierUtils {
       return false;
     } else if (RC.isActive()) {
       RC.setIndicatorString(2, "luging!");
-      Robot[] nearbyTeam = RC.senseNearbyGameObjects(Robot.class, 24, ALLY_TEAM);
+      Robot[] nearbyTeam = RC.senseNearbyGameObjects(Robot.class, 35, ALLY_TEAM);
       int enemyWeight = 0;
 
       // get robot infos of enemy
