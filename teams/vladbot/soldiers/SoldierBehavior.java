@@ -1,13 +1,11 @@
 package vladbot.soldiers;
 
-import static vladbot.soldiers.SoldierUtils.getHighestPriority;
-import static vladbot.soldiers.SoldierUtils.inRange;
 import static vladbot.utils.Utils.*;
-import vladbot.RobotBehavior;
-import vladbot.messaging.MessageHandler;
+import vladbot.*;
+import vladbot.messaging.*;
 import vladbot.messaging.MessagingSystem.MessageType;
-import vladbot.nav.Mover;
-import vladbot.utils.ArraySet;
+import vladbot.nav.*;
+import vladbot.utils.*;
 import battlecode.common.*;
 
 public class SoldierBehavior extends RobotBehavior {
@@ -27,6 +25,8 @@ public class SoldierBehavior extends RobotBehavior {
   ArraySet<MapLocation> messagedEnemyRobots = new ArraySet<MapLocation>(100);
   int[][] enemyLastSeen = new int[GameConstants.MAP_MAX_WIDTH][GameConstants.MAP_MAX_HEIGHT];
 
+  ArraySet<MapLocation> attackLocations = new ArraySet<MapLocation>(100);
+
   public SoldierBehavior() {}
 
   @Override
@@ -36,8 +36,8 @@ public class SoldierBehavior extends RobotBehavior {
     handlers[MessageType.ATTACK_LOCATION.type] = new MessageHandler() {
       @Override
       public void handleMessage(int[] message) {
-        // MapLocation loc = new MapLocation(message[0], message[1]);
-        // mover.setTarget(loc);
+        MapLocation loc = new MapLocation(message[0], message[1]);
+        attackLocations.insert(loc);
       }
     };
 
@@ -54,31 +54,33 @@ public class SoldierBehavior extends RobotBehavior {
   @Override
   public void beginRound() throws GameActionException {
     updateUnitUtils();
+    attackLocations.clear();
     messagedEnemyRobots.clear();
     messagingSystem.beginRound(handlers);
   }
 
   @Override
   public void endRound() throws GameActionException {
+    // sendEnemyMessages();
     messagingSystem.endRound();
   }
 
   @Override
   public void run() throws GameActionException {
     think();
-    // System.out.println(mode + " " + target);
     act();
   }
 
-  private void think() {
-    if (enemyRobots.length > 0) {
+  private void think() throws GameActionException {
+    if (enemyRobots.length > (RC.canSenseSquare(ENEMY_HQ) ? 1 : 0)) {
       setMode(Mode.COMBAT);
       return;
     }
 
-    MapLocation closest = closestMessagedEnemyRobot();
+    MapLocation closest = closestTarget();
     if (closest != null) {
       target = closest;
+      // messagingSystem.writeAttackMessage(target, 0);
       setMode(Mode.RUN);
       return;
     }
@@ -103,9 +105,23 @@ public class SoldierBehavior extends RobotBehavior {
     mode = m;
   }
 
-  private MapLocation closestMessagedEnemyRobot() {
+  private MapLocation closestTarget() {
     MapLocation closest = null;
     int min = Integer.MAX_VALUE;
+
+    for (int i = 0; i < attackLocations.size; i++) {
+      MapLocation loc = attackLocations.get(i);
+      int d = currentLocation.distanceSquaredTo(loc);
+      if (d < min) {
+        min = d;
+        closest = loc;
+      }
+    }
+
+    if (closest != null) return closest;
+
+    // RC.sensePastrLocations(ENEMY_TEAM);
+
     for (int i = 0; i < messagedEnemyRobots.size; i++) {
       MapLocation loc = messagedEnemyRobots.get(i);
       int d = currentLocation.distanceSquaredTo(loc);
@@ -114,36 +130,46 @@ public class SoldierBehavior extends RobotBehavior {
         closest = loc;
       }
     }
+
     return closest;
   }
 
-  private MapLocation findRichSquare() {
-    double maxCows = currentCowsHere + 50 * COW_GROWTH[curX][curY] + 300;// favor staying here
-    double curCows;
-
-    MapLocation best = currentLocation;
-    for (MapLocation current : MapLocation.getAllMapLocationsWithinRadiusSq(currentLocation,
-        RobotType.SOLDIER.sensorRadiusSquared)) {
-      try {
-        if (RC.senseTerrainTile(current) == TerrainTile.OFF_MAP) continue;
-
-        curCows = RC.senseCowsAtLocation(current) + 50 * COW_GROWTH[current.x][current.y];
-        if (curCows > maxCows && RC.senseObjectAtLocation(current) == null) {
-          best = current;
-          maxCows = curCows;
-        }
-      } catch (GameActionException e) {
-        e.printStackTrace();
+  private void sendEnemyMessages() throws GameActionException {
+    for (RobotInfo info : getEnemyRobotInfo()) {
+      if (info.type == RobotType.HQ) continue;
+      MapLocation loc = info.location;
+      if (enemyLastSeen[loc.x][loc.y] < currentRound) {
+        // enemyLastSeen[loc.x][loc.y] = currentRound;
+        messagingSystem.writeEnemyBotMessage(loc);
       }
     }
-
-    RC.setIndicatorString(1, "max nearby cows: " + maxCows + " at " + best);
-    if (maxCows > 1000) {
-      return best;
-    }
-
-    return null;
   }
+
+  /*
+   * private MapLocation findRichSquare() {
+   * double maxCows = currentCowsHere + 50 * COW_GROWTH[curX][curY] + 300;// favor staying here
+   * double curCows;
+   * MapLocation best = currentLocation;
+   * for (MapLocation current : MapLocation.getAllMapLocationsWithinRadiusSq(currentLocation,
+   * RobotType.SOLDIER.sensorRadiusSquared)) {
+   * try {
+   * if (RC.senseTerrainTile(current) == TerrainTile.OFF_MAP) continue;
+   * curCows = RC.senseCowsAtLocation(current) + 50 * COW_GROWTH[current.x][current.y];
+   * if (curCows > maxCows && RC.senseObjectAtLocation(current) == null) {
+   * best = current;
+   * maxCows = curCows;
+   * }
+   * } catch (GameActionException e) {
+   * e.printStackTrace();
+   * }
+   * }
+   * RC.setIndicatorString(1, "max nearby cows: " + maxCows + " at " + best);
+   * if (maxCows > 1000) {
+   * return best;
+   * }
+   * return null;
+   * }
+   */
 
   /**
    * TODO: Make this smarter.
@@ -156,7 +182,7 @@ public class SoldierBehavior extends RobotBehavior {
   private void act() throws GameActionException {
     switch (mode) {
       case COMBAT:
-        attack();
+        Micro.micro(mover);
         break;
       case RUN:
         mover.setTarget(target);
@@ -172,15 +198,4 @@ public class SoldierBehavior extends RobotBehavior {
         break;
     }
   }
-
-  private void attack() throws GameActionException {
-    if (RC.isActive()) {
-      MapLocation loc = getHighestPriority(enemyRobots);
-      // messagingSystem.writeAttackMessage(loc, 100);
-      if (loc != null && inRange(loc)) {
-        RC.attackSquare(loc);
-      }
-    }
-  }
-
 }

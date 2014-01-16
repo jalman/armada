@@ -9,7 +9,6 @@ public class SoldierUtils {
   public final static double MAX_NOISE_TOWER_HEALTH = RobotType.NOISETOWER.maxHealth;
   public final static double MAX_PASTR_HEALTH = RobotType.PASTR.maxHealth;
 
-  public static int sensorRadius = ENEMY_RADIUS2;
   public static int closeEnoughToGoToBattleSquared = 64;
   public static Robot[] enemiesFarAway; // enemies within closeEnoughToGoToBattle of a soldier. Only used to find farawayEnemyTarget
   public static final int maxNumberOfEnemiesToCheckToFindATarget = 9;
@@ -40,7 +39,6 @@ public class SoldierUtils {
     }
 
     int distanceSquared = currentLocation.distanceSquaredTo(r.location);
-    int cows = (int) RC.senseCowsAtLocation(r.location);
     double healthPercent = robotHealthPercent(r);
     int priority = robotTypePriority(r);
     int roundsUntilActive = 0;
@@ -48,7 +46,7 @@ public class SoldierUtils {
       roundsUntilActive = (int) r.actionDelay;
     }
 
-    return (200 - (int) (healthPercent * 20) + 100 / distanceSquared + priority + cows / 20 + (5 * roundsUntilActive));
+    return (200 - (int) (healthPercent * 20) + 100 / distanceSquared + priority - (5 * roundsUntilActive));
   }
 
   //Helper methods for overallPriority

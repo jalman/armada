@@ -1,6 +1,6 @@
 package vladbot.messaging;
 
-import static vladbot.utils.Utils.RC;
+import static vladbot.utils.Utils.*;
 import battlecode.common.*;
 
 /**
@@ -48,6 +48,12 @@ public class MessagingSystem {
       - RESERVED_CHANNELS;
   private static final int MAX_MESSAGE_INDEX = MESSAGE_CHANNELS / BLOCK_SIZE;
 
+  /**
+   * Enumerates the reserved message channels.
+   * If you want to use an arbitrary channel, make a new entry.
+   * Then use read/writeReservedMessage to use the channel.
+   * @author vlad
+   */
   public enum ReservedMessage {
     MESSAGE_INDEX, ;
 
@@ -68,11 +74,6 @@ public class MessagingSystem {
    * Whether any messages were written this round.
    */
   private boolean message_written;
-
-  /**
-   * Whether we want to send messages this round.
-   */
-  private final boolean send_messages = true;
 
   private boolean first_round = true;
 
@@ -132,8 +133,6 @@ public class MessagingSystem {
    * @throws GameActionException
    */
   public void writeMessage(int type, int... message) throws GameActionException {
-    if (!send_messages) return;
-
     int channel = (message_index++ % MAX_MESSAGE_INDEX) * BLOCK_SIZE;
 
     RC.broadcast(channel++, type);
@@ -161,17 +160,9 @@ public class MessagingSystem {
    */
   public void endRound() throws GameActionException {
     if (message_written) {
-      writeMessageIndex();
+      RC.broadcast(ReservedMessage.MESSAGE_INDEX.channel, message_index);
       message_written = false;
     }
-  }
-
-  /**
-   * Writes the message index. Should be called if this robot has written any messages.
-   * @throws GameActionException
-   */
-  private void writeMessageIndex() throws GameActionException {
-    RC.broadcast(ReservedMessage.MESSAGE_INDEX.channel, message_index);
   }
 
   /**
@@ -180,8 +171,12 @@ public class MessagingSystem {
    * @param priority: priority of attack
    * @throws GameActionException
    */
-  public void writeAttackMessage(MapLocation loc, int priority) throws GameActionException {
-    writeMessage(MessageType.ATTACK_LOCATION.type, loc.x, loc.y, priority);
+  public void writeAttackMessage(MapLocation loc) throws GameActionException {
+    // writeMessage(MessageType.ATTACK_LOCATION.type, loc.x, loc.y);
+    int channel = (message_index++ % MAX_MESSAGE_INDEX) * BLOCK_SIZE;
+    RC.broadcast(channel++, MessageType.ATTACK_LOCATION.type);
+    RC.broadcast(channel++, loc.x);
+    RC.broadcast(channel, loc.y);
   }
 
   /**
@@ -190,7 +185,10 @@ public class MessagingSystem {
    * @throws GameActionException
    */
   public void writeEnemyBotMessage(MapLocation loc) throws GameActionException {
-    writeMessage(MessageType.ENEMY_BOT.type, loc.x, loc.y);
+    int channel = (message_index++ % MAX_MESSAGE_INDEX) * BLOCK_SIZE;
+    RC.broadcast(channel++, MessageType.ENEMY_BOT.type);
+    RC.broadcast(channel++, loc.x);
+    RC.broadcast(channel, loc.y);
   }
 
   /**

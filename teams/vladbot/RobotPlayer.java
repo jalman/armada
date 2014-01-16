@@ -1,10 +1,9 @@
 package vladbot;
 
-import battlecode.common.GameActionException;
-import battlecode.common.RobotController;
-import vladbot.hq.HQBehavior;
-import vladbot.soldiers.SoldierBehavior;
-import vladbot.utils.Utils;
+import vladbot.hq.*;
+import vladbot.soldiers.*;
+import vladbot.utils.*;
+import battlecode.common.*;
 
 public class RobotPlayer {
   public static void run(RobotController rc) {

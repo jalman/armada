@@ -1,11 +1,7 @@
 package vladbot.nav;
 
-import static vladbot.utils.Utils.DIRECTIONS;
-import static vladbot.utils.Utils.RC;
-import static vladbot.utils.Utils.d;
-import battlecode.common.Clock;
-import battlecode.common.Direction;
-import battlecode.common.MapLocation;
+import static vladbot.utils.Utils.*;
+import battlecode.common.*;
 
 public class BugMoveFun extends NavAlg {
 
@@ -78,16 +74,24 @@ public class BugMoveFun extends NavAlg {
 
   @Override
   public Direction getNextDir() {
-    here = RC.getLocation();
-    int hx = here.x, hy = here.y;
     Direction dir;
 
     boolean movable[] = new boolean[8];
-    for(int i=0; i<8; i++) {
-      dir = DIRECTIONS[i];
-      movable[i] = RC.canMove(dir);
+    if (AVOID_ENEMY_HQ && currentLocation.distanceSquaredTo(ENEMY_HQ) <= 35) {
+      for(int i=0; i<8; i++) {
+        dir = DIRECTIONS[i];
+        MapLocation next = currentLocation.add(dir);
+        movable[i] =
+            RC.canMove(dir)
+            && !inRangeOfEnemyHQ(next.add(next.directionTo(ENEMY_HQ)));
+      }
+    } else {
+      for(int i=0; i<8; i++) {
+        dir = DIRECTIONS[i];
+        movable[i] = RC.canMove(dir);
+      }
     }
-    int[] toMove = computeMove(hx, hy, movable);
+    int[] toMove = computeMove(curX, curY, movable);
     if (toMove == null) return Direction.NONE;
     return DIRECTIONS[getDirTowards(toMove[0], toMove[1])];
   }

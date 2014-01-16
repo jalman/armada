@@ -33,6 +33,7 @@ public class Mover {
   }
 
   public void setTarget(MapLocation dest) {
+    // RC.setIndicatorString(2, "Mover target set to: " + dest);
     if (!dest.equals(this.dest)) {
       this.dest = dest;
       navAlg.recompute(dest);
@@ -40,7 +41,6 @@ public class Mover {
   }
 
   public MapLocation getTarget() {
-    RC.setIndicatorString(2, dest.x + ", " + dest.y);
     return dest;
   }
 
@@ -83,7 +83,7 @@ public class Mover {
       d = navAlg.getNextDir();
       if (d != null && d != Direction.NONE && d != Direction.OMNI) {
         if (RC.canMove(d)) {
-            try {
+          try {
             switch (sneak) {
               case SNEAK:
                 // RC.setIndicatorString(2, dest.x + ", " + dest.y + ": sneak");
@@ -105,10 +105,10 @@ public class Mover {
                 break;
               default:
                 break;
-              }
-            } catch (GameActionException e) {
-              e.printStackTrace();
             }
+          } catch (GameActionException e) {
+            e.printStackTrace();
+          }
         } else if (currentLocation.distanceSquaredTo(dest) <= 2) {
           setTarget(currentLocation);
         }
