@@ -1,42 +1,184 @@
 package utiltest;
 
-import battlecode.common.Clock;
-import battlecode.common.RobotController;
+import battlecode.common.*;
 
 public class RobotPlayer {
 
-	public static void run(RobotController rc) {
+  static TerrainTile[][] terrainCache;
+  static RobotController RC;
+  static int MAP_WIDTH, MAP_HEIGHT;
+  public static void run(RobotController rc) {
+    RC = rc;
     int n, startBytecodes, spent, sqrt1, sqrt2;
-    int k = 0;
-    String output;
-		while(true) {
-      k++;
-      n = Clock.getRoundNum() + 1;
-      rc.setIndicatorString(0, n + ", " + k);
+    MAP_WIDTH = rc.getMapWidth();
+    MAP_HEIGHT = rc.getMapHeight();
+    terrainCache = new TerrainTile[MAP_WIDTH][MAP_HEIGHT];
 
-      output = n + ": ";
-
-      startBytecodes = Clock.getBytecodeNum();
-      sqrt1 = sqrt1(n);
-      spent = Clock.getBytecodeNum() - startBytecodes;
-      output += (spent + " (" + sqrt1 + "), ");
-
-      startBytecodes = Clock.getBytecodeNum();
-      sqrt2 = sqrt4(n);
-      spent = Clock.getBytecodeNum() - startBytecodes;
-      output += (spent + " (" + sqrt2 + "), ");
-
-      if (sqrt1 != sqrt2) {
-        System.out.println("ERROR sqrt1 != sqrt2: " + output);
-        break;
+    int x, y;
+    rc.yield();
+    countBytecodes(false);
+    for (x = 10; x >= 0; --x) {
+      for (y = 10; y >= 0; --y) {
+        senseCachedTerrainTile(x, y);
       }
+    }
+    countBytecodes(true);
+    rc.yield();
 
-      System.out.println(output);
+    countBytecodes(false);
+    for (x = 10; x >= 0; --x) {
+      for (y = 10; y >= 0; --y) {
+        rc.senseTerrainTile(new MapLocation(x, y));
+      }
+    }
+    countBytecodes(true);
+    rc.yield();
 
-			rc.yield();
-		}
+    System.out.println("-------");
+
+    int t = 0;
+    countBytecodes(false);
+    for (x = 10; x >= 0; --x) {
+      for (y = 10; y >= 0; --y) {
+        if (terrainCache[x][y] == TerrainTile.ROAD || terrainCache[x][y] == TerrainTile.NORMAL) {
+          t++;
+        }
+      }
+    }
+    System.out
+        .println("tiles traversable 1 [if statement] precompute tile, no out-of-bounds, two array accesses: "
+            + t);
+    countBytecodes(true);
+    rc.yield();
+
+    t = 0;
+    countBytecodes(false);
+    for (x = 10; x >= 0; --x) {
+      for (y = 10; y >= 0; --y) {
+        TerrainTile tile = terrainCache[x][y];
+        if (tile == TerrainTile.ROAD || tile == TerrainTile.NORMAL) {
+          t++;
+        }
+      }
+    }
+    System.out
+        .println("tiles traversable 1 [if statement] precompute tile, no out-of-bounds,  one store one array access: "
+            + t);
+    countBytecodes(true);
+    rc.yield();
+
+
+    t = 0;
+    countBytecodes(false);
+    for (x = 10; x >= 0; --x) {
+      for (y = 10; y >= 0; --y) {
+        TerrainTile tile = rc.senseTerrainTile(new MapLocation(x, y));
+        if (tile == TerrainTile.ROAD || tile == TerrainTile.NORMAL) {
+          t++;
+        }
+      }
+    }
+    System.out.println("tiles traversable 2 [if statement] senseTerrainTile: " + t);
+    countBytecodes(true);
+    rc.yield();
+
+    terrainCache = new TerrainTile[MAP_WIDTH][MAP_HEIGHT];
+    t = 0;
+    countBytecodes(false);
+    for (x = 10; x >= 0; --x) {
+      for (y = 10; y >= 0; --y) {
+        TerrainTile tile = senseCachedTerrainTile(x, y);
+        if (tile == TerrainTile.ROAD || tile == TerrainTile.NORMAL) {
+          t++;
+        }
+      }
+    }
+    System.out.println("tiles traversable 2 [if statement] senseCachedTerrainTile empty cache: "
+        + t);
+    countBytecodes(true);
+    rc.yield();
+
+    t = 0;
+    countBytecodes(false);
+    for (x = 10; x >= 0; --x) {
+      for (y = 10; y >= 0; --y) {
+        TerrainTile tile = senseCachedTerrainTile(x, y);
+        if (tile == TerrainTile.ROAD || tile == TerrainTile.NORMAL) {
+          t++;
+        }
+      }
+    }
+    System.out
+        .println("tiles traversable 2 [if statement] senseCachedTerrainTile full cache: " + t);
+    countBytecodes(true);
+    rc.yield();
+
+    t = 0;
+    countBytecodes(false);
+    for (x = 10; x >= 0; --x) {
+      for (y = 10; y >= 0; --y) {
+        if (terrainCache[x][y].isTraversableAtHeight(RobotLevel.ON_GROUND)) {
+          t++;
+        }
+      }
+    }
+    System.out.println("tiles traversable 3 [isTraversable] use cached tile: " + t);
+    countBytecodes(true);
+    rc.yield();
+
+    t = 0;
+    countBytecodes(false);
+    for (x = 10; x >= 0; --x) {
+      for (y = 10; y >= 0; --y) {
+        if (rc.senseTerrainTile(new MapLocation(x, y)).isTraversableAtHeight(RobotLevel.ON_GROUND)) {
+          t++;
+        }
+      }
+    }
+    System.out.println("tiles traversable 3 [isTraversable] use senseTerrainTile: " + t);
+    countBytecodes(true);
+    rc.yield();
+
+    t = 0;
+    countBytecodes(false);
+    for (x = 10; x >= 0; --x) {
+      for (y = 10; y >= 0; --y) {
+        if (senseCachedTerrainTile(x, y).isTraversableAtHeight(RobotLevel.ON_GROUND)) {
+          t++;
+        }
+      }
+    }
+    System.out
+        .println("tiles traversable 3 [isTraversable] use senseCachedTerrainTile full cache: " + t);
+    countBytecodes(true);
+    rc.yield();
 	}
 
+  static int bytecodes = 0, round = 0;
+
+  public static void countBytecodes(boolean print) {
+	  int tempBytecodes = Clock.getBytecodeNum();
+    int tempRound = Clock.getRoundNum();
+    if (print) {
+      System.out.println("Bytecodes used since last call: " + ((tempRound - round) * 10000
+          + (tempBytecodes - bytecodes)));
+      System.out.println("---");
+    }
+    bytecodes = tempBytecodes;
+    round = tempRound;
+	}
+
+  public static TerrainTile senseCachedTerrainTile(int x, int y) {
+    if (x < 0 || x >= MAP_WIDTH || y < 0 || y >= MAP_HEIGHT) {
+      return TerrainTile.OFF_MAP;
+    } else if (terrainCache[x][y] == null) {
+      TerrainTile tile = RC.senseTerrainTile(new MapLocation(x, y));
+      terrainCache[x][y] = tile;
+      return tile;
+    } else {
+      return terrainCache[x][y];
+    }
+  }
   /**
    * integer sqrt, by binary search
    * @param n (assume positive)
