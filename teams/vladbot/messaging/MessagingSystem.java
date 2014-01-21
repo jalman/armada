@@ -177,6 +177,7 @@ public class MessagingSystem {
     RC.broadcast(channel++, MessageType.ATTACK_LOCATION.type);
     RC.broadcast(channel++, loc.x);
     RC.broadcast(channel, loc.y);
+    message_written = true;
   }
 
   /**
@@ -189,6 +190,7 @@ public class MessagingSystem {
     RC.broadcast(channel++, MessageType.ENEMY_BOT.type);
     RC.broadcast(channel++, loc.x);
     RC.broadcast(channel, loc.y);
+    message_written = true;
   }
 
   /**

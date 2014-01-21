@@ -27,6 +27,8 @@ public class SoldierBehavior extends RobotBehavior {
 
   ArraySet<MapLocation> attackLocations = new ArraySet<MapLocation>(100);
 
+  private final Micro micro = new Micro(this);
+
   public SoldierBehavior() {}
 
   @Override
@@ -65,6 +67,17 @@ public class SoldierBehavior extends RobotBehavior {
     messagingSystem.endRound();
   }
 
+  private void sendEnemyMessages() throws GameActionException {
+    for (RobotInfo info : getEnemyRobotInfo()) {
+      if (info.type == RobotType.HQ) continue;
+      MapLocation loc = info.location;
+      if (enemyLastSeen[loc.x][loc.y] < currentRound) {
+        // enemyLastSeen[loc.x][loc.y] = currentRound;
+        messagingSystem.writeEnemyBotMessage(loc);
+      }
+    }
+  }
+
   @Override
   public void run() throws GameActionException {
     think();
@@ -80,8 +93,9 @@ public class SoldierBehavior extends RobotBehavior {
     MapLocation closest = closestTarget();
     if (closest != null) {
       target = closest;
-      // messagingSystem.writeAttackMessage(target, 0);
+      // messagingSystem.writeAttackMessage(target);
       setMode(Mode.RUN);
+      RC.setIndicatorString(0, "RUN " + target);
       return;
     }
 
@@ -94,7 +108,7 @@ public class SoldierBehavior extends RobotBehavior {
      * }
      */
 
-    if (mover.arrived() || mode != Mode.EXPLORE) {
+    if (mover.arrived() || mode == Mode.COMBAT) {
       target = findExploreLocation();
       setMode(Mode.EXPLORE);
     }
@@ -109,7 +123,7 @@ public class SoldierBehavior extends RobotBehavior {
     MapLocation closest = null;
     int min = Integer.MAX_VALUE;
 
-    for (int i = 0; i < attackLocations.size; i++) {
+    for (int i = attackLocations.size; --i >= 0;) {
       MapLocation loc = attackLocations.get(i);
       int d = currentLocation.distanceSquaredTo(loc);
       if (d < min) {
@@ -122,7 +136,7 @@ public class SoldierBehavior extends RobotBehavior {
 
     // RC.sensePastrLocations(ENEMY_TEAM);
 
-    for (int i = 0; i < messagedEnemyRobots.size; i++) {
+    for (int i = messagedEnemyRobots.size; --i >= 0;) {
       MapLocation loc = messagedEnemyRobots.get(i);
       int d = currentLocation.distanceSquaredTo(loc);
       if (d < min) {
@@ -133,43 +147,6 @@ public class SoldierBehavior extends RobotBehavior {
 
     return closest;
   }
-
-  private void sendEnemyMessages() throws GameActionException {
-    for (RobotInfo info : getEnemyRobotInfo()) {
-      if (info.type == RobotType.HQ) continue;
-      MapLocation loc = info.location;
-      if (enemyLastSeen[loc.x][loc.y] < currentRound) {
-        // enemyLastSeen[loc.x][loc.y] = currentRound;
-        messagingSystem.writeEnemyBotMessage(loc);
-      }
-    }
-  }
-
-  /*
-   * private MapLocation findRichSquare() {
-   * double maxCows = currentCowsHere + 50 * COW_GROWTH[curX][curY] + 300;// favor staying here
-   * double curCows;
-   * MapLocation best = currentLocation;
-   * for (MapLocation current : MapLocation.getAllMapLocationsWithinRadiusSq(currentLocation,
-   * RobotType.SOLDIER.sensorRadiusSquared)) {
-   * try {
-   * if (RC.senseTerrainTile(current) == TerrainTile.OFF_MAP) continue;
-   * curCows = RC.senseCowsAtLocation(current) + 50 * COW_GROWTH[current.x][current.y];
-   * if (curCows > maxCows && RC.senseObjectAtLocation(current) == null) {
-   * best = current;
-   * maxCows = curCows;
-   * }
-   * } catch (GameActionException e) {
-   * e.printStackTrace();
-   * }
-   * }
-   * RC.setIndicatorString(1, "max nearby cows: " + maxCows + " at " + best);
-   * if (maxCows > 1000) {
-   * return best;
-   * }
-   * return null;
-   * }
-   */
 
   /**
    * TODO: Make this smarter.
@@ -182,7 +159,7 @@ public class SoldierBehavior extends RobotBehavior {
   private void act() throws GameActionException {
     switch (mode) {
       case COMBAT:
-        Micro.micro(mover);
+        micro.micro();
         break;
       case RUN:
         mover.setTarget(target);
