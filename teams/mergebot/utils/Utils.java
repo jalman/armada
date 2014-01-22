@@ -1,8 +1,9 @@
 package mergebot.utils;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Random;
 
-import mergebot.messaging.*;
+import mergebot.messaging.MessagingSystem;
 import battlecode.common.*;
 
 public class Utils {
@@ -114,9 +115,10 @@ public class Utils {
    * Called at the beginning of each round by buildings.
    */
   public static void updateBuildingUtils() {
-    // enemyRobots =
-    // RC.senseNearbyGameObjects(Robot.class, currentLocation, ENEMY_RADIUS2, ENEMY_TEAM);
+    enemyRobots =
+        RC.senseNearbyGameObjects(Robot.class, currentLocation, SENSOR_RADIUS2, ENEMY_TEAM);
     currentRound = Clock.getRoundNum();
+    bytecodes = Clock.getBytecodeNum();
 
     ALLY_PASTR_LOCS = RC.sensePastrLocations(ALLY_TEAM);
     ENEMY_PASTR_LOCS = RC.sensePastrLocations(ENEMY_TEAM);

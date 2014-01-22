@@ -1,6 +1,5 @@
 package mergebot.soldiers;
 
-import static mergebot.soldiers.SoldierUtils.*;
 import static mergebot.utils.Utils.*;
 import mergebot.RobotBehavior;
 import mergebot.RobotPlayer;
@@ -171,9 +170,40 @@ public class SoldierBehavior extends RobotBehavior {
     return true;
   }
 
+  private MapLocation closestTarget() {
+    MapLocation closest = null;
+    int min = Integer.MAX_VALUE;
+
+    for (int i = attackLocations.size; --i >= 0;) {
+      MapLocation loc = attackLocations.get(i);
+      int d = currentLocation.distanceSquaredTo(loc);
+      if (d < min) {
+        min = d;
+        closest = loc;
+      }
+    }
+
+    if (closest != null) return closest;
+
+    // RC.sensePastrLocations(ENEMY_TEAM);
+
+    for (int i = messagedEnemyRobots.size; --i >= 0;) {
+      MapLocation loc = messagedEnemyRobots.get(i);
+      int d = currentLocation.distanceSquaredTo(loc);
+      if (d < min) {
+        min = d;
+        closest = loc;
+      }
+    }
+
+    return closest;
+  }
+
   @Override
   public void run() throws GameActionException {
-    if (luge()) { // luge = micro
+    if (enemyRobots.length > (RC.canSenseSquare(ENEMY_HQ) ? 1 : 0)) {
+      micro.micro();
+      RC.setIndicatorString(1, "MICRO");
       // set mode to ATTACK or something
       return;
       // send message?
