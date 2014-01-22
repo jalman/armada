@@ -86,6 +86,8 @@ public class HQBehavior extends RobotBehavior {
   }
 
   private void tryAttack() {
+	  if(!RC.isActive()) return;
+	  
     Robot[] robots = RC.senseNearbyGameObjects(Robot.class, 18);
     if (!attackDelay && robots.length > 0) {
       attackDelay = true;
