@@ -1,7 +1,7 @@
 package mergebot.soldiers;
 
 import static mergebot.utils.Utils.*;
-import mergebot.nav.*;
+import mergebot.nav.Mover;
 import battlecode.common.*;
 
 public class Micro {
@@ -41,7 +41,13 @@ public class Micro {
     // decide whether to attack or retreat
     Robot[] allyRobots = RC.senseNearbyGameObjects(Robot.class, SENSOR_RADIUS2, ALLY_TEAM);
 
-    if (allyRobots.length >= enemyRobots.length) {
+    int numEnemySoldiers = 0;
+    for (RobotInfo info : getEnemyRobotInfo()) {
+      if (info.type == RobotType.SOLDIER)
+        numEnemySoldiers++;
+    }
+
+    if (allyRobots.length >= numEnemySoldiers) {
       // gang up on an enemy
       MapLocation closestAttackLocation = null;
       minDist2 = 36;

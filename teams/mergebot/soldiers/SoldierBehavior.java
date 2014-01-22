@@ -203,7 +203,6 @@ public class SoldierBehavior extends RobotBehavior {
   public void run() throws GameActionException {
     if (enemyRobots.length > (RC.canSenseSquare(ENEMY_HQ) ? 1 : 0)) {
       micro.micro();
-      RC.setIndicatorString(1, "MICRO");
       // set mode to ATTACK or something
       return;
       // send message?
