@@ -155,10 +155,25 @@ public class SoldierUtils {
               }
             }
           } else if (RC.canAttackSquare(target)) {
-            RC.attackSquare(target);
-            if (callX != target.x || callY != target.y) {
-              RC.broadcast(HELP_CHANNEL, 256 * target.x + target.y);
-            }
+        	  int d = 1;
+        	  double dd = currentLocation.distanceSquaredTo(target) - 0.5;
+        	  if (dd > 1 && dd <= 4) d = 2;
+        	  if (dd > 4 && dd <= 9) d = 3;
+        	  
+        	  int maxDmg = (int)(enemiesInRange.length * (d-1) * RobotType.SOLDIER.attackPower);
+        	  RC.setIndicatorString(1, "" + enemiesInRange.length + "," + d + "," + RobotType.SOLDIER.attackPower + " - " + target.x + "/" + target.y);
+        	  
+        	  if (RC.getHealth() > maxDmg+5 && RC.getHealth() < maxDmg+40) {
+        		  //TEMPORARY CHANGE ME LATER
+        		  if (dd <= 1.) RC.selfDestruct();
+        		  else RC.move(currentLocation.directionTo(target));
+        	  }
+        	  else {
+	            RC.attackSquare(target);
+	            if (callX != target.x || callY != target.y) {
+	              RC.broadcast(HELP_CHANNEL, 256 * target.x + target.y);
+	            }
+        	  }
           }
         }
       } else {
