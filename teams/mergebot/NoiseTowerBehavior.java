@@ -10,7 +10,7 @@ import static mergebot.utils.Utils.*;
 public class NoiseTowerBehavior extends RobotBehavior {
 	
 
-	int a=0, b=0; //for noise
+	public static int a=6, b=0; //for noise
 	double[][] cows = null; double[] cowsindir = new double[8];
 	Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 	public static final int[] yrangefornoise = { 17, 17, 17, 17, 16, 16, 16, 15, 15, 14, 14, 13, 12, 11, 10, 8, 6, 3 };
@@ -25,6 +25,14 @@ public class NoiseTowerBehavior extends RobotBehavior {
 			paths[i][0] = currentLocation;
 			int lastcow = 0;
 			for(int j = 1; j < 30; j++) {
+				if(i < 7 && RC.isActive()) {
+					try {
+						makeSomeNoise();
+					} catch (GameActionException e1) {
+						e1.printStackTrace();
+					}
+				}
+				
 				int k = lastdir + 2;
 				k %= 8;
 				int bestscore = -1;
@@ -74,16 +82,7 @@ public class NoiseTowerBehavior extends RobotBehavior {
 	  while (!RC.isActive()) {
 		  RC.yield();
 	  }
-	  
-	  RC.attackSquare(paths[a][b]);
-	  
-	  if(b < 3) {
-		  a++;
-		  if(a == 8) a = 0;
-		  b = pathat[a];
-	  } else {
-		  b--;
-	  }
+	  makeSomeNoise();
   }
 
 	/**
@@ -93,4 +92,20 @@ public class NoiseTowerBehavior extends RobotBehavior {
   public void endRound() {
 
   }
+	
+	public static void makeSomeNoise() throws GameActionException { //assumes RC is active
+		  
+		  
+		  if(b < 3) {
+			  a++;
+			  if(a == 8) a = 0;
+			  b = pathat[a];
+			  System.out.println(a + " " + b + " " + pathat[a]);
+		  } else {
+			  b--;
+		  }
+		  if(paths[a][b] != null)
+			  RC.attackSquare(paths[a][b]);
+		
+	}
 }
