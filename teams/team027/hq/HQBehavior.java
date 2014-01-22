@@ -32,15 +32,13 @@ public class HQBehavior extends RobotBehavior {
 
   private boolean attackDelay = false;
   
-  public static final int[] yrangefornoise = { 20, 19, 19, 19, 19, 19, 19, 18, 18, 17, 17, 16, 16, 15, 14, 13, 12, 10,
-		8, 6, 0 };
+  public static final int[] yrangefornoise = { 17, 17, 17, 17, 16, 16, 16, 15, 15, 14, 14, 13, 12, 11, 10, 8, 6, 3 };
 
   public HQBehavior() {
-
-/*	  
+  
 	  //pick a strategy
 	  double totalcows = 0.0;
-	  for(int x = Math.max(-20, -curX); x <= Math.min(20, MAP_WIDTH - 1 - curX); x++) {
+	  for(int x = Math.max(-17, -curX); x <= Math.min(17, MAP_WIDTH - 1 - curX); x++) {
 		  int range = yrangefornoise[Math.abs(x)];
 		  for(int y = Math.max(- range, -curY); y <= Math.min(range, MAP_HEIGHT - 1 - curY); y++) {
 			  totalcows += COW_GROWTH[curX+x][curY+y];
@@ -52,8 +50,6 @@ public class HQBehavior extends RobotBehavior {
 	  } catch (GameActionException e) {
 		  e.printStackTrace();
 	  }
-	  //System.out.println(totalcows + " " + (10*totalcows + MAP_HEIGHT*MAP_WIDTH + 10*HQ_DIST*HQ_DIST));
-	  */
 	  
 }
   

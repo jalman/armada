@@ -30,6 +30,10 @@ public class NoiseTowerBehavior extends RobotBehavior {
 	 */
   @Override
   public void run() throws GameActionException {
+	  while (!RC.isActive()) {
+		  RC.yield();
+	  }
+	  
 //		if(cows == null) {
 //		cows = rc.senseCowGrowth();
 //		for(int x = -20; x <= 20; x++) {
@@ -62,7 +66,7 @@ public class NoiseTowerBehavior extends RobotBehavior {
 //		if(rc.canAttackSquare(target)) rc.attackSquare(target);
 //	}
 	
-	if(b>6) b--;
+	if(b>6) b-=2;
 	else {
 		a++;
 		a%=8;

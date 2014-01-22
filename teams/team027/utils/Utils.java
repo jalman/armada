@@ -1,8 +1,9 @@
 package team027.utils;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Random;
 
-import team027.messaging.*;
+import team027.messaging.MessagingSystem;
 import battlecode.common.*;
 
 public class Utils {
@@ -66,14 +67,8 @@ public class Utils {
   public static double currentCowsHere;
   // public static double forward;
   public static final int ENEMY_RADIUS = 6;
-  public static final int ENEMY_RADIUS2 = RobotType.SOLDIER.sensorRadiusSquared;
-  // public static Robot[] enemyRobots = new Robot[0];
-
-  public static int siteRange2;
-
-
-
-  public static final MapLocation zeroLoc = new MapLocation(0, 0);
+  public static final int SENSOR_RADIUS2 = RobotType.SOLDIER.sensorRadiusSquared;
+  public static Robot[] enemyRobots = new Robot[0];
 
   public static void initUtils(RobotController rc) {
     RC = rc;
@@ -120,9 +115,10 @@ public class Utils {
    * Called at the beginning of each round by buildings.
    */
   public static void updateBuildingUtils() {
-    // enemyRobots =
-    // RC.senseNearbyGameObjects(Robot.class, currentLocation, ENEMY_RADIUS2, ENEMY_TEAM);
+    enemyRobots =
+        RC.senseNearbyGameObjects(Robot.class, currentLocation, SENSOR_RADIUS2, ENEMY_TEAM);
     currentRound = Clock.getRoundNum();
+    bytecodes = Clock.getBytecodeNum();
 
     ALLY_PASTR_LOCS = RC.sensePastrLocations(ALLY_TEAM);
     ENEMY_PASTR_LOCS = RC.sensePastrLocations(ENEMY_TEAM);
@@ -149,6 +145,21 @@ public class Utils {
 
     updateBuildingUtils();
   }
+
+  private static RobotInfo[] enemyRobotInfo = new RobotInfo[0];
+  private static int roundInfoUpdated = -1;
+
+  public static RobotInfo[] getEnemyRobotInfo() throws GameActionException {
+    if (roundInfoUpdated < currentRound) {
+      enemyRobotInfo = new RobotInfo[enemyRobots.length];
+      for (int i = 0; i < enemyRobots.length; i++) {
+        enemyRobotInfo[i] = RC.senseRobotInfo(enemyRobots[i]);
+      }
+      roundInfoUpdated = currentRound;
+    }
+    return enemyRobotInfo;
+  }
+
 
   private static int dx, dy;
 
@@ -251,10 +262,6 @@ public class Utils {
     }
   }
 
-  public Direction dxdyToDirection(int dx, int dy) {
-    return zeroLoc.directionTo(zeroLoc.add(dx, dy));
-  }
-
   public static double evaluate(MapLocation loc) {
     int dot1 = (loc.x - ALLY_HQ.x) * HQ_DX + (loc.y - ALLY_HQ.y) * HQ_DY;
     int dot2 = (ENEMY_HQ.x - loc.x) * HQ_DX + (ENEMY_HQ.y - loc.y) * HQ_DY;
@@ -268,4 +275,17 @@ public class Utils {
   public static boolean inRangeOfEnemyHQ(MapLocation loc) {
     return loc.distanceSquaredTo(ENEMY_HQ) <= RobotType.HQ.attackRadiusMaxSquared;
   }
+
+  private static int bytecodes = 0;
+
+  public static int countBytecodes() {
+    int bc = Clock.getBytecodeNum();
+    int d = bc - bytecodes;
+
+    RC.setIndicatorString(2, Integer.toString(d));
+
+    bytecodes = bc;
+    return d;
+  }
+
 }

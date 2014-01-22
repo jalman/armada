@@ -1,6 +1,6 @@
 package team027.messaging;
 
-import static team027.utils.Utils.RC;
+import static team027.utils.Utils.*;
 import battlecode.common.*;
 
 /**
@@ -15,14 +15,15 @@ public class MessagingSystem {
    */
   public enum MessageType {
 
-    HEADER(1),
-    STRATEGY(1),
     PARAMETERS(2),
     ATTACK_LOCATION(3),
-    TASK_TAKEN(3),
     MICRO_INFO(3),
     BIRTH_INFO(4),
-    SOLDIER_ID(1);
+    SOLDIER_ID(1),
+    ENEMY_BOT(2),
+    MILK_INFO(4);
+
+    public final int type = this.ordinal();
 
     /**
      * Number of integers that comprise this message.
@@ -47,6 +48,12 @@ public class MessagingSystem {
       - RESERVED_CHANNELS;
   private static final int MAX_MESSAGE_INDEX = MESSAGE_CHANNELS / BLOCK_SIZE;
 
+  /**
+   * Enumerates the reserved message channels.
+   * If you want to use an arbitrary channel, make a new entry.
+   * Then use read/writeReservedMessage to use the channel.
+   * @author vlad
+   */
   public enum ReservedMessage {
     MESSAGE_INDEX, ;
 
@@ -67,11 +74,6 @@ public class MessagingSystem {
    * Whether any messages were written this round.
    */
   private boolean message_written;
-
-  /**
-   * Whether we want to send messages this round.
-   */
-  private final boolean send_messages = true;
 
   private boolean first_round = true;
 
@@ -115,8 +117,9 @@ public class MessagingSystem {
       if (handlers[type] != null) {
         handlers[type].handleMessage(buffer);
       } else {
-        System.out.println("ERROR?: missing message handler for type " + MESSAGE_TYPES[type]
-            + " at index " + index);
+        // print error message?
+        // System.out.println("ERROR?: missing message handler for type " + MESSAGE_TYPES[type]
+        // + " at index " + index);
       }
     }
 
@@ -130,8 +133,6 @@ public class MessagingSystem {
    * @throws GameActionException
    */
   public void writeMessage(int type, int... message) throws GameActionException {
-    if (!send_messages) return;
-
     int channel = (message_index++ % MAX_MESSAGE_INDEX) * BLOCK_SIZE;
 
     RC.broadcast(channel++, type);
@@ -143,11 +144,6 @@ public class MessagingSystem {
     message_written = true;
   }
 
-  /**
-   * Reads the new messages at the beginning of the round.
-   * @param handlers Array of functions mapping message type to function to call for that message.
-   * @throws GameActionException
-   */
   public void beginRound(MessageHandler[] handlers) throws GameActionException {
     if (!first_round) {
       readMessages(handlers);
@@ -159,22 +155,14 @@ public class MessagingSystem {
   }
 
   /**
-   * Rewrites the global message index, if necessary.
+   * Rewrites the header message. Should be called at the end of each round by any robot that uses messaging.
    * @throws GameActionException
    */
   public void endRound() throws GameActionException {
     if (message_written) {
-      writeMessageIndex();
+      RC.broadcast(ReservedMessage.MESSAGE_INDEX.channel, message_index);
       message_written = false;
     }
-  }
-
-  /**
-   * Writes the message index. Should be called if this robot has written any messages.
-   * @throws GameActionException
-   */
-  private void writeMessageIndex() throws GameActionException {
-    RC.broadcast(ReservedMessage.MESSAGE_INDEX.channel, message_index);
   }
 
   /**
@@ -183,8 +171,26 @@ public class MessagingSystem {
    * @param priority: priority of attack
    * @throws GameActionException
    */
-  public void writeAttackMessage(MapLocation loc, int priority) throws GameActionException {
-    writeMessage(MessageType.ATTACK_LOCATION.ordinal(), loc.x, loc.y, priority);
+  public void writeAttackMessage(MapLocation loc) throws GameActionException {
+    // writeMessage(MessageType.ATTACK_LOCATION.type, loc.x, loc.y);
+    int channel = (message_index++ % MAX_MESSAGE_INDEX) * BLOCK_SIZE;
+    RC.broadcast(channel++, MessageType.ATTACK_LOCATION.type);
+    RC.broadcast(channel++, loc.x);
+    RC.broadcast(channel, loc.y);
+    message_written = true;
+  }
+
+  /**
+   * Announce sighting of enemy bot.
+   * @param loc
+   * @throws GameActionException
+   */
+  public void writeEnemyBotMessage(MapLocation loc) throws GameActionException {
+    int channel = (message_index++ % MAX_MESSAGE_INDEX) * BLOCK_SIZE;
+    RC.broadcast(channel++, MessageType.ENEMY_BOT.type);
+    RC.broadcast(channel++, loc.x);
+    RC.broadcast(channel, loc.y);
+    message_written = true;
   }
 
   /**
@@ -194,18 +200,18 @@ public class MessagingSystem {
    * @throws GameActionException
    */
   public void writeMicroMessage(MapLocation loc, int goIn) throws GameActionException {
-    writeMessage(MessageType.MICRO_INFO.ordinal(), loc.x, loc.y, goIn);
+    writeMessage(MessageType.MICRO_INFO.type, loc.x, loc.y, goIn);
   }
 
   /**
-   * Announce a robot's birth.
+   * Announce a robot's birth. (Usually an encampment.)
    * @param loc: location of birth
    * @param id: id of new robot
    * @param type: type of new robot
    * @throws GameActionException
    */
   public void writeBirthMessage(MapLocation loc, int id, int type) throws GameActionException {
-    writeMessage(MessageType.BIRTH_INFO.ordinal(), loc.x, loc.y, id, type);
+    writeMessage(MessageType.BIRTH_INFO.type, loc.x, loc.y, id, type);
   }
 
   /**
@@ -214,6 +220,19 @@ public class MessagingSystem {
    * @throws GameActionException
    */
   public void writeSoldierID(int soldierID) throws GameActionException {
-    writeMessage(MessageType.SOLDIER_ID.ordinal(), soldierID);
+    writeMessage(MessageType.SOLDIER_ID.type, soldierID);
+  }
+
+  /**
+   * Used by the HQ to save soldier bytecodes.
+   * @param allyPastrCount
+   * @param enemyPastrCount
+   * @param allyMilk
+   * @param enemyMilk
+   * @throws GameActionException
+   */
+  public void writeMilkInfo(int allyPastrCount, int enemyPastrCount, int allyMilk, int enemyMilk)
+      throws GameActionException {
+    writeMessage(MessageType.MILK_INFO.type, allyPastrCount, enemyPastrCount, allyMilk, enemyMilk);
   }
 }

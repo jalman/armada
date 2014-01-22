@@ -9,7 +9,7 @@ public class SoldierUtils {
   public final static double MAX_NOISE_TOWER_HEALTH = RobotType.NOISETOWER.maxHealth;
   public final static double MAX_PASTR_HEALTH = RobotType.PASTR.maxHealth;
 
-  public static int sensorRadius = ENEMY_RADIUS2;
+  public static int sensorRadius = SENSOR_RADIUS2;
   public static int closeEnoughToGoToBattleSquared = 64;
   public static Robot[] enemiesFarAway; // enemies within closeEnoughToGoToBattle of a soldier. Only
   // used to find farawayEnemyTarget

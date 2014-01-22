@@ -1,17 +1,17 @@
 package team027.soldiers;
 
-import static team027.soldiers.SoldierUtils.luge;
 import static team027.utils.Utils.*;
 import team027.RobotBehavior;
 import team027.RobotPlayer;
 import team027.messaging.MessageHandler;
 import team027.messaging.MessagingSystem.MessageType;
 import team027.nav.Mover;
+import team027.utils.ArraySet;
 import battlecode.common.*;
 
 public class SoldierBehavior extends RobotBehavior {
 
-	public static boolean shouldjosh;
+  public static boolean shouldjosh;
 
   enum Role {
     LEFTLEFT, LEFTRIGHT, RIGHTLEFT, RIGHTRIGHT, PASTR, NONE
@@ -50,6 +50,13 @@ public class SoldierBehavior extends RobotBehavior {
    */
   int sneakToBuildingLoc = 0;
 
+  ArraySet<MapLocation> messagedEnemyRobots = new ArraySet<MapLocation>(100);
+  int[][] enemyLastSeen = new int[GameConstants.MAP_MAX_WIDTH][GameConstants.MAP_MAX_HEIGHT];
+
+  ArraySet<MapLocation> attackLocations = new ArraySet<MapLocation>(100);
+
+  private final Micro micro = new Micro(this);
+
   // map locations
   MapLocation dest;
 
@@ -73,22 +80,32 @@ public class SoldierBehavior extends RobotBehavior {
   public SoldierBehavior() {
     role = Role.NONE;
     changeMode(Mode.BIRTH_DECIDE_MODE);
-    
-    shouldjosh = true;
-/*    try {
-		shouldjosh = RC.readBroadcast(JOSHBOT_CHANNEL) == 1;
-	} catch (GameActionException e) {
-		e.printStackTrace();
-	}*/
+
+    try {
+      shouldjosh = RC.readBroadcast(JOSHBOT_CHANNEL) == 1;
+    } catch (GameActionException e) {
+      e.printStackTrace();
+    }
   }
 
   @Override
   protected void initMessageHandlers() {
-    handlers[MessageType.ATTACK_LOCATION.ordinal()] = new MessageHandler() {
+    super.initMessageHandlers();
+
+    handlers[MessageType.ATTACK_LOCATION.type] = new MessageHandler() {
       @Override
       public void handleMessage(int[] message) {
         MapLocation loc = new MapLocation(message[0], message[1]);
-        // TODO: attack!
+        attackLocations.insert(loc);
+      }
+    };
+
+    handlers[MessageType.ENEMY_BOT.type] = new MessageHandler() {
+      @Override
+      public void handleMessage(int[] message) {
+        MapLocation loc = new MapLocation(message[0], message[1]);
+        enemyLastSeen[loc.x][loc.y] = currentRound;
+        messagedEnemyRobots.insert(loc);
       }
     };
   }
@@ -100,78 +117,127 @@ public class SoldierBehavior extends RobotBehavior {
     if (buildingFinished) {
       RobotPlayer.run(RC);
     }
+    attackLocations.clear();
+    messagedEnemyRobots.clear();
     messagingSystem.beginRound(handlers);
   }
 
+  @Override
+  public void endRound() throws GameActionException {
+    // sendEnemyMessages();
+    messagingSystem.endRound();
+  }
+
+  private void sendEnemyMessages() throws GameActionException {
+    for (RobotInfo info : getEnemyRobotInfo()) {
+      if (info.type == RobotType.HQ) continue;
+      MapLocation loc = info.location;
+      if (enemyLastSeen[loc.x][loc.y] < currentRound) {
+        // enemyLastSeen[loc.x][loc.y] = currentRound;
+        messagingSystem.writeEnemyBotMessage(loc);
+      }
+    }
+  }
+
   public boolean joshbotbuild() throws GameActionException {
-	  if(!RC.isActive()) return true;
+    if(!RC.isActive()) return true;
 
     MapLocation spot = ALLY_HQ.add(ALLY_HQ.directionTo(ENEMY_HQ).opposite());
     MapLocation spot2 = ALLY_HQ.add(ALLY_HQ.directionTo(spot).rotateLeft());
     if (spot.equals(currentLocation)) {
-			RC.construct(RobotType.NOISETOWER);
-		} else {
-			GameObject atspot = RC.canSenseSquare(spot) ? RC.senseObjectAtLocation(spot) : null;
+      RC.construct(RobotType.NOISETOWER);
+    } else {
+      GameObject atspot = RC.canSenseSquare(spot) ? RC.senseObjectAtLocation(spot) : null;
       Direction move = currentLocation.directionTo(spot);
-			if(atspot != null) {
+      if(atspot != null) {
         if (spot2.equals(currentLocation)) {
-					RC.construct(RobotType.PASTR);
-				}
-				GameObject atspot2 = RC.canSenseSquare(spot2) ? RC.senseObjectAtLocation(spot2) : null;
-				if(atspot2 == null) {
+          RC.construct(RobotType.PASTR);
+        }
+        GameObject atspot2 = RC.canSenseSquare(spot2) ? RC.senseObjectAtLocation(spot2) : null;
+        if(atspot2 == null) {
           move = currentLocation.directionTo(spot2);
-				}
-				else return false;
-			}
-			int count = 0;
-			while(!RC.canMove(move) && count < 9) {
-				move = move.rotateLeft();
-				count++;
-			}
-			RC.move(move);
-		}
+        }
+        else return false;
+      }
+      int count = 0;
+      while(!RC.canMove(move) && count < 9) {
+        move = move.rotateLeft();
+        count++;
+      }
+      RC.move(move);
+    }
 
-		return true;
+    return true;
+  }
+
+  private MapLocation closestTarget() {
+    MapLocation closest = null;
+    int min = Integer.MAX_VALUE;
+
+    for (int i = attackLocations.size; --i >= 0;) {
+      MapLocation loc = attackLocations.get(i);
+      int d = currentLocation.distanceSquaredTo(loc);
+      if (d < min) {
+        min = d;
+        closest = loc;
+      }
+    }
+
+    if (closest != null) return closest;
+
+    // RC.sensePastrLocations(ENEMY_TEAM);
+
+    for (int i = messagedEnemyRobots.size; --i >= 0;) {
+      MapLocation loc = messagedEnemyRobots.get(i);
+      int d = currentLocation.distanceSquaredTo(loc);
+      if (d < min) {
+        min = d;
+        closest = loc;
+      }
+    }
+
+    return closest;
   }
 
   @Override
   public void run() throws GameActionException {
-    if (luge()) { // luge = micro
+    if (enemyRobots.length > (RC.canSenseSquare(ENEMY_HQ) ? 1 : 0)) {
+      micro.micro();
       // set mode to ATTACK or something
       return;
       // send message?
     } else if(shouldjosh) {
-    	if(!joshbotbuild()) {
-    		shouldjosh = false;
-    	}
+      if(!joshbotbuild()) {
+        shouldjosh = false;
+      }
     } else if (isIdle()) {
       if (ENEMY_MILK > ALLY_MILK
           || (ENEMY_PASTR_COUNT >= ALLY_PASTR_COUNT && ENEMY_PASTR_COUNT > 0)) {
-          changeMode(Mode.ACQUIRE_TARGET);
-        } else {
-          // try to build pastures if late in game
-          // probably deprecated (doesn't happen)
-          if (currentRound > 1800 && ENEMY_PASTR_COUNT > ALLY_PASTR_COUNT && !panicPastrBuilding) {
-            if (currentCowsHere < 150) {
-              panicPastrBuilding = true;
-              dest = ALLY_HQ.subtract(ALLY_HQ.directionTo(ENEMY_HQ));
-              mover.setTarget(dest);
-              sneakToBuildingLoc = 1;
-              changeMode(Mode.FIND_PASTR_LOC);
-            } else if (currentCowsHere < 400) {
-              panicPastrBuilding = true;
-              mover.setTarget(ALLY_HQ);
-              changeMode(Mode.RETURN_HOME);
-            }
+        changeMode(Mode.ACQUIRE_TARGET);
+      } else {
+        // try to build pastures if late in game
+        // probably deprecated (doesn't happen)
+        if (currentRound > 1800 && ENEMY_PASTR_COUNT > ALLY_PASTR_COUNT && !panicPastrBuilding) {
+          if (currentCowsHere < 150) {
+            panicPastrBuilding = true;
+            dest = ALLY_HQ.subtract(ALLY_HQ.directionTo(ENEMY_HQ));
+            mover.setTarget(dest);
+            sneakToBuildingLoc = 1;
+            changeMode(Mode.FIND_PASTR_LOC);
+          } else if (currentCowsHere < 400) {
+            panicPastrBuilding = true;
+            mover.setTarget(ALLY_HQ);
+            changeMode(Mode.RETURN_HOME);
+          }
         } else if (!initialSweep && ALLY_PASTR_COUNT == 0) {
-            // stand on rich squares
-            MapLocation loc = findRichSquare();
-            if (loc != null) {
-              mover.setTarget(loc);
-              changeMode(Mode.STAND_RICH_LOC);
-            }
+          // stand on rich squares
+          MapLocation loc = findRichSquare();
+          if (loc != null) {
+            mover.setTarget(loc);
+            changeMode(Mode.STAND_RICH_LOC);
           }
         }
+      }
     }
 
     switch (mode) {
@@ -212,13 +278,13 @@ public class SoldierBehavior extends RobotBehavior {
         mover.setTarget(dest);
         mover.move();
         break;
-      // case GOING_TO_MIDDLE:
-      // if (mover.arrived()) {
-      // decideNextMode();
-      // } else {
-      // mover.movePushHome();
-      // }
-      // break;
+        // case GOING_TO_MIDDLE:
+        // if (mover.arrived()) {
+        // decideNextMode();
+        // } else {
+        // mover.movePushHome();
+        // }
+        // break;
       case SWEEP_OUT:
         if (mover.arrived()) {
           dest = new MapLocation((2 * ALLY_HQ.x + roleLocList[roleIndex].x) / 3,
@@ -378,10 +444,5 @@ public class SoldierBehavior extends RobotBehavior {
 
   private void decideNextMode() {
 
-  }
-
-  @Override
-  public void endRound() throws GameActionException {
-    messagingSystem.endRound();
   }
 }
