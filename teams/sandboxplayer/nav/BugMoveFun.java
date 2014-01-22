@@ -19,7 +19,11 @@ public class BugMoveFun extends NavAlg {
   /** the default direction to trace. Changes every time we trace too far. */
   int defaultTraceDirection = 0;
   /** trace threshold to reset to every time we get a new destination. */
+<<<<<<< HEAD
   static final int INITIAL_TRACE_THRESHOLD = 100;
+=======
+  static final int INITIAL_TRACE_THRESHOLD = 50;
+>>>>>>> ab844fb... tweak micro helping behavior
   /** number of turns to trace before resetting. */
   int traceThreshold = -1;
   /** if we've hit the edge of the map by tracing in the other direction,
@@ -63,7 +67,11 @@ public class BugMoveFun extends NavAlg {
 
   public void reset() {
     tracing = -1;
+<<<<<<< HEAD
     defaultTraceDirection = (Clock.getRoundNum() / 3) % 2; // (int)(Util.randDouble()+0.5);
+=======
+    defaultTraceDirection = Clock.getRoundNum() / 50 % 2; // (int)(Util.randDouble()+0.5);
+>>>>>>> ab844fb... tweak micro helping behavior
     traceThreshold = INITIAL_TRACE_THRESHOLD;
     hitEdgeInOtherTraceDirection = false;
   }

@@ -50,7 +50,6 @@ public class SoldierUtils {
       }
       return false;
     } else if (RC.isActive()) {
-      RC.setIndicatorString(2, "luging!");
       Robot[] nearbyTeam = RC.senseNearbyGameObjects(Robot.class, 35, ALLY_TEAM);
       int enemyWeight = 0;
 
@@ -100,20 +99,33 @@ public class SoldierUtils {
         }
 
         if ((callX - currentLocation.x) * (callX - currentLocation.x) + (callY - currentLocation.y)
-            * (callY - currentLocation.y) < 8 * 8) {
+            * (callY - currentLocation.y) < 8 * 8 && (callX != currentLocation.x || callY != currentLocation.y)) {
           isHelpingOut = true;
         }
       }
 
-      if (nearbyTeam.length + 1 >= enemyWeight || isHelpingOut) {
+      if (nearbyTeam.length + 1 >= enemyWeight || (nearbyTeam.length-1 >= enemyWeight && isHelpingOut)) {
         if (isHelpingOut) {
           RC.setIndicatorString(2, "helping out to kill guy at " + callX + "," + callY);
         }
         if (RC.isActive()) { // willing to attack!
-          if ((nearbyEnemies.length == 0 || nearbyTeam.length - 1 >= enemyWeight || isHelpingOut)
-              && enemiesInRange.length == 0) {
+          if (nearbyEnemies.length == 0) {
             // willing to move forward and attack!
             return false; // jurgz should take a look at this ...
+          }
+          else if (isHelpingOut && nearbyTeam.length-1 >= enemyWeight && enemiesInRange.length == 0) {
+        	  Direction newDir = currentLocation.directionTo(new MapLocation(callX, callY));
+        	  if (RC.isActive() && newDir != Direction.NONE && newDir != Direction.OMNI) {
+                if (RC.canMove(newDir)) {
+                  RC.move(newDir);
+                }
+                else if (RC.canMove(newDir.rotateLeft())) {
+                  RC.move(newDir.rotateLeft());
+                }
+                else if (RC.canMove(newDir.rotateRight())) {
+                  RC.move(newDir.rotateRight());
+                }
+             }
           }
 
           MapLocation target = getHighestPriority(nearbyEnemyInfo);
@@ -131,7 +143,7 @@ public class SoldierUtils {
               // copy-pasted from above.
               // if we're near the HQ but have nothing to do just randomly kill shit
               MapLocation cowTarget =
-                  getMostCowsLoc(
+                  getMostCowsLoc( 
                       MapLocation.getAllMapLocationsWithinRadiusSq(
                           currentLocation.add(currentLocation.directionTo(ENEMY_HQ)), 5),
                       //
