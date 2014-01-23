@@ -22,7 +22,7 @@ public class MessagingSystem {
     SOLDIER_ID(1),
     ENEMY_BOT(2),
     MILK_INFO(4),
-    COMBAT_ENGAGE(1);
+    COMBAT_ENGAGE(2);
 
     public final int type = this.ordinal();
 

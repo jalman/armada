@@ -115,7 +115,7 @@ public class NathanMicro {
           isHelpingOut = true;
         }
       }
-      RC.setIndicatorString(0, "ally " + allyWeight + " / enemy " + enemyWeight);
+      RC.setIndicatorString(0, "ally " + allyWeight + " / enemy " + enemyWeight + " (turn " + Clock.getRoundNum() + ")");
       if (allyWeight >= enemyWeight - 25 || GREAT_LUGE) {
         if (isHelpingOut) {
           RC.setIndicatorString(2, "helping out to kill guy at " + callX + "," + callY);
@@ -163,7 +163,7 @@ public class NathanMicro {
                           currentLocation.add(currentLocation.directionTo(ENEMY_HQ)), 5),
                       //
                       500);
-              if (cowTarget != null && RC.canAttackSquare(cowTarget)
+              if (RC.isActive() && cowTarget != null && RC.canAttackSquare(cowTarget)
                   && RC.senseObjectAtLocation(cowTarget) == null) {
                 RC.attackSquare(cowTarget);
                 return true;

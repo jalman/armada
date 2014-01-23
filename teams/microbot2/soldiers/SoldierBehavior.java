@@ -95,7 +95,7 @@ public class SoldierBehavior extends RobotBehavior {
       target = closest;
       // messagingSystem.writeAttackMessage(target);
       setMode(Mode.RUN);
-      RC.setIndicatorString(0, "RUN " + target);
+      //RC.setIndicatorString(0, "RUN " + target);
       return;
     }
 
@@ -115,7 +115,7 @@ public class SoldierBehavior extends RobotBehavior {
   }
 
   private void setMode(Mode m) {
-    RC.setIndicatorString(0, m.toString());
+    //RC.setIndicatorString(0, m.toString());
     mode = m;
   }
 
