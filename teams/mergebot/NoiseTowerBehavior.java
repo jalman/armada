@@ -17,6 +17,7 @@ public class NoiseTowerBehavior extends RobotBehavior {
 	
 	public static MapLocation[][] paths = new MapLocation[8][30];
 	public static int[] pathat = new int[8];
+	public static boolean[] skip = new boolean[8];
 	
 	public NoiseTowerBehavior() {
 		for(int i = 7; i >= 0; i--) {
@@ -60,11 +61,53 @@ public class NoiseTowerBehavior extends RobotBehavior {
 					k++;
 					if(k == 8) k = 0;
 				}
-				paths[i][j] = bestplace;
+				if(!bestplace.equals(currentLocation)) {
+					paths[i][j] = bestplace;
+				} else {
+					break;
+				}
 			}
 			pathat[i] = lastcow;
 			if(lastcow < 29) lastcow++;
 		}
+		
+		skip[0] = false;
+		
+		
+		double[] d = new double[8];
+		int[] dist = new int[8];
+		
+		for(int i = 7; i >= 0; i--) {
+			if(pathat[i] == 0){
+				d[i] = 0;
+				dist[i] = 0;
+			} else {
+				d[i] =  Math.atan2(paths[i][pathat[i]-1].y - curY, paths[i][pathat[i]-1].x - curX);
+				dist[i] = currentLocation.distanceSquaredTo(paths[i][pathat[i]-1]);
+				System.out.println(i + ": " + paths[i][pathat[i]-1] + " " + d[i] + " " + dist[i]);
+			}
+			
+		}
+		for(int i = 7; i >= 0; i--) {
+			if(dist[i] == 0) skip[i] = true;
+			else {
+				for(int j = i-1; j >= 0; j--) {
+					if(i==j || dist[j] == 0) continue;
+					if(Math.abs(d[i] - d[j]) < 0.4) {
+						if(dist[i] < dist[j]) skip[i] = true;
+						else skip[j] = true;
+					}
+				}
+			}
+			
+		}
+		
+	}
+	
+	public static double atan3(int a, int b) {
+		if (a==0 && b == 0) return 20.0;
+		return Math.atan2(a,b);
+		
 	}
 
 	/**
@@ -99,13 +142,19 @@ public class NoiseTowerBehavior extends RobotBehavior {
 		  if(b < 3) {
 			  a++;
 			  if(a == 8) a = 0;
+			  while(skip[a]) {
+				  a++;
+				  if(a == 8) a = 0;
+			  }
 			  b = pathat[a];
 			  System.out.println(a + " " + b + " " + pathat[a]);
 		  } else {
 			  b--;
 		  }
-		  if(paths[a][b] != null)
+		  if(paths[a][b] != null) {
 			  RC.attackSquare(paths[a][b]);
+			  RC.setIndicatorString(2, a + "");
+		  }
 		
 	}
 }
