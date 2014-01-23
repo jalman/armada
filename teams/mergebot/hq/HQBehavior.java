@@ -1,10 +1,8 @@
 package mergebot.hq;
 
 import static mergebot.utils.Utils.*;
-import mergebot.*;
-import mergebot.messaging.*;
-import mergebot.messaging.MessagingSystem.MessageType;
-import mergebot.utils.*;
+import mergebot.RobotBehavior;
+import mergebot.utils.Utils;
 import battlecode.common.*;
 
 public class HQBehavior extends RobotBehavior {
@@ -41,13 +39,6 @@ public class HQBehavior extends RobotBehavior {
 
   @Override
   protected void initMessageHandlers() {
-    handlers[MessageType.ATTACK_LOCATION.ordinal()] = new MessageHandler() {
-      @Override
-      public void handleMessage(int[] message) {
-        // MapLocation loc = new MapLocation(message[0], message[1]);
-        // TODO: attack!
-      }
-    };
   }
 
   @Override
@@ -61,8 +52,8 @@ public class HQBehavior extends RobotBehavior {
 
   @Override
   public void run() throws GameActionException {
-    macro();
     attackSystem.tryAttack();
+    macro();
   }
 
   @Override
@@ -74,6 +65,7 @@ public class HQBehavior extends RobotBehavior {
    * Handle upgrades and robots.
    */
   private void macro() {
+    if (!RC.isActive()) return;
     try {
       buildSoldier();
     } catch (GameActionException e) {

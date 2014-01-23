@@ -4,11 +4,12 @@ import java.util.Arrays;
 import java.util.Random;
 
 import mergebot.messaging.MessagingSystem;
+import mergebot.messaging.MessagingSystem.ReservedMessage;
 import battlecode.common.*;
 
 public class Utils {
 
-  public static final int JOSHBOT_CHANNEL = 65531;
+  public static final int JOSHBOT_CHANNEL = ReservedMessage.JOSHBOT.channel;
 
   //Game constants
   // public final static int MAX_SOLDIER_ENERGON = 40;
