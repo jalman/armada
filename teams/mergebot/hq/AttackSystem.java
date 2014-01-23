@@ -22,14 +22,7 @@ public class AttackSystem {
   private boolean attackDelay = false;
 
   private int attackWeight(RobotType type) {
-    switch (type) {
-      case SOLDIER:
-        return 2;
-      case HQ:
-        return 0;
-      default:
-        return 2;
-    }
+    return (type == RobotType.HQ) ? 0 : 2;
   }
 
   void tryAttack() {

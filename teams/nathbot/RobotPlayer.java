@@ -1,55 +1,74 @@
 package nathbot;
 
-import java.util.Random;
+
+import java.util.*;
 
 import battlecode.common.*;
 
 public class RobotPlayer {
 	static Random rand;
-	
+
+  static int numBots, numNoiseTowers, numPastrs, numSoldiers;
+  static int SoldierID = 0;
+
+  static final boolean[][] IN_RANGE = {
+      {false, false, false, false, false, false, false, false, false},
+      {false, false, true, true, true, true, true, false, false},
+      {false, true, true, true, true, true, true, true, false},
+      {false, true, true, true, true, true, true, true, false},
+      {false, true, true, true, true, true, true, true, false},
+      {false, true, true, true, true, true, true, true, false},
+      {false, true, true, true, true, true, true, true, false},
+      {false, false, true, true, true, true, true, false, false},
+      {false, false, false, false, false, false, false, false, false}
+  };
+
+  static final int IN_RANGE_DIAMETER = IN_RANGE.length;
+  static final int IN_RANGE_OFFSET = IN_RANGE.length / 2;
+
+  static boolean attackDelay = false;
+
+  static Team player, enemy;
+  static MapLocation myHQ, theirHQ;
+
 	public static void run(RobotController rc) {
-		Team player = rc.getTeam();
-		Team enemy = rc.getTeam().equals(Team.A) ? Team.B : Team.A;
+    player = rc.getTeam();
+    enemy = rc.getTeam().equals(Team.A) ? Team.B : Team.A;
 		MapLocation origin = new MapLocation(0, 0);
-		
-		MapLocation myHQ = rc.senseHQLocation();
-		MapLocation theirHQ = rc.senseEnemyHQLocation();
-		
+
+    myHQ = rc.senseHQLocation();
+    theirHQ = rc.senseEnemyHQLocation();
+
 		rand = new Random();
 		Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
-		
+
 		while(true) {
 			MapLocation loc = rc.getLocation();
-			
+
 			if (rc.getType() == RobotType.HQ) {
-				try {					
-					//Check if a robot is spawnable and spawn one if it is
-					if (rc.isActive() && rc.senseRobotCount() < 25) {
-						Direction toEnemy = loc.directionTo(rc.senseEnemyHQLocation());
-						if (rc.senseObjectAtLocation(loc.add(toEnemy)) == null) {
-							rc.spawn(toEnemy);
-						}
-					}
-					
+				try {
+          rc.setIndicatorString(1,
+              "active? " + rc.isActive() + " rounds until active: " + rc.roundsUntilActive()
+                  + " action delay: " + rc.getActionDelay());
+
 					if(rc.isActive()) {
-						Robot[] nearbyEnemies = rc.senseNearbyGameObjects(Robot.class, 16, enemy);
-						int attackindex = (int)(Math.random() * nearbyEnemies.length);
-						if (attackindex > 0) {
-							RobotInfo tokill = rc.senseRobotInfo(nearbyEnemies[attackindex]);
-							MapLocation killplace = tokill.location;
-							if(rc.canAttackSquare(killplace)) {
-								rc.attackSquare(killplace);
-							}
-						}
+            tryHQAttack(rc);
 					}
-					
-					
+
+          // Check if a robot is spawnable and spawn one if it is
+          if (rc.isActive() && rc.senseRobotCount() < 25) {
+            Direction toEnemy = loc.directionTo(rc.senseEnemyHQLocation());
+            if (rc.senseObjectAtLocation(loc.add(toEnemy)) == null) {
+              rc.spawn(toEnemy);
+            }
+          }
+
 				} catch (Exception e) {
 					System.out.println("HQ Exception");
 					e.printStackTrace();
 				}
 			}
-			
+
 			if (rc.getType() == RobotType.SOLDIER) {
 				try {
 					if (RobotMicro.luge(rc)) {
@@ -62,7 +81,7 @@ public class RobotPlayer {
 							}
 						}
 					}
-					
+
 					if (rc.isActive()) {
 						int d = rc.readBroadcast(0);
 						MapLocation[] m = rc.sensePastrLocations(enemy);
@@ -95,7 +114,7 @@ public class RobotPlayer {
 						}
 						if (d >= 1) {
 							MapLocation trg = new MapLocation(rc.readBroadcast(1), rc.readBroadcast(2));
-							
+
 							if (d == 2) {
 								boolean stillThere = false;
 								for (int i=0; i<m.length; ++i) {
@@ -108,9 +127,9 @@ public class RobotPlayer {
 									trg = new MapLocation( (myHQ.x + theirHQ.x) / 2, (myHQ.y + theirHQ.y) / 2 );
 								}
 							}
-							
+
 							Direction newDir = loc.directionTo(trg);
-							
+
 							if (rc.isActive() && newDir != Direction.NONE && newDir != Direction.OMNI) {
 								if (rc.canMove(newDir)) {
 									rc.move(newDir);
@@ -129,8 +148,149 @@ public class RobotPlayer {
 					e.printStackTrace();
 				}
 			}
-			
+
 			rc.yield();
 		}
 	}
+
+  private static void tryHQAttack(RobotController rc) {
+    MapLocation loc = rc.getLocation();
+    Robot[] robots = rc.senseNearbyGameObjects(Robot.class, 25);
+    if (!attackDelay && robots.length > 0) {
+      attackDelay = true;
+      return;
+    } else if (attackDelay && robots.length == 0) {
+      attackDelay = false;
+      return;
+    }
+
+    int[][] weight = new int[9][9];
+
+    int[] enemiesX = new int[robots.length];
+    int[] enemiesY = new int[robots.length];
+    int numEnemies = 0;
+
+    RobotInfo info;
+
+    for (Robot robot : robots) {
+      try {
+        info = rc.senseRobotInfo(robot);
+
+        int x = info.location.x - loc.x + IN_RANGE_OFFSET;
+        int y = info.location.y - loc.y + IN_RANGE_OFFSET;
+
+        if (0 <= x && x < IN_RANGE_DIAMETER && 0 <= y && y < IN_RANGE_DIAMETER) {
+          if (info.team == player) {
+            weight[x][y] = -attackWeight(info.type);
+
+          } else {
+            weight[x][y] = attackWeight(info.type);
+            enemiesX[numEnemies] = x;
+            enemiesY[numEnemies] = y;
+            numEnemies++;
+          }
+        }
+
+      } catch (GameActionException e) {
+        e.printStackTrace();
+      }
+
+    }
+
+    int attackX = 0;
+    int attackY = 0;
+    int attackWeight = -1000;
+
+    if (Clock.getBytecodesLeft() > numEnemies * 500) {
+      for (int n = 0; n < numEnemies; n++) {
+        if (Clock.getBytecodesLeft() < 500) {
+          break;
+        }
+
+        int[] iplaces = {enemiesX[n] - 1, enemiesX[n], enemiesX[n] + 1};
+        int[] jplaces = {enemiesY[n] - 1, enemiesY[n], enemiesY[n] + 1};
+        for (int i : iplaces) {
+          for (int j : jplaces) {
+            if (i <= 0 || i >= IN_RANGE_DIAMETER || j <= 0 || j >= IN_RANGE_DIAMETER) {
+              continue;
+            }
+
+
+            if (!IN_RANGE[i][j])
+              continue;
+
+
+            int val = 0;
+            val += weight[i - 1][j - 1];
+            val += weight[i - 1][j + 1];
+            val += weight[i + 1][j - 1];
+            val += weight[i + 1][j + 1];
+            val += weight[i][j - 1];
+            val += weight[i][j + 1];
+            val += weight[i - 1][j];
+            val += weight[i + 1][j];
+            val += weight[i][j] * 4;
+
+
+            if (val > attackWeight) {
+              attackWeight = val;
+              attackX = i;
+              attackY = j;
+            }
+          }
+        }
+
+      }
+    } else {
+      for (int n = 0; n < numEnemies; n++) {
+        if (Clock.getBytecodesLeft() < 250) {
+          break;
+        }
+
+        int i = enemiesX[n];
+        int j = enemiesY[n];
+        if (i <= 0 || i >= IN_RANGE_DIAMETER || j <= 0 || j >= IN_RANGE_DIAMETER) {
+          continue;
+        }
+
+
+        if (!IN_RANGE[i][j])
+          continue;
+
+        MapLocation ml =
+            new MapLocation(loc.x + i - IN_RANGE_OFFSET, loc.y + j - IN_RANGE_OFFSET);
+        int val = rc.senseNearbyGameObjects(Robot.class, ml, 2, enemy).length + 1;
+        val -= rc.senseNearbyGameObjects(Robot.class, ml, 2, player).length;
+
+        if (val > attackWeight) {
+          attackWeight = val;
+          attackX = i;
+          attackY = j;
+        }
+      }
+    }
+
+    if (attackX != 0 || attackY != 0) {
+      try {
+        MapLocation target =
+            new MapLocation(loc.x + attackX - IN_RANGE_OFFSET, loc.y + attackY
+                - IN_RANGE_OFFSET);
+        rc.attackSquare(target);
+        rc.setIndicatorString(1, "target: " + target);
+        // RC.setIndicatorString(0, weight[attackX - 1][attackY - 1] + " " +
+        // weight[attackX][attackY - 1] + " " + weight[attackX + 1][attackY - 1]);
+        // RC.setIndicatorString(1, weight[attackX - 1][attackY] + " " +
+        // weight[attackX][attackY]
+        // + " " + weight[attackX + 1][attackY]);
+        // RC.setIndicatorString(2, weight[attackX - 1][attackY + 1] + " " +
+        // weight[attackX][attackY + 1] + " " + weight[attackX + 1][attackY + 1]);
+      } catch (GameActionException e) {
+        e.printStackTrace();
+      }
+    }
+
+  }
+  private static int attackWeight(RobotType type) {
+    return (type == RobotType.HQ) ? 0 : 2;
+  }
 }

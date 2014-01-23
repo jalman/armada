@@ -1,10 +1,10 @@
 package mergebot.hq;
 
 import static mergebot.utils.Utils.*;
-import mergebot.RobotBehavior;
-import mergebot.messaging.MessageHandler;
+import mergebot.*;
+import mergebot.messaging.*;
 import mergebot.messaging.MessagingSystem.MessageType;
-import mergebot.utils.Utils;
+import mergebot.utils.*;
 import battlecode.common.*;
 
 public class HQBehavior extends RobotBehavior {
@@ -74,10 +74,8 @@ public class HQBehavior extends RobotBehavior {
    * Handle upgrades and robots.
    */
   private void macro() {
-    boolean built = false;
-
     try {
-      built = buildSoldier();
+      buildSoldier();
     } catch (GameActionException e) {
       e.printStackTrace();
     }
@@ -100,13 +98,15 @@ public class HQBehavior extends RobotBehavior {
    */
   boolean buildSoldier(Direction dir) throws GameActionException {
     if (RC.isActive() && RC.senseRobotCount() < GameConstants.MAX_ROBOTS) {
-      // Spawn a Soldier
+      // Spawn soldier
       for (int i = 0; i < 8; i++) {
-        if (goodPlaceToMakeSoldier(dir)) {
+        // if square is movable, spawn soldier there and send initial messages
+        if (RC.canMove(dir)) {
           sendMessagesOnBuild();
           RC.spawn(dir);
           return true;
         }
+        // otherwise keep rotating until this is possible
         dir = dir.rotateRight();
       }
       // message guys to get out of the way??

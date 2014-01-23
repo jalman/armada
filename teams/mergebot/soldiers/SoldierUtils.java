@@ -228,7 +228,7 @@ public class SoldierUtils {
       case SOLDIER:
         return 20;
       case PASTR:
-        return 100;
+        return 50;
       case NOISETOWER:
         return 0;
       default:
