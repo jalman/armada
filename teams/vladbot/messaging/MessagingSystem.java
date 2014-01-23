@@ -55,9 +55,10 @@ public class MessagingSystem {
    * @author vlad
    */
   public enum ReservedMessage {
-    MESSAGE_INDEX, ;
+    MESSAGE_INDEX,
+    JOSHBOT;
 
-    final int channel = MESSAGE_CHANNELS + this.ordinal();
+    public final int channel = MESSAGE_CHANNELS + this.ordinal();
   }
 
   public static final double BROADCAST_COST = 10;
