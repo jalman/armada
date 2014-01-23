@@ -11,7 +11,7 @@ public class NathanMicro {
    * Channel for help messages. Message format: 256*X + Y.
    */
   public static final int HELP_CHANNEL = ReservedMessage.HELP_CHANNEL.channel;
-  public static final int GREAT_LUGE_ASSIST = 60;
+  public static final int GREAT_LUGE_ASSIST = 30;
   
   public static boolean GREAT_LUGE = false;
 
@@ -174,23 +174,23 @@ public class NathanMicro {
             double dd = currentLocation.distanceSquaredTo(target) - 0.5;
             if (dd > 1 && dd <= 4) d = 2;
             if (dd > 4 && dd <= 9) d = 3;
+            if (dd > 9) d = 4;
 
             int maxDmg = (int) (enemiesInRange.length * (d - 1) * RobotType.SOLDIER.attackPower);
 
-            if (RC.getHealth() > maxDmg + 5 && RC.getHealth() < maxDmg + 40 && allyWeight < enemyWeight + GREAT_LUGE_ASSIST) {
+            if (RC.getHealth() > maxDmg + 5 && RC.getHealth() < maxDmg + 40 && allyWeight < enemyWeight - GREAT_LUGE_ASSIST) {
               // TEMPORARY CHANGE ME LATER
               GREAT_LUGE = true;
             }
-            if (GREAT_LUGE) {
-              if (RC.isActive()) {
-                if (d <= 1.)
-                  RC.selfDestruct();
-                else if (RC.canMove(currentLocation.directionTo(target))) {
-                  RC.move(currentLocation.directionTo(target));
-                }
-                else {
-                  RC.attackSquare(target);
-                }
+            RC.setIndicatorString(2, "" + d + "," + dd + "/" + maxDmg);
+            if (GREAT_LUGE && RC.isActive()) {
+              if (d <= 1.)
+                RC.selfDestruct();
+              else if (RC.canMove(currentLocation.directionTo(target))) {
+                RC.move(currentLocation.directionTo(target));
+              }
+              else {
+                RC.attackSquare(target);
               }
             }
             else {
