@@ -1,6 +1,6 @@
-package mergebot.messaging;
+package microbot2.messaging;
 
-import static mergebot.utils.Utils.*;
+import static microbot2.utils.Utils.*;
 import battlecode.common.*;
 
 /**
@@ -58,7 +58,7 @@ public class MessagingSystem {
     MESSAGE_INDEX,
     HELP_CHANNEL, ;
 
-    final int channel = MESSAGE_CHANNELS + this.ordinal();
+    public final int channel = MESSAGE_CHANNELS + this.ordinal();
   }
 
   public static final double BROADCAST_COST = 10;
