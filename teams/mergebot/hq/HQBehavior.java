@@ -5,10 +5,8 @@ import static mergebot.utils.Utils.*;
 import java.util.Arrays;
 import java.util.Comparator;
 
-import mergebot.*;
-import mergebot.messaging.*;
-import mergebot.messaging.MessagingSystem.MessageType;
-import mergebot.utils.*;
+import mergebot.RobotBehavior;
+import mergebot.utils.Utils;
 import battlecode.common.*;
 
 public class HQBehavior extends RobotBehavior {
@@ -49,13 +47,6 @@ public class HQBehavior extends RobotBehavior {
 
   @Override
   protected void initMessageHandlers() {
-    handlers[MessageType.ATTACK_LOCATION.ordinal()] = new MessageHandler() {
-      @Override
-      public void handleMessage(int[] message) {
-        // MapLocation loc = new MapLocation(message[0], message[1]);
-        // TODO: attack!
-      }
-    };
   }
 
   @Override
@@ -69,8 +60,8 @@ public class HQBehavior extends RobotBehavior {
 
   @Override
   public void run() throws GameActionException {
-    macro();
     attackSystem.tryAttack();
+    macro();
   }
 
   @Override
@@ -82,6 +73,7 @@ public class HQBehavior extends RobotBehavior {
    * Handle upgrades and robots.
    */
   private void macro() {
+    if (!RC.isActive()) return;
     try {
       buildSoldier();
     } catch (GameActionException e) {
@@ -133,12 +125,15 @@ public class HQBehavior extends RobotBehavior {
   private MapLocation[] cowMiningLocations() {
 	  int xparts = MAP_WIDTH < 50 ? MAP_WIDTH/10 : MAP_WIDTH/15;
 	  int yparts = MAP_HEIGHT < 50 ? MAP_HEIGHT/10 : MAP_HEIGHT/15;
-	  MapLocation[] ret = new MapLocation[xparts * yparts];
+	  MapLocation[] ret = new MapLocation[(1+xparts) * (1+yparts) / 2];
 	  int i = 0;
 	  for(int x = xparts - 1; x >= 0; x--) {
 		  for(int y = yparts - 1; y >= 0; y--) {
-			  ret[i] = gradientDescentOnNegativeCowScalarField(x * MAP_WIDTH / xparts,y * MAP_HEIGHT / yparts, 3);
-			  i++;
+			  MapLocation inittry = new MapLocation(x * MAP_WIDTH / xparts,y * MAP_HEIGHT / yparts);
+			  if(inittry.distanceSquaredTo(ALLY_HQ) < inittry.distanceSquaredTo(ENEMY_HQ)) {
+				  ret[i] = gradientDescentOnNegativeCowScalarField(inittry.x, inittry.y, 3);
+				  i++;
+			  }
 		  }
 	  }
 	  

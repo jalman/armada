@@ -12,7 +12,7 @@ public class NoiseTowerBehavior extends RobotBehavior {
 
 	public static int a=6, b=0; //for noise
 	double[][] cows = null; double[] cowsindir = new double[8];
-	Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
+	static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 	public static final int[] yrangefornoise = { 17, 17, 17, 17, 16, 16, 16, 15, 15, 14, 14, 13, 12, 11, 10, 8, 6, 3 };
 	
 	public static MapLocation[][] paths = new MapLocation[8][30];
@@ -48,7 +48,7 @@ public class NoiseTowerBehavior extends RobotBehavior {
 					try {
 						cows = Utils.COW_GROWTH[here.x][here.y];
 						if(cows > 0) lastcow = j;
-						score =  here.distanceSquaredTo(currentLocation) > 300 || RC.senseTerrainTile(here) == TerrainTile.VOID ? -10 : cows == 0.0  ? 30 : score + (int)(cows*10000) + 30;
+						score =  here.distanceSquaredTo(currentLocation.add(directions[k])) > 300 || RC.senseTerrainTile(here) == TerrainTile.VOID ? -10 : cows == 0.0  ? 30 : score + (int)(cows)*0 + 30;
 					} catch (Exception e) {
 						score = -2;
 					}
@@ -76,15 +76,16 @@ public class NoiseTowerBehavior extends RobotBehavior {
 		
 		double[] d = new double[8];
 		int[] dist = new int[8];
+		MapLocation[] toconsider = new MapLocation[8];
 		
 		for(int i = 7; i >= 0; i--) {
 			if(pathat[i] == 0){
 				d[i] = 0;
 				dist[i] = 0;
 			} else {
-				d[i] =  Math.atan2(paths[i][pathat[i]-1].y - curY, paths[i][pathat[i]-1].x - curX);
-				dist[i] = currentLocation.distanceSquaredTo(paths[i][pathat[i]-1]);
-				System.out.println(i + ": " + paths[i][pathat[i]-1] + " " + d[i] + " " + dist[i]);
+				toconsider[i] = paths[i][pathat[i]-1];
+				d[i] =  Math.atan2(toconsider[i].y - curY, toconsider[i].x - curX);
+				dist[i] = currentLocation.distanceSquaredTo(toconsider[i]);
 			}
 			
 		}
@@ -93,7 +94,7 @@ public class NoiseTowerBehavior extends RobotBehavior {
 			else {
 				for(int j = i-1; j >= 0; j--) {
 					if(i==j || dist[j] == 0) continue;
-					if(Math.abs(d[i] - d[j]) < 0.4) {
+					if(Math.abs(d[i] - d[j]) < 0.4 && pathbetween(toconsider[i], toconsider[j])) {
 						if(dist[i] < dist[j]) skip[i] = true;
 						else skip[j] = true;
 					}
@@ -102,6 +103,14 @@ public class NoiseTowerBehavior extends RobotBehavior {
 			
 		}
 		
+	}
+	
+	public static boolean pathbetween(MapLocation a, MapLocation b) {
+		while(!a.equals(b)) {
+			a.add(a.directionTo(b));
+			if(RC.senseTerrainTile(a) == TerrainTile.VOID) return false;
+		}
+		return true;
 	}
 	
 	public static double atan3(int a, int b) {
@@ -152,7 +161,7 @@ public class NoiseTowerBehavior extends RobotBehavior {
 			  b--;
 		  }
 		  if(paths[a][b] != null) {
-			  RC.attackSquare(paths[a][b]);
+			  RC.attackSquare(paths[a][b].add(directions[a]));
 			  RC.setIndicatorString(2, a + "");
 		  }
 		
