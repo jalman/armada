@@ -240,28 +240,6 @@ public class Utils {
     return sqrt - 1;
   }
 
-  public static int getDirTowards(int dx, int dy) {
-    if (dx == 0) {
-      if (dy > 0)
-        return 4;
-      else return 0;
-    }
-    double slope = ((double) dy) / dx;
-    if (dx > 0) {
-      if(slope>2.414) return 4;
-      else if(slope>0.414) return 3;
-      else if(slope>-0.414) return 2;
-      else if(slope>-2.414) return 1;
-      else return 0;
-    } else {
-      if(slope>2.414) return 0;
-      else if(slope>0.414) return 7;
-      else if(slope>-0.414) return 6;
-      else if(slope>-2.414) return 5;
-      else return 4;
-    }
-  }
-
   public static double evaluate(MapLocation loc) {
     int dot1 = (loc.x - ALLY_HQ.x) * HQ_DX + (loc.y - ALLY_HQ.y) * HQ_DY;
     int dot2 = (ENEMY_HQ.x - loc.x) * HQ_DX + (ENEMY_HQ.y - loc.y) * HQ_DY;
