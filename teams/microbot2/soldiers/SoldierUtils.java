@@ -1,6 +1,6 @@
 package microbot2.soldiers;
 
-import static mergebot.utils.Utils.*;
+import static microbot2.utils.Utils.*;
 import battlecode.common.*;
 
 public class SoldierUtils {

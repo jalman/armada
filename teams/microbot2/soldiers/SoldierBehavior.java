@@ -157,9 +157,11 @@ public class SoldierBehavior extends RobotBehavior {
   }
 
   private void act() throws GameActionException {
+    if (!RC.isActive()) return;
     switch (mode) {
       case COMBAT:
-        micro.micro();
+    	  NathanMicro.luge();
+    	  //micro.micro();
         break;
       case RUN:
         mover.setTarget(target);
