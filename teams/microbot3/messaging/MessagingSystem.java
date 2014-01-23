@@ -1,6 +1,6 @@
-package mergebot.messaging;
+package microbot3.messaging;
 
-import static mergebot.utils.Utils.*;
+import static microbot3.utils.Utils.*;
 import battlecode.common.*;
 
 /**
@@ -21,10 +21,7 @@ public class MessagingSystem {
     BIRTH_INFO(4),
     SOLDIER_ID(1),
     ENEMY_BOT(2),
-    MILK_INFO(4),
-    BUILD_PASTURE(2),
-    BUILDING_PASTURE(2);
-    ;
+    MILK_INFO(4);
 
     public final int type = this.ordinal();
 
@@ -59,7 +56,6 @@ public class MessagingSystem {
    */
   public enum ReservedMessageType {
     MESSAGE_INDEX(1),
-    JOSHBOT(1);
     HELP_CHANNEL(1);
 
     public final int type = this.ordinal();
@@ -202,10 +198,10 @@ public class MessagingSystem {
    * @param message The message data.
    * @throws GameActionException
    */
-  public void writeMessage(MessageType type, int... message) throws GameActionException {
+  public void writeMessage(int type, int... message) throws GameActionException {
     int channel = (message_index++ % MAX_MESSAGE_INDEX) * BLOCK_SIZE;
 
-    RC.broadcast(channel++, type.type);
+    RC.broadcast(channel++, type);
 
     for (int i = 0; i < message.length; i++) {
       RC.broadcast(channel++, message[i]);
@@ -270,7 +266,7 @@ public class MessagingSystem {
    * @throws GameActionException
    */
   public void writeMicroMessage(MapLocation loc, int goIn) throws GameActionException {
-    writeMessage(MessageType.MICRO_INFO, loc.x, loc.y, goIn);
+    writeMessage(MessageType.MICRO_INFO.type, loc.x, loc.y, goIn);
   }
 
   /**
@@ -281,7 +277,7 @@ public class MessagingSystem {
    * @throws GameActionException
    */
   public void writeBirthMessage(MapLocation loc, int id, int type) throws GameActionException {
-    writeMessage(MessageType.BIRTH_INFO, loc.x, loc.y, id, type);
+    writeMessage(MessageType.BIRTH_INFO.type, loc.x, loc.y, id, type);
   }
 
   /**
@@ -290,7 +286,7 @@ public class MessagingSystem {
    * @throws GameActionException
    */
   public void writeSoldierID(int soldierID) throws GameActionException {
-    writeMessage(MessageType.SOLDIER_ID, soldierID);
+    writeMessage(MessageType.SOLDIER_ID.type, soldierID);
   }
 
   /**
@@ -303,14 +299,6 @@ public class MessagingSystem {
    */
   public void writeMilkInfo(int allyPastrCount, int enemyPastrCount, int allyMilk, int enemyMilk)
       throws GameActionException {
-    writeMessage(MessageType.MILK_INFO, allyPastrCount, enemyPastrCount, allyMilk, enemyMilk);
-  }
-
-  public void writeBuildPastureMessage(MapLocation loc) throws GameActionException {
-    writeMessage(MessageType.BUILD_PASTURE, loc.x, loc.y);
-  }
-
-  public void writeBuildingPastureMessage(MapLocation target) throws GameActionException {
-    writeMessage(MessageType.BUILDING_PASTURE, target.x, target.y);
+    writeMessage(MessageType.MILK_INFO.type, allyPastrCount, enemyPastrCount, allyMilk, enemyMilk);
   }
 }
