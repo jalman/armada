@@ -1,9 +1,8 @@
 package mergebot.utils;
 
-import java.util.Arrays;
-import java.util.Random;
+import java.util.*;
 
-import mergebot.messaging.MessagingSystem;
+import mergebot.messaging.*;
 import battlecode.common.*;
 
 public class Utils {
@@ -29,10 +28,6 @@ public class Utils {
       d[i][1] = DIRECTIONS[i].dy;
     }
   }
-
-  // Mining constants
-  public static final int CHECK_MINE_RADIUS_SQUARED = 13; // make sure this matches CHECK_MINE_RADIUS!!!
-  public static final int CHECK_MINE_RADIUS = 4;
 
   //these are set from the beginning of the game
   public static RobotController RC;
