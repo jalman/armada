@@ -46,24 +46,34 @@ public class MessagingSystem {
   public static final int MESSAGE_SIZE = 6;
   public static final int BLOCK_SIZE = 1 + MESSAGE_SIZE;
 
-  private static final int RESERVED_CHANNELS = 100;
+  private static final int RESERVED_CHANNELS = 5000;
   private static final int MESSAGE_CHANNELS = GameConstants.BROADCAST_MAX_CHANNELS
       - RESERVED_CHANNELS;
   private static final int MAX_MESSAGE_INDEX = MESSAGE_CHANNELS / BLOCK_SIZE;
 
   /**
    * Enumerates the reserved message channels.
-   * If you want to use an arbitrary channel, make a new entry.
+   * If you want to reserve N channels, add an entry of length N.
    * Then use read/writeReservedMessage to use the channel.
    * @author vlad
    */
-  public enum ReservedMessage {
-    MESSAGE_INDEX,
-    HELP_CHANNEL,
-    JOSHBOT;
+  public enum ReservedMessageType {
+    MESSAGE_INDEX(1),
+    JOSHBOT(1);
 
-    public final int channel = MESSAGE_CHANNELS + this.ordinal();
+    public final int type = this.ordinal();
+    public final int length;
+
+    private ReservedMessageType(int length) {
+      this.length = length;
+    }
+
+    public int channel() {
+      return reserved_channel_indices[this.type];
+    }
   }
+
+  public static int[] reserved_channel_indices = new int[ReservedMessageType.values().length];
 
   public static final double BROADCAST_COST = 10;
 
@@ -82,11 +92,65 @@ public class MessagingSystem {
 
   private boolean first_round = true;
 
-  public MessagingSystem() {}
-
-  public int readReservedMessage(ReservedMessage rm) throws GameActionException {
-    return RC.readBroadcast(rm.channel);
+  public MessagingSystem() {
+    initReservedChannels();
   }
+
+  /**
+   * Initialize the reserved_channel_indices array, necessary for correct function of reserved channels
+   */
+  public static void initReservedChannels() {
+    int currentChannel = MESSAGE_CHANNELS; // start of reserved channels is at MESSAGE_CHANNELS
+    ReservedMessageType[] rmt = ReservedMessageType.values();
+    for (int i = 0; i < rmt.length; i++) {
+      reserved_channel_indices[i] = currentChannel;
+      currentChannel += rmt[i].length;
+    }
+  }
+
+  /**
+   * Reads a reserved message at rm.channel().
+   * @param rm A Reserved MessageType
+   * @throws GameActionException
+   */
+  public int readReservedMessage(ReservedMessageType rm) throws GameActionException {
+    return RC.readBroadcast(rm.channel());
+  }
+
+  /**
+   * Reads a reserved message at rm.channel() + offset; DOES NOT CHECK IF THIS GOES OUT OF THE ALLOTTED
+   * CHANNELS FOR ReservedMessageType rm!!!!
+   * @param rm A Reserved MessageType
+   * @param offset Channel offset to read broadcast at
+   * @throws GameActionException
+   */
+  public int readReservedMessage(ReservedMessageType rm, int offset) throws GameActionException {
+    return RC.readBroadcast(rm.channel() + offset);
+  }
+
+  /**
+   * Writes a reserved message at rm.channel().
+   * @param rm A Reserved MessageType
+   * @param message Message
+   * @throws GameActionException
+   */
+  public void writeReservedMessage(ReservedMessageType rm, int message) throws GameActionException {
+    RC.broadcast(rm.channel(), message);
+  }
+
+  /**
+   * Writes a reserved message at rm.channel() + offset; DOES NOT CHECK IF THIS GOES OUT OF THE ALLOTTED
+   * CHANNELS FOR ReservedMessageType rm!!!!
+   * @param rm A Reserved MessageType
+   * @param offset Channel offset to broadcast at
+   * @param message Message
+   * @throws GameActionException
+   */
+  public void writeReservedMessage(ReservedMessageType rm, int offset, int message)
+      throws GameActionException {
+    RC.broadcast(rm.channel() + offset, message);
+  }
+
 
   /**
    * Reads a single message from the global message board.
@@ -113,7 +177,7 @@ public class MessagingSystem {
    * @throws GameActionException
    */
   private void readMessages(MessageHandler[] handlers) throws GameActionException {
-    int new_index = readReservedMessage(ReservedMessage.MESSAGE_INDEX);
+    int new_index = readReservedMessage(ReservedMessageType.MESSAGE_INDEX);
 
     int[] buffer = new int[MESSAGE_SIZE];
 
@@ -154,7 +218,7 @@ public class MessagingSystem {
       readMessages(handlers);
       message_written = false;
     } else {
-      message_index = readReservedMessage(ReservedMessage.MESSAGE_INDEX);
+      message_index = readReservedMessage(ReservedMessageType.MESSAGE_INDEX);
       first_round = false;
     }
   }
@@ -165,7 +229,7 @@ public class MessagingSystem {
    */
   public void endRound() throws GameActionException {
     if (message_written) {
-      RC.broadcast(ReservedMessage.MESSAGE_INDEX.channel, message_index);
+      RC.broadcast(ReservedMessageType.MESSAGE_INDEX.channel(), message_index);
       message_written = false;
     }
   }

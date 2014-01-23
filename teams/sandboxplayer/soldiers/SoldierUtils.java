@@ -106,7 +106,7 @@ public class SoldierUtils {
 
       if (nearbyTeam.length + 1 >= enemyWeight || (nearbyTeam.length-1 >= enemyWeight && isHelpingOut)) {
         if (isHelpingOut) {
-          RC.setIndicatorString(2, "helping out to kill guy at " + callX + "," + callY);
+          //RC.setIndicatorString(2, "helping out to kill guy at " + callX + "," + callY);
         }
         if (RC.isActive()) { // willing to attack!
           if (nearbyEnemies.length == 0) {
@@ -170,6 +170,7 @@ public class SoldierUtils {
         	  }
         	  else {
 	            RC.attackSquare(target);
+	            RC.setIndicatorString(2, "TARGET ACQUIRED " + RC.senseObjectAtLocation(target).getID());
 	            if (callX != target.x || callY != target.y) {
 	              RC.broadcast(HELP_CHANNEL, 256 * target.x + target.y);
 	            }

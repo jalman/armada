@@ -4,12 +4,12 @@ import java.util.Arrays;
 import java.util.Random;
 
 import mergebot.messaging.MessagingSystem;
-import mergebot.messaging.MessagingSystem.ReservedMessage;
+import mergebot.messaging.MessagingSystem.ReservedMessageType;
 import battlecode.common.*;
 
 public class Utils {
 
-  public static final int JOSHBOT_CHANNEL = ReservedMessage.JOSHBOT.channel;
+  public static final int JOSHBOT_CHANNEL = ReservedMessageType.JOSHBOT.channel();
 
   //Game constants
   // public final static int MAX_SOLDIER_ENERGON = 40;
@@ -30,10 +30,6 @@ public class Utils {
       d[i][1] = DIRECTIONS[i].dy;
     }
   }
-
-  // Mining constants
-  public static final int CHECK_MINE_RADIUS_SQUARED = 13; // make sure this matches CHECK_MINE_RADIUS!!!
-  public static final int CHECK_MINE_RADIUS = 4;
 
   //these are set from the beginning of the game
   public static RobotController RC;

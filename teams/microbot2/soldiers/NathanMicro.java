@@ -11,6 +11,8 @@ public class NathanMicro {
    * Channel for help messages. Message format: 256*X + Y.
    */
   public static final int HELP_CHANNEL = ReservedMessage.HELP_CHANNEL.channel;
+  public static final int GREAT_LUGE_ASSIST = 60;
+  
   public static boolean GREAT_LUGE = false;
 
   public static boolean luge() throws GameActionException {
@@ -52,7 +54,19 @@ public class NathanMicro {
         
         switch (ri.type){
           case SOLDIER:
-            allyWeight += ri.health;
+            Robot[] stuff = RC.senseNearbyGameObjects(Robot.class, ri.location, 17, ENEMY_TEAM);
+            boolean inCombat = false;
+            for (int j=0; j<stuff.length; ++j) {
+              if (ri.location.distanceSquaredTo(RC.senseRobotInfo(stuff[j]).location) <= 10) {
+                inCombat = true;
+              }
+            }
+            if (inCombat) {
+              allyWeight += ri.health;
+            }
+            else if (stuff.length > 0) {
+              allyWeight += ri.health / 2; // change me later
+            }
             break;
           default:
             break;
@@ -162,19 +176,22 @@ public class NathanMicro {
             if (dd > 4 && dd <= 9) d = 3;
 
             int maxDmg = (int) (enemiesInRange.length * (d - 1) * RobotType.SOLDIER.attackPower);
-            RC.setIndicatorString(1, "" + enemiesInRange.length + "," + d + ","
-                + RobotType.SOLDIER.attackPower + " - " + target.x + "/" + target.y);
 
-            if (RC.getHealth() > maxDmg + 5 && RC.getHealth() < maxDmg + 40 && allyWeight < enemyWeight) {
+            if (RC.getHealth() > maxDmg + 5 && RC.getHealth() < maxDmg + 40 && allyWeight < enemyWeight + GREAT_LUGE_ASSIST) {
               // TEMPORARY CHANGE ME LATER
               GREAT_LUGE = true;
             }
             if (GREAT_LUGE) {
-              RC.setIndicatorString(2, "" + d + "," + dd);
-              if (d <= 1.)
-                RC.selfDestruct();
-              else
-                RC.move(currentLocation.directionTo(target));
+              if (RC.isActive()) {
+                if (d <= 1.)
+                  RC.selfDestruct();
+                else if (RC.canMove(currentLocation.directionTo(target))) {
+                  RC.move(currentLocation.directionTo(target));
+                }
+                else {
+                  RC.attackSquare(target);
+                }
+              }
             }
             else {
               RC.attackSquare(target);
