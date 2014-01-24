@@ -99,27 +99,27 @@ public class NathanMicro {
         }
         nearbyEnemyInfo[i] = ri;
       }
-
-      int help_message = RC.readBroadcast(HELP_CHANNEL);
-      int callX = help_message / 256, callY = help_message % 256;
       boolean isHelpingOut = false;
-
-      if (help_message > 0) {
-        MapLocation callLoc = new MapLocation(callX, callY);
-        if (RC.canSenseSquare(callLoc) && RC.senseObjectAtLocation(callLoc) == null) {
-          RC.broadcast(HELP_CHANNEL, -1);
-        }
-
-        if ((callX - currentLocation.x) * (callX - currentLocation.x) + (callY - currentLocation.y)
-            * (callY - currentLocation.y) < 8 * 8
-            && (callX != currentLocation.x || callY != currentLocation.y)) {
+      MapLocation m = new MapLocation(0, 0);
+      
+      for (int i=0; i<SoldierBehavior.microLocations.size; ++i) {
+        m = SoldierBehavior.microLocations.get(i);
+        
+        if (currentLocation.distanceSquaredTo(m) <= 8*8) {
           isHelpingOut = true;
+          break;
+        }
+      }
+
+      if (isHelpingOut) {
+        if (RC.canSenseSquare(m) && RC.senseObjectAtLocation(m) == null) {
+          //RC.broadcast(HELP_CHANNEL, -1);
         }
       }
       RC.setIndicatorString(0, "ally " + allyWeight + " / enemy " + enemyWeight + " (turn " + Clock.getRoundNum() + ")");
       if (allyWeight >= enemyWeight - 25 || GREAT_LUGE) {
         if (isHelpingOut) {
-          RC.setIndicatorString(2, "helping out to kill guy at " + callX + "," + callY);
+          RC.setIndicatorString(2, "helping out to kill guy at " + m.x + "," + m.y);
         }
         else {
           RC.setIndicatorString(2, "");
@@ -130,7 +130,7 @@ public class NathanMicro {
             return false; // jurgz should take a look at this ...
           }
           else if (isHelpingOut && enemiesInRange.length == 0) { //change me eventually
-            Direction newDir = currentLocation.directionTo(new MapLocation(callX, callY));
+            Direction newDir = currentLocation.directionTo(m);
             if (RC.isActive() && newDir != Direction.NONE && newDir != Direction.OMNI) {
               if (RC.canMove(newDir)) {
                 RC.move(newDir);
@@ -196,8 +196,7 @@ public class NathanMicro {
             }
             else {
               RC.attackSquare(target);
-              if (callX != target.x || callY != target.y) {
-                RC.broadcast(HELP_CHANNEL, 256 * target.x + target.y);
+              if (m.x != target.x || m.y != target.y) {
                 messagingSystem.writeMicroMessage(target, 1);
               }
             }
