@@ -26,6 +26,7 @@ public class SoldierBehavior extends RobotBehavior {
   int[][] enemyLastSeen = new int[MAP_WIDTH][MAP_HEIGHT];
 
   ArraySet<MapLocation> attackLocations = new ArraySet<MapLocation>(100);
+  static ArraySet<MapLocation> microLocations = new ArraySet<MapLocation>(100);
 
   private MapLocation buildPastureLoc = null;
   private int buildPastureRound;
@@ -43,6 +44,13 @@ public class SoldierBehavior extends RobotBehavior {
       public void handleMessage(int[] message) {
         MapLocation loc = new MapLocation(message[0], message[1]);
         attackLocations.insert(loc);
+      }
+    };
+    handlers[MessageType.MICRO_INFO.type] = new MessageHandler() {
+      @Override
+      public void handleMessage(int[] message) {
+        MapLocation loc = new MapLocation(message[0], message[1]);
+        microLocations.insert(loc);
       }
     };
 
@@ -78,6 +86,7 @@ public class SoldierBehavior extends RobotBehavior {
   public void beginRound() throws GameActionException {
     updateUnitUtils();
     attackLocations.clear();
+    microLocations.clear();
     messagedEnemyRobots.clear();
     messagingSystem.beginRound(handlers);
   }

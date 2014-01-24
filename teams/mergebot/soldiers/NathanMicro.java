@@ -2,6 +2,7 @@ package mergebot.soldiers;
 
 import static mergebot.soldiers.SoldierUtils.*;
 import static mergebot.utils.Utils.*;
+import mergebot.messaging.MessagingSystem;
 import mergebot.messaging.MessagingSystem.ReservedMessageType;
 import battlecode.common.*;
 
@@ -197,6 +198,7 @@ public class NathanMicro {
               RC.attackSquare(target);
               if (callX != target.x || callY != target.y) {
                 RC.broadcast(HELP_CHANNEL, 256 * target.x + target.y);
+                messagingSystem.writeMicroMessage(target, 1);
               }
             }
           }
