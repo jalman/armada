@@ -3,6 +3,7 @@ package mergebot.soldiers;
 import static mergebot.soldiers.SoldierUtils.*;
 import static mergebot.utils.Utils.*;
 import mergebot.messaging.MessagingSystem.ReservedMessageType;
+import mergebot.nav.*;
 import battlecode.common.*;
 
 public class NathanMicro {
@@ -15,7 +16,7 @@ public class NathanMicro {
 
   public static boolean GREAT_LUGE = false;
 
-  public static boolean luge() throws GameActionException {
+  public static boolean luge(Mover mover) throws GameActionException {
     RobotInfo[] nearbyEnemies = getEnemyRobotInfo();
     Robot[] enemiesInRange = RC.senseNearbyGameObjects(Robot.class, 10, ENEMY_TEAM);
 
@@ -149,30 +150,47 @@ public class NathanMicro {
           RC.setIndicatorString(2, ss);
         }
         if (RC.isActive()) { // willing to attack!
+          MapLocation target = getHighestPriority(nearbyEnemies);
+
+          RC.setIndicatorString(1, "..." + isHelpingOut + "," + Clock.getRoundNum());
           if (!isHelpingOut && (nearbyEnemies.length == 0 || (enemiesInRange.length == 0 && allyWeight >= enemyWeight + 75))) {
             // willing to move forward and attack!
             RC.setIndicatorString(2, "not microing");
-            return false; // jurgz should take a look at this ...
+            if (target != null) {
+              mover.setTarget(target); // jurgz should take a look at this ...
+              mover.move();
+              return true;
+            } else {
+              return false;
+            }
           }
           else if (isHelpingOut && enemiesInRange.length == 0) { //change me eventually
             RC.setIndicatorString(2, "helping" + "," + RC.canSenseSquare(m) + "," + m.x + "," + m.y);
             Direction newDir = currentLocation.directionTo(m);
             if (RC.isActive() && newDir != Direction.NONE && newDir != Direction.OMNI) {
               if (RC.canMove(newDir)) {
-                RC.move(newDir);
+                mover.setTarget(currentLocation.add(newDir, 3));
+                mover.move();
+                return true;
               }
               else if (RC.canMove(newDir.rotateLeft())) {
-                RC.move(newDir.rotateLeft());
+                mover.setTarget(currentLocation.add(newDir.rotateLeft(), 3));
+                mover.move();
+                return true;
               }
               else if (RC.canMove(newDir.rotateRight())) {
-                RC.move(newDir.rotateRight());
+                mover.setTarget(currentLocation.add(newDir.rotateRight(), 3));
+                mover.move();
+                return true;
               }
             }
           }
 
-          MapLocation target = getHighestPriority(nearbyEnemies);
-          if (target != null) RC.setIndicatorString(2, "" + target.x + "," + target.y + "," + Clock.getRoundNum());
-          else RC.setIndicatorString(2, "null target" + "," + Clock.getRoundNum());
+          if (target != null)
+            RC.setIndicatorString(2, "" + target.x + "," + target.y + "," + Clock.getRoundNum());
+          else
+            RC.setIndicatorString(2, "null target" + "," + Clock.getRoundNum());
+
           if (target == null) {
             if (nearestPastrLoc != null) {
               // PASTR_RANGE = 5
@@ -216,12 +234,12 @@ public class NathanMicro {
                 RC.selfDestruct();
               else if (RC.canMove(currentLocation.directionTo(target))) {
                 RC.move(currentLocation.directionTo(target));
-              }
-              else {
+              } else {
+                System.out.println("great luge attack");
                 RC.attackSquare(target);
               }
-            }
-            else {
+              return true;
+            } else {
               RC.attackSquare(target);
               if (m.x != target.x || m.y != target.y) {
                 messagingSystem.writeMicroMessage(target, 1);
@@ -244,13 +262,16 @@ public class NathanMicro {
 
         if (RC.isActive() && newDir != Direction.NONE && newDir != Direction.OMNI) {
           if (RC.canMove(newDir)) {
-            RC.move(newDir);
+            mover.setTarget(currentLocation.add(newDir, 3));
+            mover.move();
           }
           else if (RC.canMove(newDir.rotateLeft())) {
-            RC.move(newDir.rotateLeft());
+            mover.setTarget(currentLocation.add(newDir.rotateLeft(), 3));
+            mover.move();
           }
           else if (RC.canMove(newDir.rotateRight())) {
-            RC.move(newDir.rotateRight());
+            mover.setTarget(currentLocation.add(newDir.rotateRight(), 3));
+            mover.move();
           }
         }
       }
