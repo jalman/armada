@@ -78,7 +78,7 @@ public class NathanMicro {
       }
       // find enemy weight
       for (int i = nearbyEnemies.length - 1; i >= 0; --i) {
-        ri = RC.senseRobotInfo(nearbyEnemies[i]);
+        ri = nearbyEnemies[i];
         switch (ri.type) {
           case HQ:
             enemyWeight += 1000;
