@@ -2,7 +2,8 @@ package team027.nav;
 
 public enum NavType {
 
-  BUG_FUN(new BugMoveFun());
+  BUG(new BugMoveFun()),
+  BUG_2(new BugMoveFun2());
 
 	public final NavAlg navAlg;
 

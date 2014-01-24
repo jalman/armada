@@ -4,11 +4,12 @@ import java.util.Arrays;
 import java.util.Random;
 
 import team027.messaging.MessagingSystem;
+import team027.messaging.MessagingSystem.ReservedMessageType;
 import battlecode.common.*;
 
 public class Utils {
 
-  public static final int JOSHBOT_CHANNEL = 65531;
+  public static final int JOSHBOT_CHANNEL = ReservedMessageType.JOSHBOT.channel();
 
   //Game constants
   // public final static int MAX_SOLDIER_ENERGON = 40;
@@ -29,10 +30,6 @@ public class Utils {
       d[i][1] = DIRECTIONS[i].dy;
     }
   }
-
-  // Mining constants
-  public static final int CHECK_MINE_RADIUS_SQUARED = 13; // make sure this matches CHECK_MINE_RADIUS!!!
-  public static final int CHECK_MINE_RADIUS = 4;
 
   //these are set from the beginning of the game
   public static RobotController RC;
@@ -152,7 +149,7 @@ public class Utils {
   public static RobotInfo[] getEnemyRobotInfo() throws GameActionException {
     if (roundInfoUpdated < currentRound) {
       enemyRobotInfo = new RobotInfo[enemyRobots.length];
-      for (int i = 0; i < enemyRobots.length; i++) {
+      for (int i = enemyRobots.length - 1; i >= 0; i--) {
         enemyRobotInfo[i] = RC.senseRobotInfo(enemyRobots[i]);
       }
       roundInfoUpdated = currentRound;
@@ -206,12 +203,12 @@ public class Utils {
    * @param target The target location.
    * @return The closest map location.
    */
-  public static MapLocation closest(MapLocation[] locs, MapLocation target) {
+  public static MapLocation closestLocation(MapLocation[] locs, MapLocation target) {
     MapLocation close = null;
     int distance = Integer.MAX_VALUE;
 
-    for(int i = 0; i < locs.length; i++) {
-      int d = naiveDistance(locs[i], target);
+    for (int i = locs.length - 1; i >= 0; i--) {
+      int d = locs[i].distanceSquaredTo(target);
       if(d < distance) {
         close = locs[i];
         distance = d;
@@ -238,28 +235,6 @@ public class Utils {
     }
 
     return sqrt - 1;
-  }
-
-  public static int getDirTowards(int dx, int dy) {
-    if (dx == 0) {
-      if (dy > 0)
-        return 4;
-      else return 0;
-    }
-    double slope = ((double) dy) / dx;
-    if (dx > 0) {
-      if(slope>2.414) return 4;
-      else if(slope>0.414) return 3;
-      else if(slope>-0.414) return 2;
-      else if(slope>-2.414) return 1;
-      else return 0;
-    } else {
-      if(slope>2.414) return 0;
-      else if(slope>0.414) return 7;
-      else if(slope>-0.414) return 6;
-      else if(slope>-2.414) return 5;
-      else return 4;
-    }
   }
 
   public static double evaluate(MapLocation loc) {

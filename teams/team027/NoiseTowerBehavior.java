@@ -1,21 +1,119 @@
 package team027;
 
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.TerrainTile;
+import team027.utils.Utils;
+import battlecode.common.*;
 import static team027.utils.Utils.*;
 
 public class NoiseTowerBehavior extends RobotBehavior {
 	
 
-	int a=0, b=0; //for noise
+	public static int a=6, b=0; //for noise
 	double[][] cows = null; double[] cowsindir = new double[8];
-	Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
-	public static final int[] yrangefornoise = { 20, 19, 19, 19, 19, 19, 19, 18, 18, 17, 17, 16, 16, 15, 14, 13, 12, 10,
-		8, 6, 0 };
+	static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
+	public static final int[] yrangefornoise = { 17, 17, 17, 17, 16, 16, 16, 15, 15, 14, 14, 13, 12, 11, 10, 8, 6, 3 };
+	
+	public static MapLocation[][] paths = new MapLocation[8][30];
+	public static int[] pathat = new int[8];
+	public static boolean[] skip = new boolean[8];
 	
 	public NoiseTowerBehavior() {
+		for(int i = 7; i >= 0; i--) {
+			int lastdir = (i+4) % 8;
+			int at = 1;
+			paths[i][0] = currentLocation;
+			int lastcow = 0;
+			for(int j = 1; j < 30; j++) {
+				if(i < 7 && RC.isActive()) {
+					try {
+						makeSomeNoise();
+					} catch (GameActionException e1) {
+						e1.printStackTrace();
+					}
+				}
+				
+				int k = lastdir + 2;
+				k %= 8;
+				int bestscore = -1;
+				MapLocation bestplace = currentLocation;
+				while (k != (lastdir + 6) % 8) {
+					
+					int score = Math.abs(i - k);
+					if(score < 4) score = 8 - score;
+					score *= score*score;
+					MapLocation here = paths[i][j-1].add(directions[k]);
+					double cows;
+					try {
+						cows = Utils.COW_GROWTH[here.x][here.y];
+						if(cows > 0) lastcow = j;
+						score =  (here.add(directions[k])).distanceSquaredTo(currentLocation) > 300 || RC.senseTerrainTile(here) == TerrainTile.VOID ? -10 : cows == 0.0  ? 30 : score + (int)(cows)*0 + 30;
+					} catch (Exception e) {
+						score = -2;
+					}
+					
+					if(score > bestscore) {
+						bestscore = score;
+						bestplace = here;
+					}
+					
+					k++;
+					if(k == 8) k = 0;
+				}
+				if(!bestplace.equals(currentLocation)) {
+					paths[i][j] = bestplace;
+				} else {
+					break;
+				}
+			}
+			pathat[i] = lastcow;
+			if(lastcow < 29) lastcow++;
+		}
+		
+		skip[0] = false;
+		
+		
+		double[] d = new double[8];
+		int[] dist = new int[8];
+		MapLocation[] toconsider = new MapLocation[8];
+		
+		for(int i = 7; i >= 0; i--) {
+			if(pathat[i] == 0){
+				d[i] = 0;
+				dist[i] = 0;
+			} else {
+				toconsider[i] = paths[i][pathat[i]-1];
+				d[i] =  Math.atan2(toconsider[i].y - curY, toconsider[i].x - curX);
+				dist[i] = currentLocation.distanceSquaredTo(toconsider[i]);
+			}
+			
+		}
+		for(int i = 7; i >= 0; i--) {
+			if(dist[i] == 0) skip[i] = true;
+			else {
+				for(int j = i-1; j >= 0; j--) {
+					if(i==j || dist[j] == 0) continue;
+					if(Math.abs(d[i] - d[j]) < 0.4 && pathbetween(toconsider[i], toconsider[j])) {
+						if(dist[i] < dist[j]) skip[i] = true;
+						else skip[j] = true;
+					}
+				}
+			}
+			
+		}
+		
+	}
+	
+	public static boolean pathbetween(MapLocation a, MapLocation b) {
+		while(!a.equals(b)) {
+			a = a.add(a.directionTo(b));
+			if(RC.senseTerrainTile(a) == TerrainTile.VOID) return false;
+		}
+		return true;
+	}
+	
+	public static double atan3(int a, int b) {
+		if (a==0 && b == 0) return 20.0;
+		return Math.atan2(a,b);
+		
 	}
 
 	/**
@@ -23,6 +121,9 @@ public class NoiseTowerBehavior extends RobotBehavior {
 	 */
   @Override
   public void beginRound() throws GameActionException {
+    Utils.updateBuildingUtils();
+    
+    messagingSystem.beginRound(handlers);
   }
 
 	/**
@@ -33,60 +134,44 @@ public class NoiseTowerBehavior extends RobotBehavior {
 	  while (!RC.isActive()) {
 		  RC.yield();
 	  }
-	  
-//		if(cows == null) {
-//		cows = rc.senseCowGrowth();
-//		for(int x = -20; x <= 20; x++) {
-//			int range = yrangefornoise[Math.abs(x)];
-//			for(int y = - range; y <= range; y++) {
-//				cowsindir[Utils.getDirTowards(x,y)] += cows[curX+x][curY+y];
-//			}
-//		}
-//	}
-//	
-	
-	
-//	if(a%2 == 0) {
-		MapLocation target = RC.getLocation().add(directions[a %8], b);
-		if(RC.canAttackSquare(target)) RC.attackSquare(target);
-//		rc.yield();
-//		target = target.add(directions[(a+3) %8]).add(directions[(a+2) %8], 2);
-//		if(rc.canAttackSquare(target)) rc.attackSquare(target);
-//		rc.yield();
-//		target = target.add(directions[(a+6) %8], 6);
-//		if(rc.canAttackSquare(target)) rc.attackSquare(target);
-//	} else {
-//		MapLocation target = rc.getLocation().add(directions[a %8], b);
-//		if(rc.canAttackSquare(target)) rc.attackSquare(target);
-//		rc.yield();
-//		target = target.add(directions[(a+3) %8]).add(directions[(a+2) %8], 2);
-//		if(rc.canAttackSquare(target)) rc.attackSquare(target);
-//		rc.yield();
-//		target = target.add(directions[(a+6) %8], 6);
-//		if(rc.canAttackSquare(target)) rc.attackSquare(target);
-//	}
-	
-	if(b>6) b-=2;
-	else {
-		a++;
-		a%=8;
-		int c = a%2 == 0 ? 20 : 14;
-		for(b = 1; b <= c; b++) {
-			MapLocation checkingplace = RC.getLocation().add(directions[a], b);
-			TerrainTile check = RC.senseTerrainTile(checkingplace);
-			if(check == TerrainTile.OFF_MAP || checkingplace.distanceSquaredTo(ENEMY_HQ) < 16) {
-				b--;
-				break;
-			}
-		}
-	}
+    RobotInfo[] robots = Utils.getEnemyRobotInfo();
+    Utils.RC.setIndicatorString(1, "" + robots.length);
+    for (int i=0; i<robots.length; ++i) {
+      messagingSystem.writeAttackMessage(robots[i].location);
+      messagingSystem.writeMicroMessage(robots[i].location, 1);
+    }
+    
+	  makeSomeNoise();
   }
 
 	/**
 	 * Called at the end of each round.
 	 */
 	@Override
-  public void endRound() {
-
+  public void endRound() throws GameActionException {
+	  messagingSystem.endRound();
   }
+	
+	public static void makeSomeNoise() throws GameActionException { //assumes RC is active
+		  
+		  if(b < 3) {
+			  a++;
+			  if(a == 8) a = 0;
+			  while(skip[a]) {
+				  a++;
+				  if(a == 8) a = 0;
+			  }
+			  b = pathat[a];
+		  } else {
+			  b--;
+		  }
+		  if(paths[a][b] != null) {
+			  if(RC.canAttackSquare(paths[a][b].add(directions[a]))) {
+				  RC.attackSquare(paths[a][b].add(directions[a]));
+			  } else {
+				  makeSomeNoise();
+			  }
+		  }
+		
+	}
 }

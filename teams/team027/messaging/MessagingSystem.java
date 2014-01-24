@@ -21,7 +21,10 @@ public class MessagingSystem {
     BIRTH_INFO(4),
     SOLDIER_ID(1),
     ENEMY_BOT(2),
-    MILK_INFO(4);
+    MILK_INFO(4),
+    BUILD_PASTURE(2),
+    BUILDING_PASTURE(2);
+    ;
 
     public final int type = this.ordinal();
 
@@ -43,21 +46,46 @@ public class MessagingSystem {
   public static final int MESSAGE_SIZE = 6;
   public static final int BLOCK_SIZE = 1 + MESSAGE_SIZE;
 
-  private static final int RESERVED_CHANNELS = 100;
+  private static final int RESERVED_CHANNELS = 5000;
   private static final int MESSAGE_CHANNELS = GameConstants.BROADCAST_MAX_CHANNELS
       - RESERVED_CHANNELS;
   private static final int MAX_MESSAGE_INDEX = MESSAGE_CHANNELS / BLOCK_SIZE;
 
   /**
    * Enumerates the reserved message channels.
-   * If you want to use an arbitrary channel, make a new entry.
+   * If you want to reserve N channels, add an entry of length N.
    * Then use read/writeReservedMessage to use the channel.
    * @author vlad
    */
-  public enum ReservedMessage {
-    MESSAGE_INDEX, ;
+  public enum ReservedMessageType {
+    MESSAGE_INDEX(1),
+    JOSHBOT(1),
+    HELP_CHANNEL(1);
 
-    final int channel = MESSAGE_CHANNELS + this.ordinal();
+    public final int type = this.ordinal();
+    public final int length;
+
+    private ReservedMessageType(int length) {
+      this.length = length;
+    }
+
+    public int channel() {
+      return reserved_channel_indices[this.type];
+    }
+  }
+
+  public static int[] reserved_channel_indices = new int[ReservedMessageType.values().length];
+
+  /**
+   * Initialize the reserved_channel_indices array, necessary for correct function of reserved channels
+   */
+  static {
+    int currentChannel = MESSAGE_CHANNELS; // start of reserved channels is at MESSAGE_CHANNELS
+    ReservedMessageType[] rmt = ReservedMessageType.values();
+    for (int i = 0; i < rmt.length; i++) {
+      reserved_channel_indices[i] = currentChannel;
+      currentChannel += rmt[i].length;
+    }
   }
 
   public static final double BROADCAST_COST = 10;
@@ -79,9 +107,49 @@ public class MessagingSystem {
 
   public MessagingSystem() {}
 
-  public int readReservedMessage(ReservedMessage rm) throws GameActionException {
-    return RC.readBroadcast(rm.channel);
+  /**
+   * Reads a reserved message at rm.channel().
+   * @param rm A Reserved MessageType
+   * @throws GameActionException
+   */
+  public int readReservedMessage(ReservedMessageType rm) throws GameActionException {
+    return RC.readBroadcast(rm.channel());
   }
+
+  /**
+   * Reads a reserved message at rm.channel() + offset; DOES NOT CHECK IF THIS GOES OUT OF THE ALLOTTED
+   * CHANNELS FOR ReservedMessageType rm!!!!
+   * @param rm A Reserved MessageType
+   * @param offset Channel offset to read broadcast at
+   * @throws GameActionException
+   */
+  public int readReservedMessage(ReservedMessageType rm, int offset) throws GameActionException {
+    return RC.readBroadcast(rm.channel() + offset);
+  }
+
+  /**
+   * Writes a reserved message at rm.channel().
+   * @param rm A Reserved MessageType
+   * @param message Message
+   * @throws GameActionException
+   */
+  public void writeReservedMessage(ReservedMessageType rm, int message) throws GameActionException {
+    RC.broadcast(rm.channel(), message);
+  }
+
+  /**
+   * Writes a reserved message at rm.channel() + offset; DOES NOT CHECK IF THIS GOES OUT OF THE ALLOTTED
+   * CHANNELS FOR ReservedMessageType rm!!!!
+   * @param rm A Reserved MessageType
+   * @param offset Channel offset to broadcast at
+   * @param message Message
+   * @throws GameActionException
+   */
+  public void writeReservedMessage(ReservedMessageType rm, int offset, int message)
+      throws GameActionException {
+    RC.broadcast(rm.channel() + offset, message);
+  }
+
 
   /**
    * Reads a single message from the global message board.
@@ -108,7 +176,7 @@ public class MessagingSystem {
    * @throws GameActionException
    */
   private void readMessages(MessageHandler[] handlers) throws GameActionException {
-    int new_index = readReservedMessage(ReservedMessage.MESSAGE_INDEX);
+    int new_index = readReservedMessage(ReservedMessageType.MESSAGE_INDEX);
 
     int[] buffer = new int[MESSAGE_SIZE];
 
@@ -132,10 +200,10 @@ public class MessagingSystem {
    * @param message The message data.
    * @throws GameActionException
    */
-  public void writeMessage(int type, int... message) throws GameActionException {
+  public void writeMessage(MessageType type, int... message) throws GameActionException {
     int channel = (message_index++ % MAX_MESSAGE_INDEX) * BLOCK_SIZE;
 
-    RC.broadcast(channel++, type);
+    RC.broadcast(channel++, type.type);
 
     for (int i = 0; i < message.length; i++) {
       RC.broadcast(channel++, message[i]);
@@ -149,7 +217,7 @@ public class MessagingSystem {
       readMessages(handlers);
       message_written = false;
     } else {
-      message_index = readReservedMessage(ReservedMessage.MESSAGE_INDEX);
+      message_index = readReservedMessage(ReservedMessageType.MESSAGE_INDEX);
       first_round = false;
     }
   }
@@ -160,7 +228,7 @@ public class MessagingSystem {
    */
   public void endRound() throws GameActionException {
     if (message_written) {
-      RC.broadcast(ReservedMessage.MESSAGE_INDEX.channel, message_index);
+      RC.broadcast(ReservedMessageType.MESSAGE_INDEX.channel(), message_index);
       message_written = false;
     }
   }
@@ -200,7 +268,7 @@ public class MessagingSystem {
    * @throws GameActionException
    */
   public void writeMicroMessage(MapLocation loc, int goIn) throws GameActionException {
-    writeMessage(MessageType.MICRO_INFO.type, loc.x, loc.y, goIn);
+    writeMessage(MessageType.MICRO_INFO, loc.x, loc.y, goIn);
   }
 
   /**
@@ -211,7 +279,7 @@ public class MessagingSystem {
    * @throws GameActionException
    */
   public void writeBirthMessage(MapLocation loc, int id, int type) throws GameActionException {
-    writeMessage(MessageType.BIRTH_INFO.type, loc.x, loc.y, id, type);
+    writeMessage(MessageType.BIRTH_INFO, loc.x, loc.y, id, type);
   }
 
   /**
@@ -220,7 +288,7 @@ public class MessagingSystem {
    * @throws GameActionException
    */
   public void writeSoldierID(int soldierID) throws GameActionException {
-    writeMessage(MessageType.SOLDIER_ID.type, soldierID);
+    writeMessage(MessageType.SOLDIER_ID, soldierID);
   }
 
   /**
@@ -233,6 +301,14 @@ public class MessagingSystem {
    */
   public void writeMilkInfo(int allyPastrCount, int enemyPastrCount, int allyMilk, int enemyMilk)
       throws GameActionException {
-    writeMessage(MessageType.MILK_INFO.type, allyPastrCount, enemyPastrCount, allyMilk, enemyMilk);
+    writeMessage(MessageType.MILK_INFO, allyPastrCount, enemyPastrCount, allyMilk, enemyMilk);
+  }
+
+  public void writeBuildPastureMessage(MapLocation loc) throws GameActionException {
+    writeMessage(MessageType.BUILD_PASTURE, loc.x, loc.y);
+  }
+
+  public void writeBuildingPastureMessage(MapLocation target) throws GameActionException {
+    writeMessage(MessageType.BUILDING_PASTURE, target.x, target.y);
   }
 }
