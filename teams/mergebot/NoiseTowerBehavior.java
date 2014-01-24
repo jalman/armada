@@ -65,6 +65,7 @@ public class NoiseTowerBehavior extends RobotBehavior {
 				}
 			}
 			pathat[i] = lastcow;
+			while(paths[i][pathat[i]] == null && pathat[i] > 0) pathat[i]--;
 			if(lastcow < 29) lastcow++;
 		}
 		
@@ -152,19 +153,30 @@ public class NoiseTowerBehavior extends RobotBehavior {
 	  messagingSystem.endRound();
   }
 	
+	private static void incrementAB() {
+	  if(b < ((a%2 == 0) ? 6 : 5)) {
+      a++;
+      if(a == 8) a = 0;
+      while(skip[a]) {
+        a++;
+        if(a == 8) a = 0;
+      }
+      b = pathat[a];
+    } else {
+      b--;
+    }
+	}
+	
 	public static void makeSomeNoise() throws GameActionException { //assumes RC is active
 		  
-		  if(b < 3) {
-			  a++;
-			  if(a == 8) a = 0;
-			  while(skip[a]) {
-				  a++;
-				  if(a == 8) a = 0;
-			  }
-			  b = pathat[a];
-		  } else {
-			  b--;
+		  incrementAB();
+		  
+		  if(b < pathat[a] - 1 && b > 1 && paths[a][b] != null && paths[a][b+1] != null && paths[a][b-1] != null) {
+		    if(paths[a][b].directionTo(paths[a][b+1]) == paths[a][b-1].directionTo(paths[a][b])) {
+		      b--;
+		    }
 		  }
+		  
 		  if(paths[a][b] != null) {
 			  if(RC.canAttackSquare(paths[a][b].add(directions[a]))) {
 				  RC.attackSquare(paths[a][b].add(directions[a]));

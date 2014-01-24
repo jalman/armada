@@ -3,7 +3,7 @@ package team027.nav;
 import static team027.utils.Utils.*;
 import battlecode.common.*;
 
-public class BugMoveFun extends NavAlg {
+public class BugMoveFun2 extends NavAlg {
 
   MapLocation here;
 
@@ -19,7 +19,7 @@ public class BugMoveFun extends NavAlg {
   /** the default direction to trace. Changes every time we trace too far. */
   int defaultTraceDirection = 0;
   /** trace threshold to reset to every time we get a new destination. */
-  static final int INITIAL_TRACE_THRESHOLD = 25;
+  static final int INITIAL_TRACE_THRESHOLD = 50;
   /** number of turns to trace before resetting. */
   int traceThreshold = -1;
   /** if we've hit the edge of the map by tracing in the other direction,
@@ -34,8 +34,12 @@ public class BugMoveFun extends NavAlg {
   // Map edge variables - these need to be updated from the outside
   public int edgeXMin, edgeXMax, edgeYMin, edgeYMax;
 
+  /**
+   * Best d^2 to target achieved during bugging (not just the current wallfollow)
+   */
+  int bestDistanceSquaredToTarget = Integer.MAX_VALUE;
 
-  public BugMoveFun() {
+  public BugMoveFun2() {
     edgeXMin = -1;
     edgeXMax = MAP_WIDTH;
     edgeYMin = -1;
@@ -62,8 +66,9 @@ public class BugMoveFun extends NavAlg {
   }
 
   public void reset() {
+    bestDistanceSquaredToTarget = (curX - tx) * (curX - tx) + (curY - ty) * (curY - ty);
     tracing = -1;
-    defaultTraceDirection = Clock.getRoundNum()/200%2; //(int)(Util.randDouble()+0.5);
+    defaultTraceDirection = (int) (random.nextDouble() + 0.5);
     traceThreshold = INITIAL_TRACE_THRESHOLD;
     hitEdgeInOtherTraceDirection = false;
   }
@@ -78,13 +83,12 @@ public class BugMoveFun extends NavAlg {
 
     boolean movable[] = new boolean[8];
     if (AVOID_ENEMY_HQ && currentLocation.distanceSquaredTo(ENEMY_HQ) <= 35) {
-
       for(int i=0; i<8; i++) {
         dir = DIRECTIONS[i];
         MapLocation next = currentLocation.add(dir);
         movable[i] =
             RC.canMove(dir)
-                && !inRangeOfEnemyHQ(next.add(next.directionTo(ENEMY_HQ)));
+            && !inRangeOfEnemyHQ(next.add(next.directionTo(ENEMY_HQ)));
       }
     } else {
       for(int i=0; i<8; i++) {
@@ -110,10 +114,15 @@ public class BugMoveFun extends NavAlg {
       return new int[] {tx-sx, ty-sy};
     }
 
-    double dist = (sx-tx)*(sx-tx)+(sy-ty)*(sy-ty);
+    int dist = (sx - tx) * (sx - tx) + (sy - ty) * (sy - ty);
+    // if (dist < bestDistanceSquaredToTarget) {
+    // bestDistanceSquaredToTarget = dist;
+    // }
+    // int dist = naiveDistance(sx, sy, tx, ty);
     if(tracing!=-1) {
       turnsTraced++;
-      if(dist<traceDistance) {
+      if (dist < bestDistanceSquaredToTarget) {
+        bestDistanceSquaredToTarget = dist;
         tracing = -1;
         hitEdgeInOtherTraceDirection = false;
       } else if(turnsTraced>=traceThreshold) {
@@ -144,9 +153,11 @@ public class BugMoveFun extends NavAlg {
     }
     if(tracing==-1) {
       int dir = getDirTowards(tx-sx, ty-sy);
-      if(movableTerrain[dir]) return d[dir];
+      if (movableTerrain[dir]) {
+        return d[dir];
+      }
       tracing = defaultTraceDirection;
-      traceDistance = dist;
+      // traceDistance = dist;
       turnsTraced = 0;
       wallDir = dir;
     }

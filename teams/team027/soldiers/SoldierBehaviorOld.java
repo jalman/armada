@@ -1,12 +1,12 @@
-package mergebot.soldiers;
+package team027.soldiers;
 
-import static mergebot.utils.Utils.*;
-import mergebot.RobotBehavior;
-import mergebot.RobotPlayer;
-import mergebot.messaging.MessageHandler;
-import mergebot.messaging.MessagingSystem.MessageType;
-import mergebot.nav.Mover;
-import mergebot.utils.ArraySet;
+import static team027.utils.Utils.*;
+import team027.RobotBehavior;
+import team027.RobotPlayer;
+import team027.messaging.MessageHandler;
+import team027.messaging.MessagingSystem.MessageType;
+import team027.nav.Mover;
+import team027.utils.ArraySet;
 import battlecode.common.*;
 
 public class SoldierBehaviorOld extends RobotBehavior {

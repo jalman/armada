@@ -2,15 +2,21 @@ package team027.soldiers;
 
 import static team027.utils.Utils.*;
 import team027.nav.Mover;
+import team027.utils.ArraySet;
 import battlecode.common.*;
 
 public class Micro {
 
-  private final SoldierBehavior soldierBehavior;
+  private final ArraySet<MapLocation> attackLocations;
   private final Mover mover;
 
   public Micro(SoldierBehavior soldierBehavior) {
-    this.soldierBehavior = soldierBehavior;
+    this.attackLocations = soldierBehavior.attackLocations;
+    this.mover = soldierBehavior.mover;
+  }
+
+  public Micro(SoldierBehaviorOld soldierBehavior) {
+    this.attackLocations = soldierBehavior.attackLocations;
     this.mover = soldierBehavior.mover;
   }
 
@@ -52,8 +58,8 @@ public class Micro {
       MapLocation closestAttackLocation = null;
       minDist2 = 36;
 
-      for (int i = soldierBehavior.attackLocations.size; --i >= 0;) {
-        MapLocation loc = soldierBehavior.attackLocations.get(i);
+      for (int i = attackLocations.size; --i >= 0;) {
+        MapLocation loc = attackLocations.get(i);
         int dist2 = currentLocation.distanceSquaredTo(loc);
         if (dist2 < minDist2) {
           minDist2 = dist2;
@@ -73,7 +79,7 @@ public class Micro {
       mover.move();
       RC.setIndicatorString(1, "ATTACK " + closestEnemyRobot.location);
     } else if (allyRobots.length < enemyRobots.length) {
-      // do something better here
+      // FIXME: do something better here
       mover.setTarget(ALLY_HQ);
       mover.move();
       RC.setIndicatorString(1, "RETREAT");

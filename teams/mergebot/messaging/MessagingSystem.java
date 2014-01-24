@@ -59,7 +59,6 @@ public class MessagingSystem {
    */
   public enum ReservedMessageType {
     MESSAGE_INDEX(1),
-    JOSHBOT(1),
     HELP_CHANNEL(1);
 
     public final int type = this.ordinal();

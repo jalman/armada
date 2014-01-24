@@ -9,8 +9,6 @@ import battlecode.common.*;
 
 public class Utils {
 
-  public static final int JOSHBOT_CHANNEL = ReservedMessageType.JOSHBOT.channel();
-
   //Game constants
   // public final static int MAX_SOLDIER_ENERGON = 40;
   // public final static int MAX_ENCAMPMENT_ENERGON = 100;
