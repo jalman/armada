@@ -31,19 +31,19 @@ public class HQBehavior extends RobotBehavior {
     PASTRLocs = cowMiningLocations();
     
     //pick a strategy
-    double totalcows = 0.0;
-    for(int x = Math.max(-17, -curX); x <= Math.min(17, MAP_WIDTH - 1 - curX); x++) {
-      int range = yrangefornoise[Math.abs(x)];
-      for(int y = Math.max(- range, -curY); y <= Math.min(range, MAP_HEIGHT - 1 - curY); y++) {
-        totalcows += COW_GROWTH[curX+x][curY+y];
-      }
-    }
-
-    try {
-      RC.broadcast(JOSHBOT_CHANNEL, totalcows > 150 && 10*totalcows + MAP_HEIGHT*MAP_WIDTH + 10*HQ_DIST*HQ_DIST > 11000 ? 1 : 0);
-    } catch (GameActionException e) {
-      e.printStackTrace();
-    }
+//    double totalcows = 0.0;
+//    for(int x = Math.max(-17, -curX); x <= Math.min(17, MAP_WIDTH - 1 - curX); x++) {
+//      int range = yrangefornoise[Math.abs(x)];
+//      for(int y = Math.max(- range, -curY); y <= Math.min(range, MAP_HEIGHT - 1 - curY); y++) {
+//        totalcows += COW_GROWTH[curX+x][curY+y];
+//      }
+//    }
+//
+//    try {
+//      RC.broadcast(JOSHBOT_CHANNEL, totalcows > 150 && 10*totalcows + MAP_HEIGHT*MAP_WIDTH + 10*HQ_DIST*HQ_DIST > 11000 ? 1 : 0);
+//    } catch (GameActionException e) {
+//      e.printStackTrace();
+//    }
 
   }
 
