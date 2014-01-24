@@ -154,7 +154,7 @@ public class NoiseTowerBehavior extends RobotBehavior {
   }
 	
 	private static void incrementAB() {
-	  if(b < 5) {
+	  if(b < ((a%2 == 0) ? 6 : 5)) {
       a++;
       if(a == 8) a = 0;
       while(skip[a]) {
