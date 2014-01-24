@@ -107,7 +107,7 @@ public class HQBehavior extends RobotBehavior {
       }
       
       
-      if(!PASTRMessageSent && RC.senseRobotCount() > 5) {
+      if(!PASTRMessageSent && RC.senseRobotCount() > ((MAP_WIDTH * MAP_HEIGHT < 1600) ? 8 : 5)) {
         messagingSystem.writeBuildPastureMessage(PASTRLocs[0]);
       }
     
@@ -180,7 +180,6 @@ public class HQBehavior extends RobotBehavior {
         }
       }
     }
-    System.out.println(Clock.getBytecodeNum());
     
     Arrays.sort(ret, new Comparator<MapLocation>() {
 
@@ -190,8 +189,6 @@ public class HQBehavior extends RobotBehavior {
     }
       
     });
-
-    System.out.println(Clock.getBytecodeNum());
     return ret;
   }
   
