@@ -1,11 +1,11 @@
 package mergebot.soldiers;
 
 import static mergebot.utils.Utils.*;
-import mergebot.RobotBehavior;
-import mergebot.messaging.MessageHandler;
+import mergebot.*;
+import mergebot.messaging.*;
 import mergebot.messaging.MessagingSystem.MessageType;
-import mergebot.nav.Mover;
-import mergebot.utils.ArraySet;
+import mergebot.nav.*;
+import mergebot.utils.*;
 import battlecode.common.*;
 
 public class SoldierBehavior extends RobotBehavior {
@@ -226,7 +226,7 @@ public class SoldierBehavior extends RobotBehavior {
     switch (mode) {
       case COMBAT:
         //micro.micro();
-        if (!NathanMicro.luge()) {
+        if (!NathanMicro.luge(mover)) {
           mover.move();
         }
         break;
