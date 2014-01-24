@@ -2,7 +2,6 @@ package mergebot.soldiers;
 
 import static mergebot.soldiers.SoldierUtils.*;
 import static mergebot.utils.Utils.*;
-import mergebot.messaging.MessagingSystem;
 import mergebot.messaging.MessagingSystem.ReservedMessageType;
 import battlecode.common.*;
 
@@ -13,23 +12,28 @@ public class NathanMicro {
    */
   public static final int HELP_CHANNEL = ReservedMessageType.HELP_CHANNEL.channel();
   public static final int GREAT_LUGE_ASSIST = 30;
-  
+
   public static boolean GREAT_LUGE = false;
 
   public static boolean luge() throws GameActionException {
-    Robot[] nearbyEnemies = RC.senseNearbyGameObjects(Robot.class, 35, ENEMY_TEAM);
+    RobotInfo[] nearbyEnemies = getEnemyRobotInfo();
     Robot[] enemiesInRange = RC.senseNearbyGameObjects(Robot.class, 10, ENEMY_TEAM);
 
-    // sense every round -- maybe send messages on non-active rounds?
+    int nearbyEnemySoldiers = 0;
+    for (RobotInfo info : nearbyEnemies) {
+      if (info.type == RobotType.SOLDIER) {
+        nearbyEnemySoldiers++;
+      }
+    }
 
-    if (nearbyEnemies.length == 0) { // no enemies: don't micro
+    if (nearbyEnemySoldiers == 0) { // no enemies: don't micro
       if (RC.isActive() && currentLocation.distanceSquaredTo(ENEMY_HQ) <= 100) {
         MapLocation cowTarget =
             getMostCowsLoc(
                 MapLocation.getAllMapLocationsWithinRadiusSq(
                     currentLocation.add(currentLocation.directionTo(ENEMY_HQ)), 5),
-                //
-                500);
+                    //
+                    500);
         if (cowTarget != null && RC.canAttackSquare(cowTarget)
             && RC.senseObjectAtLocation(cowTarget) == null) {
           RC.attackSquare(cowTarget);
@@ -42,7 +46,6 @@ public class NathanMicro {
       float allyWeight = 0, enemyWeight = 0;
 
       // get robot infos of enemy
-      RobotInfo[] nearbyEnemyInfo = new RobotInfo[enemiesInRange.length];
       RobotInfo ri;
 
       MapLocation nearestPastrLoc = null;
@@ -52,7 +55,7 @@ public class NathanMicro {
       allyWeight += RC.getHealth();
       for (int i = 0; i < nearbyTeam.length; ++i) {
         ri = RC.senseRobotInfo(nearbyTeam[i]);
-        
+
         switch (ri.type){
           case SOLDIER:
             Robot[] stuff = RC.senseNearbyGameObjects(Robot.class, ri.location, 17, ENEMY_TEAM);
@@ -97,14 +100,13 @@ public class NathanMicro {
           default:
             break;
         }
-        nearbyEnemyInfo[i] = ri;
       }
       boolean isHelpingOut = false;
       MapLocation m = new MapLocation(0, 0);
-      
+
       for (int i=0; i<SoldierBehavior.microLocations.size; ++i) {
         m = SoldierBehavior.microLocations.get(i);
-        
+
         if (currentLocation.distanceSquaredTo(m) <= 8*8) {
           isHelpingOut = true;
           break;
@@ -144,7 +146,7 @@ public class NathanMicro {
             }
           }
 
-          MapLocation target = getHighestPriority(nearbyEnemyInfo);
+          MapLocation target = getHighestPriority(nearbyEnemies);
           if (target == null) {
             if (nearestPastrLoc != null) {
               // PASTR_RANGE = 5
@@ -162,8 +164,8 @@ public class NathanMicro {
                   getMostCowsLoc(
                       MapLocation.getAllMapLocationsWithinRadiusSq(
                           currentLocation.add(currentLocation.directionTo(ENEMY_HQ)), 5),
-                      //
-                      500);
+                          //
+                          500);
               if (RC.isActive() && cowTarget != null && RC.canAttackSquare(cowTarget)
                   && RC.senseObjectAtLocation(cowTarget) == null) {
                 RC.attackSquare(cowTarget);
@@ -204,12 +206,12 @@ public class NathanMicro {
         }
       } else {
         int dx = 0, dy = 0;
-        for (int i = nearbyEnemyInfo.length - 1; i >= 0; --i) {
-          dx += nearbyEnemyInfo[i].location.x;
-          dy += nearbyEnemyInfo[i].location.y;
+        for (int i = nearbyEnemies.length - 1; i >= 0; --i) {
+          dx += nearbyEnemies[i].location.x;
+          dy += nearbyEnemies[i].location.y;
         }
-        dx /= nearbyEnemyInfo.length;
-        dy /= nearbyEnemyInfo.length;
+        dx /= nearbyEnemies.length;
+        dy /= nearbyEnemies.length;
 
         Direction newDir =
             currentLocation.directionTo(new MapLocation(2 * curX - dx, 2 * curY - dy));
