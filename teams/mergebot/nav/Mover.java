@@ -13,7 +13,7 @@ public class Mover {
 
   public Mover() {
     this.dest = null;
-    setNavType(NavType.BUG_FUN);
+    setNavType(NavType.BUG_2);
   }
 
   public Mover(NavType navType) {
