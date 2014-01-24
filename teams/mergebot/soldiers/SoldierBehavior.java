@@ -51,6 +51,7 @@ public class SoldierBehavior extends RobotBehavior {
       public void handleMessage(int[] message) {
         MapLocation loc = new MapLocation(message[0], message[1]);
         microLocations.insert(loc);
+        // attackLocations.insert(loc);
       }
     };
 
@@ -95,7 +96,7 @@ public class SoldierBehavior extends RobotBehavior {
 
   @Override
   public void endRound() throws GameActionException {
-    // sendEnemyMessages();
+    sendEnemyMessages();
     messagingSystem.endRound();
   }
 
