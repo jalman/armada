@@ -227,7 +227,7 @@ public class SoldierBehavior extends RobotBehavior {
       case COMBAT:
         //micro.micro();
         if (!NathanMicro.luge()) {
-          mover.move();
+          micro.micro();
         }
         break;
       case RUN:
