@@ -76,6 +76,18 @@ public class MessagingSystem {
 
   public static int[] reserved_channel_indices = new int[ReservedMessageType.values().length];
 
+  /**
+   * Initialize the reserved_channel_indices array, necessary for correct function of reserved channels
+   */
+  static {
+    int currentChannel = MESSAGE_CHANNELS; // start of reserved channels is at MESSAGE_CHANNELS
+    ReservedMessageType[] rmt = ReservedMessageType.values();
+    for (int i = 0; i < rmt.length; i++) {
+      reserved_channel_indices[i] = currentChannel;
+      currentChannel += rmt[i].length;
+    }
+  }
+
   public static final double BROADCAST_COST = 10;
 
   public static final int HQ = RobotType.HQ.ordinal(),
@@ -93,21 +105,7 @@ public class MessagingSystem {
 
   private boolean first_round = true;
 
-  public MessagingSystem() {
-    initReservedChannels();
-  }
-
-  /**
-   * Initialize the reserved_channel_indices array, necessary for correct function of reserved channels
-   */
-  public static void initReservedChannels() {
-    int currentChannel = MESSAGE_CHANNELS; // start of reserved channels is at MESSAGE_CHANNELS
-    ReservedMessageType[] rmt = ReservedMessageType.values();
-    for (int i = 0; i < rmt.length; i++) {
-      reserved_channel_indices[i] = currentChannel;
-      currentChannel += rmt[i].length;
-    }
-  }
+  public MessagingSystem() {}
 
   /**
    * Reads a reserved message at rm.channel().

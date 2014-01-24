@@ -203,12 +203,12 @@ public class Utils {
    * @param target The target location.
    * @return The closest map location.
    */
-  public static MapLocation closest(MapLocation[] locs, MapLocation target) {
+  public static MapLocation closestLocation(MapLocation[] locs, MapLocation target) {
     MapLocation close = null;
     int distance = Integer.MAX_VALUE;
 
-    for(int i = 0; i < locs.length; i++) {
-      int d = naiveDistance(locs[i], target);
+    for (int i = locs.length - 1; i >= 0; i--) {
+      int d = locs[i].distanceSquaredTo(target);
       if(d < distance) {
         close = locs[i];
         distance = d;
