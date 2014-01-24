@@ -176,7 +176,10 @@ public class SoldierBehavior extends RobotBehavior {
 
     if (closest != null) return closest;
 
-    // RC.sensePastrLocations(ENEMY_TEAM);
+    MapLocation[] allyPastures = RC.sensePastrLocations(ALLY_TEAM);
+
+    closest = closestLocation(allyPastures, currentLocation);
+    if (closest != null) return closest;
 
     for (int i = messagedEnemyRobots.size; --i >= 0;) {
       MapLocation loc = messagedEnemyRobots.get(i);
@@ -186,6 +189,8 @@ public class SoldierBehavior extends RobotBehavior {
         closest = loc;
       }
     }
+
+    if (closest != null) return closest;
 
     return closest;
   }
