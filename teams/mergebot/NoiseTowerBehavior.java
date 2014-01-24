@@ -48,7 +48,7 @@ public class NoiseTowerBehavior extends RobotBehavior {
 					try {
 						cows = Utils.COW_GROWTH[here.x][here.y];
 						if(cows > 0) lastcow = j;
-						score =  here.distanceSquaredTo(currentLocation.add(directions[k])) > 300 || RC.senseTerrainTile(here) == TerrainTile.VOID ? -10 : cows == 0.0  ? 30 : score + (int)(cows)*0 + 30;
+						score =  (here.add(directions[k])).distanceSquaredTo(currentLocation) > 300 || RC.senseTerrainTile(here) == TerrainTile.VOID ? -10 : cows == 0.0  ? 30 : score + (int)(cows)*0 + 30;
 					} catch (Exception e) {
 						score = -2;
 					}
@@ -107,7 +107,7 @@ public class NoiseTowerBehavior extends RobotBehavior {
 	
 	public static boolean pathbetween(MapLocation a, MapLocation b) {
 		while(!a.equals(b)) {
-			a.add(a.directionTo(b));
+			a = a.add(a.directionTo(b));
 			if(RC.senseTerrainTile(a) == TerrainTile.VOID) return false;
 		}
 		return true;
@@ -147,7 +147,6 @@ public class NoiseTowerBehavior extends RobotBehavior {
 	
 	public static void makeSomeNoise() throws GameActionException { //assumes RC is active
 		  
-		  
 		  if(b < 3) {
 			  a++;
 			  if(a == 8) a = 0;
@@ -156,13 +155,12 @@ public class NoiseTowerBehavior extends RobotBehavior {
 				  if(a == 8) a = 0;
 			  }
 			  b = pathat[a];
-			  System.out.println(a + " " + b + " " + pathat[a]);
 		  } else {
 			  b--;
 		  }
 		  if(paths[a][b] != null) {
 			  RC.attackSquare(paths[a][b].add(directions[a]));
-			  RC.setIndicatorString(2, a + "");
+			  RC.setIndicatorString(2, a + " " + b);
 		  }
 		
 	}

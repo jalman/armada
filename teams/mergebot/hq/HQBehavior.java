@@ -22,6 +22,7 @@ public class HQBehavior extends RobotBehavior {
   public static final int[] yrangefornoise = { 17, 17, 17, 17, 16, 16, 16, 15, 15, 14, 14, 13, 12, 11, 10, 8, 6, 3 };
 
   public static MapLocation[] PASTRLocs;
+  public static boolean PASTRMessageSent = false;
   
   public HQBehavior() {
 	  
@@ -62,6 +63,10 @@ public class HQBehavior extends RobotBehavior {
   public void run() throws GameActionException {
     attackSystem.tryAttack();
     macro();
+    if(!PASTRMessageSent && RC.senseRobotCount() > 5) {
+    	messagingSystem.writeBuildPastureMessage(PASTRLocs[0]);
+    	PASTRMessageSent = true;
+    }
   }
 
   @Override
