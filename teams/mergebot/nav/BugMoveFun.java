@@ -37,9 +37,9 @@ public class BugMoveFun extends NavAlg {
 
   public BugMoveFun() {
     edgeXMin = -1;
-    edgeXMax = Integer.MAX_VALUE;
+    edgeXMax = MAP_WIDTH;
     edgeYMin = -1;
-    edgeYMax = Integer.MAX_VALUE;
+    edgeYMax = MAP_HEIGHT;
 
     reset();
   }
