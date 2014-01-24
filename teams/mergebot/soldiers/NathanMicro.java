@@ -11,7 +11,7 @@ public class NathanMicro {
    * Channel for help messages. Message format: 256*X + Y.
    */
   public static final int HELP_CHANNEL = ReservedMessageType.HELP_CHANNEL.channel();
-  public static final int GREAT_LUGE_ASSIST = 30;
+  public static final int GREAT_LUGE_ASSIST = 60;
 
   public static boolean GREAT_LUGE = false;
 
@@ -88,6 +88,8 @@ public class NathanMicro {
               enemyWeight += 1000;
             }
             break;
+          case SOLDIER:
+            if (currentLocation.distanceSquaredTo(ri.location) <= 17) enemyWeight += ri.health / 2;
           default:
             break;
         }
@@ -96,7 +98,7 @@ public class NathanMicro {
         ri = RC.senseRobotInfo(enemiesInRange[i]);
         switch (ri.type) {
           case SOLDIER:
-            enemyWeight += ri.health; // 10 / (currentLocation.distanceSquaredTo(ri.location));
+            enemyWeight += ri.health / 2; // 10 / (currentLocation.distanceSquaredTo(ri.location));
             // weight by how close enemy soldier is?
             break;
           case PASTR:
@@ -204,8 +206,8 @@ public class NathanMicro {
             if (dd > 9) d = 4;
 
             int maxDmg = (int) (enemiesInRange.length * (d - 1) * RobotType.SOLDIER.attackPower);
-
-            if (RC.getHealth() > maxDmg + 5 && RC.getHealth() < maxDmg + 40 && allyWeight < enemyWeight - GREAT_LUGE_ASSIST) {
+            RC.setIndicatorString(2, maxDmg + "," + RC.getHealth() + "," + allyWeight + "," + enemyWeight + " | " + GREAT_LUGE + "," + target.x + "," + target.y + " - round " + Clock.getRoundNum());
+            if (RC.getHealth() > maxDmg + 5 && allyWeight < enemyWeight - GREAT_LUGE_ASSIST) {
               // TEMPORARY CHANGE ME LATER
               GREAT_LUGE = true;
             }
@@ -229,6 +231,7 @@ public class NathanMicro {
         }
       } else {
         int dx = 0, dy = 0;
+        
         for (int i = nearbyEnemies.length - 1; i >= 0; --i) {
           dx += nearbyEnemies[i].location.x;
           dy += nearbyEnemies[i].location.y;
