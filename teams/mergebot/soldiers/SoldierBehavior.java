@@ -11,7 +11,7 @@ import battlecode.common.*;
 public class SoldierBehavior extends RobotBehavior {
 
   enum Mode {
-    COMBAT, RUN, FARM, EXPLORE, BUILD_PASTURE
+    COMBAT, RUN, FARM, EXPLORE, BUILD_PASTURE, DEFEND_PASTURE
   };
 
   // state machine stuff
@@ -123,11 +123,11 @@ public class SoldierBehavior extends RobotBehavior {
     if (buildPastureLoc != null) {
       // build a pasture!
       if (mode != Mode.BUILD_PASTURE) {
-        mode = Mode.BUILD_PASTURE;
         target = buildPastureLoc;
-        RC.setIndicatorString(0, "BUILD_PASTURE " + target);
+        setMode(Mode.BUILD_PASTURE, target);
         return;
       } else {
+        // already building a pasture
         return;
       }
     }
@@ -136,8 +136,16 @@ public class SoldierBehavior extends RobotBehavior {
     if (closest != null) {
       target = closest;
       // messagingSystem.writeAttackMessage(target);
-      setMode(Mode.RUN);
-      RC.setIndicatorString(0, "RUN " + target);
+      setMode(Mode.RUN, target);
+      return;
+    }
+
+    MapLocation[] allyPastures = RC.sensePastrLocations(ALLY_TEAM);
+    closest = closestLocation(allyPastures, currentLocation);
+
+    if (closest != null) {
+      target = closest;
+      setMode(Mode.DEFEND_PASTURE, target);
       return;
     }
 
@@ -161,6 +169,11 @@ public class SoldierBehavior extends RobotBehavior {
     mode = m;
   }
 
+  private void setMode(Mode m, MapLocation target) {
+    RC.setIndicatorString(0, m + " " + target);
+    mode = m;
+  }
+
   private MapLocation closestTarget() {
     MapLocation closest = null;
     int min = Integer.MAX_VALUE;
@@ -174,11 +187,6 @@ public class SoldierBehavior extends RobotBehavior {
       }
     }
 
-    if (closest != null) return closest;
-
-    MapLocation[] allyPastures = RC.sensePastrLocations(ALLY_TEAM);
-
-    closest = closestLocation(allyPastures, currentLocation);
     if (closest != null) return closest;
 
     for (int i = messagedEnemyRobots.size; --i >= 0;) {
@@ -241,6 +249,15 @@ public class SoldierBehavior extends RobotBehavior {
         }
         mover.setTarget(target);
         mover.move();
+        break;
+      case DEFEND_PASTURE:
+        boolean inRange = currentLocation.distanceSquaredTo(target) < 30;
+        mover.setTarget(target);
+        if (inRange) {
+          mover.sneak();
+        } else {
+          mover.move();
+        }
         break;
       default:
         break;
