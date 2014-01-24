@@ -69,7 +69,7 @@ public class NathanMicro {
               allyWeight += ri.health;
             }
             else if (stuff.length > 0) {
-              allyWeight += (ri.health - 20); // change me later
+              allyWeight += (ri.health/2); // change me later
             }
             else {
               //allyWeight += Math.max(0, ri.health - 40);
@@ -147,7 +147,6 @@ public class NathanMicro {
           RC.setIndicatorString(2, ss);
         }
         if (RC.isActive()) { // willing to attack!
-          RC.setIndicatorString(1, "..." + isHelpingOut + "," + Clock.getRoundNum());
           if (!isHelpingOut && (nearbyEnemies.length == 0 || (enemiesInRange.length == 0 && allyWeight >= enemyWeight + 75))) {
             // willing to move forward and attack!
             RC.setIndicatorString(2, "not microing");
