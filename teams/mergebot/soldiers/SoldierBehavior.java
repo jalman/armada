@@ -217,7 +217,7 @@ public class SoldierBehavior extends RobotBehavior {
    * @return Place to explore to.
    */
   private MapLocation findExploreLocation() {
-    return ALLY_HQ.add(HQ_DX / 2, HQ_DY / 2);
+    return ALLY_HQ.add(HQ_DX / 4, HQ_DY / 4);
   }
 
   private void act() throws GameActionException {
