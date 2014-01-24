@@ -194,7 +194,8 @@ public class SoldierBehavior extends RobotBehavior {
 
     switch (mode) {
       case COMBAT:
-        micro.micro();
+        //micro.micro();
+        NathanMicro.luge();
         break;
       case RUN:
         mover.setTarget(target);
