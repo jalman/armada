@@ -159,8 +159,11 @@ public class NoiseTowerBehavior extends RobotBehavior {
 			  b--;
 		  }
 		  if(paths[a][b] != null) {
-			  RC.attackSquare(paths[a][b].add(directions[a]));
-			  RC.setIndicatorString(2, a + " " + b);
+			  if(RC.canAttackSquare(paths[a][b].add(directions[a]))) {
+				  RC.attackSquare(paths[a][b].add(directions[a]));
+			  } else {
+				  makeSomeNoise();
+			  }
 		  }
 		
 	}
