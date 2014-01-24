@@ -69,7 +69,7 @@ public class NathanMicro {
               allyWeight += ri.health;
             }
             else if (stuff.length > 0) {
-              allyWeight += ri.health / 2; // change me later
+              allyWeight += (ri.health - 20); // change me later
             }
             break;
           default:
@@ -78,7 +78,7 @@ public class NathanMicro {
       }
       // find enemy weight
       for (int i = nearbyEnemies.length - 1; i >= 0; --i) {
-        ri = RC.senseRobotInfo(nearbyEnemies[i]);
+        ri = nearbyEnemies[i];
         switch (ri.type) {
           case HQ:
             enemyWeight += 1000;
