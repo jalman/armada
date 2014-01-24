@@ -135,11 +135,11 @@ public class NoiseTowerBehavior extends RobotBehavior {
 	  while (!RC.isActive()) {
 		  RC.yield();
 	  }
-    RobotInfo[] robots = Utils.getEnemyRobotInfo();
+    Robot[] robots = Utils.RC.senseNearbyGameObjects(Robot.class, 35, ENEMY_TEAM);
     Utils.RC.setIndicatorString(1, "" + robots.length);
     for (int i=0; i<robots.length; ++i) {
-      messagingSystem.writeAttackMessage(robots[i].location);
-      messagingSystem.writeMicroMessage(robots[i].location, 1);
+      messagingSystem.writeAttackMessage(Utils.RC.senseRobotInfo(robots[i]).location);
+      messagingSystem.writeMicroMessage(Utils.RC.senseRobotInfo(robots[i]).location, 1);
     }
     
 	  makeSomeNoise();
