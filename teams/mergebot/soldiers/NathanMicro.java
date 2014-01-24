@@ -26,7 +26,7 @@ public class NathanMicro {
       }
     }
 
-    if (nearbyEnemySoldiers == 0) { // no enemies: don't micro
+    /*if (nearbyEnemySoldiers == 0) { // no enemies: don't micro
       if (RC.isActive() && currentLocation.distanceSquaredTo(ENEMY_HQ) <= 100) {
         MapLocation cowTarget =
             getMostCowsLoc(
@@ -40,8 +40,8 @@ public class NathanMicro {
           return true;
         }
       }
-      return false;
-    } else if (RC.isActive()) {
+      return false;*/
+    if (RC.isActive()) {
       Robot[] nearbyTeam = RC.senseNearbyGameObjects(Robot.class, 35, ALLY_TEAM);
       float allyWeight = 0, enemyWeight = 0;
 
@@ -71,6 +71,9 @@ public class NathanMicro {
             else if (stuff.length > 0) {
               allyWeight += (ri.health - 20); // change me later
             }
+            else {
+              //allyWeight += Math.max(0, ri.health - 40);
+            }
             break;
           default:
             break;
@@ -81,7 +84,9 @@ public class NathanMicro {
         ri = nearbyEnemies[i];
         switch (ri.type) {
           case HQ:
-            enemyWeight += 1000;
+            if (ri.location.distanceSquaredTo(currentLocation) <= 25) {
+              enemyWeight += 1000;
+            }
             break;
           default:
             break;
@@ -105,7 +110,7 @@ public class NathanMicro {
           case NOISETOWER:
             break;
           case HQ:
-            enemyWeight += 1000;
+            //enemyWeight += 1000;
             break;
           default:
             break;
@@ -125,7 +130,7 @@ public class NathanMicro {
 
       if (isHelpingOut) {
         if (RC.canSenseSquare(m) && RC.senseObjectAtLocation(m) == null) {
-          //RC.broadcast(HELP_CHANNEL, -1);
+          isHelpingOut = false;
         }
       }
       RC.setIndicatorString(1, "in range " + enemiesInRange.length + " | " + "ally " + allyWeight + " / enemy " + enemyWeight + " (turn " + Clock.getRoundNum() + ")");
@@ -142,11 +147,14 @@ public class NathanMicro {
           RC.setIndicatorString(2, ss);
         }
         if (RC.isActive()) { // willing to attack!
+          RC.setIndicatorString(1, "..." + isHelpingOut + "," + Clock.getRoundNum());
           if (!isHelpingOut && (nearbyEnemies.length == 0 || (enemiesInRange.length == 0 && allyWeight >= enemyWeight + 75))) {
             // willing to move forward and attack!
+            RC.setIndicatorString(2, "not microing");
             return false; // jurgz should take a look at this ...
           }
           else if (isHelpingOut && enemiesInRange.length == 0) { //change me eventually
+            RC.setIndicatorString(2, "helping" + "," + RC.canSenseSquare(m) + "," + m.x + "," + m.y);
             Direction newDir = currentLocation.directionTo(m);
             if (RC.isActive() && newDir != Direction.NONE && newDir != Direction.OMNI) {
               if (RC.canMove(newDir)) {
@@ -162,6 +170,8 @@ public class NathanMicro {
           }
 
           MapLocation target = getHighestPriority(nearbyEnemies);
+          if (target != null) RC.setIndicatorString(2, "" + target.x + "," + target.y + "," + Clock.getRoundNum());
+          else RC.setIndicatorString(2, "null target" + "," + Clock.getRoundNum());
           if (target == null) {
             if (nearestPastrLoc != null) {
               // PASTR_RANGE = 5
@@ -172,7 +182,7 @@ public class NathanMicro {
                 RC.attackSquare(cowTarget);
               }
             }
-            else if (currentLocation.distanceSquaredTo(ENEMY_HQ) <= 100) {
+            /*else if (currentLocation.distanceSquaredTo(ENEMY_HQ) <= 100) {
               // copy-pasted from above.
               // if we're near the HQ but have nothing to do just randomly kill shit
               MapLocation cowTarget =
@@ -186,7 +196,7 @@ public class NathanMicro {
                 RC.attackSquare(cowTarget);
                 return true;
               }
-            }
+            }*/
           } else if (RC.canAttackSquare(target)) {
             int d = 1;
             double dd = currentLocation.distanceSquaredTo(target) - 0.5;

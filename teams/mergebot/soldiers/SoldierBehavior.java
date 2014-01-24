@@ -33,7 +33,8 @@ public class SoldierBehavior extends RobotBehavior {
 
   private final Micro micro = new Micro(this);
 
-  public SoldierBehavior() {}
+  public SoldierBehavior() {
+  }
 
   @Override
   protected void initMessageHandlers() {
@@ -219,7 +220,9 @@ public class SoldierBehavior extends RobotBehavior {
     switch (mode) {
       case COMBAT:
         //micro.micro();
-        NathanMicro.luge();
+        if (!NathanMicro.luge()) {
+          mover.move();
+        }
         break;
       case RUN:
         mover.setTarget(target);
