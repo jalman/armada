@@ -149,7 +149,7 @@ public class Utils {
   public static RobotInfo[] getEnemyRobotInfo() throws GameActionException {
     if (roundInfoUpdated < currentRound) {
       enemyRobotInfo = new RobotInfo[enemyRobots.length];
-      for (int i = 0; i < enemyRobots.length; i++) {
+      for (int i = enemyRobots.length - 1; i >= 0; i--) {
         enemyRobotInfo[i] = RC.senseRobotInfo(enemyRobots[i]);
       }
       roundInfoUpdated = currentRound;

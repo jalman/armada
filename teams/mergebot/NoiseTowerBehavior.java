@@ -1,10 +1,7 @@
 package mergebot;
 
 import mergebot.utils.Utils;
-import battlecode.common.Direction;
-import battlecode.common.GameActionException;
-import battlecode.common.MapLocation;
-import battlecode.common.TerrainTile;
+import battlecode.common.*;
 import static mergebot.utils.Utils.*;
 
 public class NoiseTowerBehavior extends RobotBehavior {
@@ -125,6 +122,9 @@ public class NoiseTowerBehavior extends RobotBehavior {
 	 */
   @Override
   public void beginRound() throws GameActionException {
+    Utils.updateBuildingUtils();
+    
+    messagingSystem.beginRound(handlers);
   }
 
 	/**
@@ -135,6 +135,13 @@ public class NoiseTowerBehavior extends RobotBehavior {
 	  while (!RC.isActive()) {
 		  RC.yield();
 	  }
+    RobotInfo[] robots = Utils.getEnemyRobotInfo();
+    Utils.RC.setIndicatorString(1, "" + robots.length);
+    for (int i=0; i<robots.length; ++i) {
+      messagingSystem.writeAttackMessage(robots[i].location);
+      messagingSystem.writeMicroMessage(robots[i].location, 1);
+    }
+    
 	  makeSomeNoise();
   }
 
@@ -142,8 +149,8 @@ public class NoiseTowerBehavior extends RobotBehavior {
 	 * Called at the end of each round.
 	 */
 	@Override
-  public void endRound() {
-
+  public void endRound() throws GameActionException {
+	  messagingSystem.endRound();
   }
 	
 	private static void incrementAB() {

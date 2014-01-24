@@ -24,7 +24,6 @@ public class PastrBehavior extends RobotBehavior {
 	 */
   @Override
   public void run() throws GameActionException {
-
   }
 
 	/**

@@ -77,6 +77,8 @@ public class SoldierBehavior extends RobotBehavior {
         MapLocation loc = new MapLocation(message[0], message[1]);
         if (!loc.equals(currentLocation)) {
           buildPastureLoc = null;
+          target = loc;
+          setMode(Mode.DEFEND_PASTURE, target);
         }
       }
     };
