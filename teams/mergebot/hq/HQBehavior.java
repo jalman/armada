@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 import mergebot.RobotBehavior;
+import mergebot.messaging.MessageHandler;
+import mergebot.messaging.MessagingSystem.MessageType;
 import mergebot.utils.Utils;
 import battlecode.common.*;
 
@@ -22,7 +24,7 @@ public class HQBehavior extends RobotBehavior {
   public static final int[] yrangefornoise = { 17, 17, 17, 17, 16, 16, 16, 15, 15, 14, 14, 13, 12, 11, 10, 8, 6, 3 };
 
   public static MapLocation[] PASTRLocs;
-  public static boolean PASTRMessageSent = false;
+  public static boolean PASTRMessageSent = false, PASTRBuilt = false;
   
   public HQBehavior() {
 	  
@@ -48,6 +50,12 @@ public class HQBehavior extends RobotBehavior {
 
   @Override
   protected void initMessageHandlers() {
+    handlers[MessageType.BUILDING_PASTURE.type] = new MessageHandler() {
+      @Override
+      public void handleMessage(int[] message) {
+        PASTRMessageSent = true;
+      }
+    };
   }
 
   @Override
@@ -63,15 +71,46 @@ public class HQBehavior extends RobotBehavior {
   public void run() throws GameActionException {
     attackSystem.tryAttack();
     macro();
-    if(!PASTRMessageSent && RC.senseRobotCount() > 5) {
-    	messagingSystem.writeBuildPastureMessage(PASTRLocs[0]);
-    	PASTRMessageSent = true;
-    }
+    PASTRMessages();
+    considerTeamAttacking();
   }
 
   @Override
   public void endRound() throws GameActionException {
     messagingSystem.endRound();
+  }
+  
+  private void considerTeamAttacking() throws GameActionException {    
+	  if(ALLY_PASTR_COUNT < ENEMY_PASTR_COUNT) {
+		  MapLocation closestEnemyPASTR = ENEMY_PASTR_LOCS[0];
+		  int dist = closestEnemyPASTR.distanceSquaredTo(ALLY_HQ);
+		  for (int i = ENEMY_PASTR_COUNT - 1; i > 0; i--) {
+			  int newdist = ENEMY_PASTR_LOCS[i].distanceSquaredTo(ALLY_HQ);
+			  if(newdist < dist) {
+				  dist = newdist;
+				  closestEnemyPASTR = ENEMY_PASTR_LOCS[i];
+			  }
+		  }
+		  messagingSystem.writeAttackMessage(closestEnemyPASTR);
+	  }
+	  
+  }
+  
+  private void PASTRMessages() throws GameActionException {    
+	    if(PASTRBuilt && ALLY_PASTR_COUNT == 0) {
+	    	PASTRBuilt = false;
+	    	PASTRMessageSent = false;
+	    }
+	    
+	    if(PASTRMessageSent && ALLY_PASTR_COUNT > 0) {
+	    	PASTRBuilt = true;
+	    }
+	    
+	    
+	    if(!PASTRMessageSent && RC.senseRobotCount() > 5) {
+	    	messagingSystem.writeBuildPastureMessage(PASTRLocs[0]);
+	    }
+	  
   }
 
   /**
@@ -141,6 +180,7 @@ public class HQBehavior extends RobotBehavior {
 			  }
 		  }
 	  }
+	  System.out.println(Clock.getBytecodeNum());
 	  
 	  Arrays.sort(ret, new Comparator<MapLocation>() {
 
@@ -150,6 +190,8 @@ public class HQBehavior extends RobotBehavior {
 		}
 		  
 	  });
+
+	  System.out.println(Clock.getBytecodeNum());
 	  return ret;
   }
   
