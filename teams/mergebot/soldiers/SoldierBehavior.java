@@ -151,6 +151,11 @@ public class SoldierBehavior extends RobotBehavior {
       return;
     }
 
+    // keep defending our pasture
+    if (mode == Mode.DEFEND_PASTURE) {
+      return;
+    }
+
     /*
      * MapLocation rich = findRichSquare();
      * if (rich != null) {
