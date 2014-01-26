@@ -1,5 +1,7 @@
 package mergebot.utils;
 
+import static battlecode.common.Direction.*;
+
 import java.util.Arrays;
 import java.util.Random;
 
@@ -18,7 +20,9 @@ public class Utils {
 
   // public static final int[] DX = {-1, -1, -1, 0, 0, 1, 1, 1};
   // public static final int[] DY = {-1, 0, 1, -1, 1, -1, 0, 1};
-  public static final Direction[] DIRECTIONS = Direction.values();
+  public static final Direction[] DIRECTIONS = new Direction[] {
+      EAST, NORTH_EAST, NORTH, NORTH_WEST, WEST, SOUTH_WEST, SOUTH, SOUTH_EAST
+  };
 
   public static final int[][] d = new int[8][2];
   static {
