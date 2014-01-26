@@ -133,7 +133,7 @@ public class BugMoveFun2 extends NavAlg {
       } else if(!(sx==expectedsx && sy==expectedsy)) {
         int i = getDirTowards(expectedsx-sx, expectedsy-sy);
         if(movableTerrain[i])
-          return d[i];
+          return directions[i];
         else
           wallDir = i;
       } else if(movableTerrain[wallDir]) {
@@ -142,8 +142,8 @@ public class BugMoveFun2 extends NavAlg {
         tracing = -1;
         hitEdgeInOtherTraceDirection = false;
       } else if(!hitEdgeInOtherTraceDirection) {
-        int x = sx + d[wallDir][0];
-        int y = sy + d[wallDir][1];
+        int x = sx + directions[wallDir][0];
+        int y = sy + directions[wallDir][1];
         if(x<=edgeXMin || x>=edgeXMax || y<=edgeYMin || y>=edgeYMax) {
           tracing = 1 - tracing;
           defaultTraceDirection = 1 - defaultTraceDirection;
@@ -154,7 +154,7 @@ public class BugMoveFun2 extends NavAlg {
     if(tracing==-1) {
       int dir = getDirTowards(tx-sx, ty-sy);
       if (movableTerrain[dir]) {
-        return d[dir];
+        return directions[dir];
       }
       tracing = defaultTraceDirection;
       // traceDistance = dist;
@@ -166,9 +166,9 @@ public class BugMoveFun2 extends NavAlg {
         int dir = ((1-tracing*2)*ti + wallDir + 8) % 8;
         if(movableTerrain[dir]) {
           wallDir = (dir+6+5*tracing)/2%4*2; //magic formula
-          expectedsx = sx + d[dir][0];
-          expectedsy = sy + d[dir][1];
-          return d[dir];
+          expectedsx = sx + directions[dir][0];
+          expectedsy = sy + directions[dir][1];
+          return directions[dir];
         }
       }
     }

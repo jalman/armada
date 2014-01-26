@@ -21,14 +21,14 @@ public class Utils {
   // public static final int[] DX = {-1, -1, -1, 0, 0, 1, 1, 1};
   // public static final int[] DY = {-1, 0, 1, -1, 1, -1, 0, 1};
   public static final Direction[] DIRECTIONS = new Direction[] {
-      EAST, NORTH_EAST, NORTH, NORTH_WEST, WEST, SOUTH_WEST, SOUTH, SOUTH_EAST
+    EAST, NORTH_EAST, NORTH, NORTH_WEST, WEST, SOUTH_WEST, SOUTH, SOUTH_EAST
   };
 
-  public static final int[][] d = new int[8][2];
+  public static final int[][] directions = new int[8][2];
   static {
     for (int i = 0; i < 8; i++) {
-      d[i][0] = DIRECTIONS[i].dx;
-      d[i][1] = DIRECTIONS[i].dy;
+      directions[i][0] = DIRECTIONS[i].dx;
+      directions[i][1] = DIRECTIONS[i].dy;
     }
   }
 
