@@ -20,7 +20,9 @@ public class Utils {
 
   // public static final int[] DX = {-1, -1, -1, 0, 0, 1, 1, 1};
   // public static final int[] DY = {-1, 0, 1, -1, 1, -1, 0, 1};
-  public static final Direction[] DIRECTIONS = new Direction[] {
+  public static final Direction[] DIRECTIONS = Direction.values();
+
+  public static final Direction[] REGULAR_DIRECTIONS = new Direction[] {
     EAST, NORTH_EAST, NORTH, NORTH_WEST, WEST, SOUTH_WEST, SOUTH, SOUTH_EAST
   };
 
@@ -97,7 +99,7 @@ public class Utils {
 
     birthRound = Clock.getRoundNum();
 
-    random = new Random(((long)ID<< 32) ^ Clock.getRoundNum());
+    random = new Random(((long) ID << 32) ^ birthRound);
 
     messagingSystem = new MessagingSystem();
 
