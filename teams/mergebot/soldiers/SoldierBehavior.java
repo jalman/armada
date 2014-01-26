@@ -136,26 +136,21 @@ public class SoldierBehavior extends RobotBehavior {
       }
     }
 
+    // TODO: use priorities for where to be?
+
     MapLocation closestTarget = closestTarget();
+    if (closestTarget != null) {
+      target = closestTarget;
+      setMode(Mode.MOVE, target);
+      return;
+    }
 
     MapLocation[] allyPastures = RC.sensePastrLocations(ALLY_TEAM);
     MapLocation closestPasture = closestLocation(allyPastures, currentLocation);
 
-    if (closestTarget != null || closestPasture != null) {
-      int closestTargetDistance =
-          closestTarget != null ? currentLocation.distanceSquaredTo(closestTarget)
-              : Integer.MAX_VALUE;
-      int closestPastureDistance =
-          closestPasture != null ? currentLocation.distanceSquaredTo(closestPasture)
-              : Integer.MAX_VALUE;
-
-      if (closestPastureDistance < closestTargetDistance) {
-        target = closestPasture;
-        setMode(Mode.DEFEND_PASTURE, target);
-      } else {
-        target = closestTarget;
-        setMode(Mode.MOVE, target);
-      }
+    if (closestPasture != null) {
+      target = closestPasture;
+      setMode(Mode.DEFEND_PASTURE, target);
       return;
     }
 
