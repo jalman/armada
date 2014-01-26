@@ -15,11 +15,6 @@ public class Micro {
     this.mover = soldierBehavior.mover;
   }
 
-  public Micro(SoldierBehaviorOld soldierBehavior) {
-    this.attackLocations = soldierBehavior.attackLocations;
-    this.mover = soldierBehavior.mover;
-  }
-
   public void micro() throws GameActionException {
     if (!RC.isActive()) return;
 

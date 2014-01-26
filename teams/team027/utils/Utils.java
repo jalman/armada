@@ -4,12 +4,9 @@ import java.util.Arrays;
 import java.util.Random;
 
 import team027.messaging.MessagingSystem;
-import team027.messaging.MessagingSystem.ReservedMessageType;
 import battlecode.common.*;
 
 public class Utils {
-
-  public static final int JOSHBOT_CHANNEL = ReservedMessageType.JOSHBOT.channel();
 
   //Game constants
   // public final static int MAX_SOLDIER_ENERGON = 40;
@@ -63,8 +60,7 @@ public class Utils {
   public static int curX, curY;
   public static double currentCowsHere;
   // public static double forward;
-  public static final int ENEMY_RADIUS = 6;
-  public static final int SENSOR_RADIUS2 = RobotType.SOLDIER.sensorRadiusSquared;
+  public static int SENSOR_RADIUS2;
   public static Robot[] enemyRobots = new Robot[0];
 
   public static void initUtils(RobotController rc) {
@@ -72,6 +68,7 @@ public class Utils {
     ROBOT = rc.getRobot();
     TYPE = rc.getType();
     ID = ROBOT.getID();
+    SENSOR_RADIUS2 = TYPE.sensorRadiusSquared;
 
     MAP_WIDTH = rc.getMapWidth();
     MAP_HEIGHT = rc.getMapHeight();

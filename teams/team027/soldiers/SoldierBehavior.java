@@ -11,7 +11,7 @@ import battlecode.common.*;
 public class SoldierBehavior extends RobotBehavior {
 
   enum Mode {
-    COMBAT, RUN, FARM, EXPLORE, BUILD_PASTURE, DEFEND_PASTURE
+    COMBAT, MOVE, FARM, EXPLORE, BUILD_PASTURE, DEFEND_PASTURE
   };
 
   // state machine stuff
@@ -33,7 +33,8 @@ public class SoldierBehavior extends RobotBehavior {
 
   private final Micro micro = new Micro(this);
 
-  public SoldierBehavior() {}
+  public SoldierBehavior() {
+  }
 
   @Override
   protected void initMessageHandlers() {
@@ -51,6 +52,7 @@ public class SoldierBehavior extends RobotBehavior {
       public void handleMessage(int[] message) {
         MapLocation loc = new MapLocation(message[0], message[1]);
         microLocations.insert(loc);
+        attackLocations.insert(loc);
       }
     };
 
@@ -134,20 +136,31 @@ public class SoldierBehavior extends RobotBehavior {
       }
     }
 
-    MapLocation closest = closestTarget();
-    if (closest != null) {
-      target = closest;
-      // messagingSystem.writeAttackMessage(target);
-      setMode(Mode.RUN, target);
+    MapLocation closestTarget = closestTarget();
+
+    MapLocation[] allyPastures = RC.sensePastrLocations(ALLY_TEAM);
+    MapLocation closestPasture = closestLocation(allyPastures, currentLocation);
+
+    if (closestTarget != null || closestPasture != null) {
+      int closestTargetDistance =
+          closestTarget != null ? currentLocation.distanceSquaredTo(closestTarget)
+              : Integer.MAX_VALUE;
+      int closestPastureDistance =
+          closestPasture != null ? currentLocation.distanceSquaredTo(closestPasture)
+              : Integer.MAX_VALUE;
+
+      if (closestPastureDistance < closestTargetDistance) {
+        target = closestPasture;
+        setMode(Mode.DEFEND_PASTURE, target);
+      } else {
+        target = closestTarget;
+        setMode(Mode.MOVE, target);
+      }
       return;
     }
 
-    MapLocation[] allyPastures = RC.sensePastrLocations(ALLY_TEAM);
-    closest = closestLocation(allyPastures, currentLocation);
-
-    if (closest != null) {
-      target = closest;
-      setMode(Mode.DEFEND_PASTURE, target);
+    // keep defending our pasture, even if it hasn't been built
+    if (mode == Mode.DEFEND_PASTURE) {
       return;
     }
 
@@ -160,7 +173,7 @@ public class SoldierBehavior extends RobotBehavior {
      * }
      */
 
-    if (mover.arrived() || mode != Mode.RUN) {
+    if (mover.arrived() || mode != Mode.MOVE) {
       target = findExploreLocation();
       setMode(Mode.EXPLORE);
     }
@@ -210,7 +223,7 @@ public class SoldierBehavior extends RobotBehavior {
    * @return Place to explore to.
    */
   private MapLocation findExploreLocation() {
-    return ALLY_HQ.add(HQ_DX / 2, HQ_DY / 2);
+    return ALLY_HQ.add(HQ_DX / 4, HQ_DY / 4);
   }
 
   private void act() throws GameActionException {
@@ -219,9 +232,11 @@ public class SoldierBehavior extends RobotBehavior {
     switch (mode) {
       case COMBAT:
         //micro.micro();
-        NathanMicro.luge();
+        if (!NathanMicro.luge(mover)) {
+          micro.micro();
+        }
         break;
-      case RUN:
+      case MOVE:
         mover.setTarget(target);
         mover.move();
         break;
