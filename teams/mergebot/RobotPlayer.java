@@ -4,6 +4,7 @@ import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
 import mergebot.hq.HQBehavior;
 import mergebot.noise.NewNoiseTowerBehavior;
+import mergebot.noise.OctantNoiseTowerBehavior;
 import mergebot.noise.SpiralNoiseTowerBehavior;
 import mergebot.soldiers.SoldierBehavior;
 import mergebot.utils.Utils;
@@ -24,7 +25,7 @@ public class RobotPlayer {
         robot = new PastrBehavior();
         break;
       case NOISETOWER:
-        robot = new SpiralNoiseTowerBehavior();
+        robot = new OctantNoiseTowerBehavior();
         break;
       default: // autokill
         return;

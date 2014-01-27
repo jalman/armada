@@ -29,7 +29,7 @@ public class SpiralNoiseTowerBehavior extends BFSNoiseTower {
   public void run() throws GameActionException {
     if(!RC.isActive()) return;
     i--;
-    while((queue[i].x + queue[i].y) % 5 != 0 && i > 0) i--;
+    while(queue[i].distanceSquaredTo(currentLocation) % 5 != 0 && i > 0) i--;
     
     if(queue[i].distanceSquaredTo(currentLocation) < 5) {
       i = at-1;
