@@ -1,12 +1,12 @@
-package mergebot;
+package pogbot;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
-import mergebot.hq.HQBehavior;
-import mergebot.noise.NewNoiseTowerBehavior;
-import mergebot.noise.SpiralNoiseTowerBehavior;
-import mergebot.soldiers.SoldierBehavior;
-import mergebot.utils.Utils;
+import pogbot.hq.HQBehavior;
+import pogbot.noise.NewNoiseTowerBehavior;
+import pogbot.noise.SpiralNoiseTowerBehavior;
+import pogbot.soldiers.SoldierBehavior;
+import pogbot.utils.Utils;
 
 public class RobotPlayer {
   public static void run(RobotController rc) {

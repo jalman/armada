@@ -1,14 +1,14 @@
-package mergebot.hq;
+package pogbot.hq;
 
-import static mergebot.utils.Utils.*;
+import static pogbot.utils.Utils.*;
 
 import java.util.Arrays;
 import java.util.Comparator;
 
-import mergebot.RobotBehavior;
-import mergebot.messaging.MessageHandler;
-import mergebot.messaging.MessagingSystem.MessageType;
-import mergebot.utils.Utils;
+import pogbot.RobotBehavior;
+import pogbot.messaging.MessageHandler;
+import pogbot.messaging.MessagingSystem.MessageType;
+import pogbot.utils.Utils;
 import battlecode.common.*;
 
 public class HQBehavior extends RobotBehavior {
