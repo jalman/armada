@@ -20,6 +20,7 @@ public class Utils {
 
   // public static final int[] DX = {-1, -1, -1, 0, 0, 1, 1, 1};
   // public static final int[] DY = {-1, 0, 1, -1, 1, -1, 0, 1};
+  public static final TerrainTile[] TERRAIN_TILES = TerrainTile.values();
   public static final Direction[] DIRECTIONS = Direction.values();
 
   public static final Direction[] REGULAR_DIRECTIONS = new Direction[] {
@@ -39,7 +40,7 @@ public class Utils {
   public static Robot ROBOT;
   public static int ID;
   public static RobotType TYPE;
-  public static int MAP_WIDTH, MAP_HEIGHT;
+  public static int MAP_WIDTH, MAP_HEIGHT, MAP_SIZE;
   public static Team ALLY_TEAM, ENEMY_TEAM;
   public static MapLocation ALLY_HQ, ENEMY_HQ;
   public static Direction ENEMY_DIR;
@@ -78,6 +79,7 @@ public class Utils {
 
     MAP_WIDTH = rc.getMapWidth();
     MAP_HEIGHT = rc.getMapHeight();
+    MAP_SIZE = MAP_WIDTH * MAP_HEIGHT;
 
     ALLY_TEAM = rc.getTeam();
     ENEMY_TEAM = (ALLY_TEAM == Team.A) ? Team.B : Team.A;

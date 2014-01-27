@@ -28,7 +28,7 @@ public class HQBehavior extends RobotBehavior {
 
   public static Pair<MapLocation, Double>[] PASTRLocs;
   public static boolean PASTRMessageSent = false, PASTRBuilt = false;
-  private final Dijkstra dijkstra = new Dijkstra(ENEMY_HQ);
+  private final Dijkstra dijkstra = new Dijkstra(HybridMover.DIJKSTRA_CENTER);
 
   public HQBehavior() {
 
@@ -82,7 +82,7 @@ public class HQBehavior extends RobotBehavior {
   @Override
   public void endRound() throws GameActionException {
     messagingSystem.endRound();
-    dijkstra.compute(HybridMover.DIJKSTRA_CENTER, 10000, true);
+    dijkstra.compute(10000, true);
   }
 
   private void considerTeamAttacking() throws GameActionException {
@@ -215,8 +215,8 @@ public class HQBehavior extends RobotBehavior {
   }
 
   private MapLocation randomNearbyLocation(MapLocation loc, int d2) {
-    int[] offset = SQUARES[random.nextInt(SQUARE_INDEX[d2 + 1])];
-    return loc.add(offset[0], offset[1]);
+    MapLocation[] locs = MapLocation.getAllMapLocationsWithinRadiusSq(loc, d2);
+    return locs[random.nextInt(locs.length)];
   }
 
   private double estimateCowGrowth(MapLocation loc) {
