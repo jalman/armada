@@ -18,6 +18,7 @@ abstract public class BFSNoiseTower extends RobotBehavior {
 	MapLocation target = null;
 	
 	public BFSNoiseTower() {
+    System.out.println("start " + Clock.getBytecodeNum());
 	  
 		
 	  queue[0] = currentLocation;
@@ -27,22 +28,21 @@ abstract public class BFSNoiseTower extends RobotBehavior {
 	    for(int i = 7; i >= 0; i--) {
 	      MapLocation loc = queue[s].add(directions[i]);
 	      TerrainTile there = RC.senseTerrainTile(loc);
-	      if(there == TerrainTile.VOID || there == TerrainTile.OFF_MAP) continue;
-	      int x = loc.x - currentLocation.x + 17;
-	      if(x<0 || x >= 35 || loc.x >= MAP_WIDTH || loc.x < 0) continue;
-	      int y = loc.y - currentLocation.y + 17;
-        if(y<0 || y >= 35 || loc.y >= MAP_HEIGHT || loc.y < 0) continue;
-        if((17-x)*(17-x) + (17-y)*(17-y) > 200) continue;
+	      if(!there.isTraversableAtHeight(RobotLevel.ON_GROUND)) continue;
+	      int x = loc.x - currentLocation.x;
+	      int y = loc.y - currentLocation.y;
+        if(x*x + y*y > 200) continue;
         
-	      if(dir[x][y] == null) {
-	        dir[x][y] = directions[(i+4)%8];
+	      if(dir[x+17][y+17] == null) {
+	        dir[x+17][y+17] = directions[i].opposite();
 	        queue[at] = loc;
 	        at++;
 	      }
 	    }
 	  }
-	  
-	  System.out.println("at = " + at);
+
+    System.out.println("end " + Clock.getBytecodeNum());
+    System.out.println("at " + at);
 	  
 	}
 
