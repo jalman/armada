@@ -125,7 +125,7 @@ public class SoldierBehavior extends RobotBehavior {
     for (int i=0; i<SoldierBehavior.microLocations.size; ++i) {
       MapLocation m = SoldierBehavior.microLocations.get(i);
       
-      if (currentLocation.distanceSquaredTo(m) <= 8*8) {
+      if (currentLocation.distanceSquaredTo(m) <= 10*10) {
         hasNearbyPlea = true;
         break;
       }

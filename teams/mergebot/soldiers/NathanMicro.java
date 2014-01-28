@@ -20,8 +20,8 @@ public class NathanMicro {
   /**
    * TODO give actual names and/or definitions for these constants so other people know what's going on
    */
-  public static boolean GREAT_LUGE = false;
-  public static boolean JON_SCHNEIDER = false;
+  public static boolean GREAT_LUGE = false; // flag for if the bot is suiciding
+  public static boolean JON_SCHNEIDER = false; // flag for if the bot is running away
 
   public static boolean isHelpingOut = false;
   public static MapLocation helpingLoc = new MapLocation(0, 0);
@@ -31,33 +31,10 @@ public class NathanMicro {
     RobotInfo[] nearbyEnemies = getEnemyRobotInfo();
     Robot[] enemiesInRange = RC.senseNearbyGameObjects(Robot.class, 10, ENEMY_TEAM);
 
-    int nearbyEnemySoldiers = 0;
-    for (RobotInfo info : nearbyEnemies) {
-      if (info.type == RobotType.SOLDIER) {
-        nearbyEnemySoldiers++;
-      }
-    }
-
-    /*if (nearbyEnemySoldiers == 0) { // no enemies: don't micro
-      if (RC.isActive() && currentLocation.distanceSquaredTo(ENEMY_HQ) <= 100) {
-        MapLocation cowTarget =
-            getMostCowsLoc(
-                MapLocation.getAllMapLocationsWithinRadiusSq(
-                    currentLocation.add(currentLocation.directionTo(ENEMY_HQ)), 5),
-                    //
-                    500);
-        if (cowTarget != null && RC.canAttackSquare(cowTarget)
-            && RC.senseObjectAtLocation(cowTarget) == null) {
-          RC.attackSquare(cowTarget);
-          return true;
-        }
-      }
-      return false;*/
     if (RC.isActive()) {
       Robot[] nearbyTeam = RC.senseNearbyGameObjects(Robot.class, 35, ALLY_TEAM);
       float allyWeight = 0, enemyWeight = 0;
 
-      // get robot infos of enemy
       RobotInfo ri;
 
       MapLocation nearestPastrLoc = null;
@@ -111,7 +88,7 @@ public class NathanMicro {
       for (int i=0; i<SoldierBehavior.microLocations.size; ++i) {
         m = SoldierBehavior.microLocations.get(i);
         zzz += "(" + m.x + "," + m.y + "),";
-        if (currentLocation.distanceSquaredTo(m) <= 8*8) {
+        if (currentLocation.distanceSquaredTo(m) <= 10*10) {
           isHelpingOut = true;
           helpingLoc = m;
           lastHelpRequest = Clock.getRoundNum();
@@ -127,12 +104,14 @@ public class NathanMicro {
       zzz += (isHelpingOut ? "HELPING " + locToString(helpingLoc) : "") + "last help: " + lastHelpRequest + " | round: " + Clock.getRoundNum();
       RC.setIndicatorString(1, "in range " + enemiesInRange.length + " | " + "ally " + allyWeight + " / enemy " + enemyWeight + " (turn " + Clock.getRoundNum() + ") | " + zzz + (JON_SCHNEIDER ? " RUNAWAY" : ""));
 
-      if (!JON_SCHNEIDER && (RC.getHealth() <= 10.1 || (RC.getHealth() <= 20.1 && enemiesInRange.length >= 3))) {
+      //decide whether to retreat
+      if (!JON_SCHNEIDER && (RC.getHealth() <= 10.1 || (RC.getHealth() <= 20.1 && enemiesInRange.length >= 3)) && allyWeight >= enemyWeight + 40) {
         JON_SCHNEIDER = true;
       }
       if (JON_SCHNEIDER && RC.getHealth() >= 50) JON_SCHNEIDER = false;
 
       if (!JON_SCHNEIDER && (allyWeight >= enemyWeight || GREAT_LUGE)) {
+        // choose an aggressive option
         if (isHelpingOut) {
           RC.setIndicatorString(2, "helping out to kill guy at " + m.x + "," + m.y);
         }
@@ -149,6 +128,7 @@ public class NathanMicro {
           MapLocation nextLoc = new MapLocation(-1, -1);
           float nextWeight = 0;
           if (!isHelpingOut && target == null) {
+            // if we don't have to do anything, consider moving towards a nearby enemy
             Direction newDir = Direction.NONE;
             for (int i=0; i<nearbyEnemies.length; ++i) {
               Direction nd = currentLocation.directionTo(nearbyEnemies[i].location);
@@ -174,7 +154,7 @@ public class NathanMicro {
             for (int z=0; z<nearbyEnemies.length; ++z) ss += "," + nearbyEnemies[z].location.x + "," + nearbyEnemies[z].location.y;
             RC.setIndicatorString(2, "///" + "moving forward (enemy weight: " + nextWeight + " at (" + nextLoc.x + "," + nextLoc.y + "))" + (target == null ? " -- ceding control" : locToString(target)) );
             if (target != null) {
-              mover.setTarget(target); // jurgz should take a look at this ...
+              mover.setTarget(target);
               mover.move();
               return true;
             } else {
@@ -185,6 +165,7 @@ public class NathanMicro {
             Direction newDir = currentLocation.directionTo(m);
             if (RC.isActive() && newDir != Direction.NONE && newDir != Direction.OMNI) {
               // go straight towards the target point
+              // the point of the helping out flag is to get manpower ASAP
               RC.setIndicatorString(2, "/// helping out " + locToString(currentLocation.add(newDir)));
               if (RC.canMove(newDir)) {
                 mover.setTarget(currentLocation.add(newDir));
@@ -205,6 +186,7 @@ public class NathanMicro {
           }
 
           if (target == null) {
+            //attack a PASTR i guess
             if (nearestPastrLoc != null) {
               // PASTR_RANGE = 5
               MapLocation cowTarget =
