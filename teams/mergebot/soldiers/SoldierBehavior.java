@@ -4,7 +4,6 @@ import static mergebot.utils.Utils.*;
 import mergebot.RobotBehavior;
 import mergebot.messaging.MessageHandler;
 import mergebot.messaging.MessagingSystem.MessageType;
-import mergebot.nav.HybridMover;
 import mergebot.nav.Mover;
 import mergebot.utils.ArraySet;
 import battlecode.common.*;
@@ -21,7 +20,7 @@ public class SoldierBehavior extends RobotBehavior {
 
   // basic data
   int bornRound = Clock.getRoundNum();
-  HybridMover hybrid = new HybridMover();
+  // HybridMover hybrid = new HybridMover();
   Mover mover = new Mover();
 
   ArraySet<MapLocation> messagedEnemyRobots = new ArraySet<MapLocation>(100);
@@ -170,7 +169,7 @@ public class SoldierBehavior extends RobotBehavior {
      * }
      */
 
-    if (hybrid.arrived() || mode != Mode.MOVE) {
+    if (mover.arrived() || mode != Mode.MOVE) {
       target = findExploreLocation();
       setMode(Mode.EXPLORE);
     }
@@ -234,16 +233,16 @@ public class SoldierBehavior extends RobotBehavior {
         }
         break;
       case MOVE:
-        hybrid.setTarget(target);
-        hybrid.move();
+        mover.setTarget(target);
+        mover.move();
         break;
       case FARM:
-        hybrid.setTarget(target);
-        hybrid.sneak();
+        mover.setTarget(target);
+        mover.sneak();
         break;
       case EXPLORE:
-        hybrid.setTarget(target);
-        hybrid.move();
+        mover.setTarget(target);
+        mover.move();
         break;
       case BUILD_PASTURE:
         int d = currentLocation.distanceSquaredTo(target);
@@ -261,16 +260,16 @@ public class SoldierBehavior extends RobotBehavior {
             break;
           }
         }
-        hybrid.setTarget(target);
-        hybrid.move();
+        mover.setTarget(target);
+        mover.move();
         break;
       case DEFEND_PASTURE:
         boolean inRange = currentLocation.distanceSquaredTo(target) < 30;
-        hybrid.setTarget(target);
+        mover.setTarget(target);
         if (inRange) {
-          hybrid.sneak();
+          mover.sneak();
         } else {
-          hybrid.move();
+          mover.move();
         }
         break;
       default:
