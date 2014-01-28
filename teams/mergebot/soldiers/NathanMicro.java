@@ -13,13 +13,16 @@ public class NathanMicro {
    */
   public static final int HELP_CHANNEL = ReservedMessageType.HELP_CHANNEL.channel();
   public static final int GREAT_LUGE_ASSIST = 60;
-  public static final int FIRE_RANGE_SQUARED = 10; // i have no idea where this constant is actually located
+  public static final int FIRE_RANGE_SQUARED = RobotType.SOLDIER.attackRadiusMaxSquared;
   public static final int HELP_DURATION = 8;
   public static final float ALLY_WEIGHT_DECAY = 12;
 
+  /**
+   * TODO give actual names and/or definitions for these constants so other people know what's going on
+   */
   public static boolean GREAT_LUGE = false;
   public static boolean JON_SCHNEIDER = false;
-  
+
   public static boolean isHelpingOut = false;
   public static MapLocation helpingLoc = new MapLocation(0, 0);
   public static int lastHelpRequest = 0;
@@ -87,7 +90,7 @@ public class NathanMicro {
       }
       // find enemy weight
       enemyWeight = enemyWeightAboutPoint(currentLocation, nearbyEnemies);
-      
+
       //find nearest PASTR -- should be moved later
       for (int i = enemiesInRange.length - 1; i >= 0; --i) {
         ri = RC.senseRobotInfo(enemiesInRange[i]);
@@ -123,12 +126,12 @@ public class NathanMicro {
       }
       zzz += (isHelpingOut ? "HELPING " + locToString(helpingLoc) : "") + "last help: " + lastHelpRequest + " | round: " + Clock.getRoundNum();
       RC.setIndicatorString(1, "in range " + enemiesInRange.length + " | " + "ally " + allyWeight + " / enemy " + enemyWeight + " (turn " + Clock.getRoundNum() + ") | " + zzz + (JON_SCHNEIDER ? " RUNAWAY" : ""));
-      
+
       if (!JON_SCHNEIDER && (RC.getHealth() <= 10.1 || (RC.getHealth() <= 20.1 && enemiesInRange.length >= 3))) {
         JON_SCHNEIDER = true;
       }
       if (JON_SCHNEIDER && RC.getHealth() >= 50) JON_SCHNEIDER = false;
-      
+
       if (!JON_SCHNEIDER && (allyWeight >= enemyWeight || GREAT_LUGE)) {
         if (isHelpingOut) {
           RC.setIndicatorString(2, "helping out to kill guy at " + m.x + "," + m.y);
@@ -153,7 +156,7 @@ public class NathanMicro {
                 newDir = nd;
                 nextLoc = currentLocation.add(newDir);
                 nextWeight = enemyWeightAboutPoint(nextLoc, nearbyEnemies);
-                
+
                 break;
               }
             }
@@ -259,7 +262,7 @@ public class NathanMicro {
         }
       } else if (nearbyEnemies.length > 0) {
         int dx = 0, dy = 0;
-        
+
         for (int i = nearbyEnemies.length - 1; i >= 0; --i) {
           dx += nearbyEnemies[i].location.x;
           dy += nearbyEnemies[i].location.y;
@@ -290,7 +293,7 @@ public class NathanMicro {
         mover.move();
       }
     }
-    
+
 
     return true;
   }
