@@ -16,7 +16,7 @@ abstract public class BFSNoiseTower extends RobotBehavior {
 	
 	MapLocation target = null;
 	
-	public BFSNoiseTower() {
+	public BFSNoiseTower() throws GameActionException {
     System.out.println("start " + Clock.getBytecodeNum());
 	  
 		
@@ -37,6 +37,18 @@ abstract public class BFSNoiseTower extends RobotBehavior {
       }
 	  
 	  for(int s = 1; s < at; s++) {
+	    if(s%30 == 0 && RC.isActive()) {
+	      if(target == null || target.distanceSquaredTo(ALLY_PASTR_COUNT > 0 ? ALLY_PASTR_LOCS[0] : currentLocation) <= 5 ) {
+	        earlyNearbyCows();
+	      }
+	      MapLocation realTarget = target.add(currentLocation.directionTo(target), 3);
+	      
+	      if(RC.canAttackSquare(realTarget)) RC.attackSquare(realTarget);
+	      
+	      target = target.add(target.directionTo(currentLocation));
+	    }
+	    
+	    
 	    Direction initD = dir[queue[s].x - currentLocation.x + 17][queue[s].y - currentLocation.y + 17];
 	    Direction aD;
 	    Direction bD;
@@ -67,5 +79,23 @@ abstract public class BFSNoiseTower extends RobotBehavior {
     System.out.println("at " + at);
 	  
 	}
+	
+	
+  public void earlyNearbyCows() throws GameActionException {
+    target = null;
+    double numCows = -1.0;
+    for(int x = -8; x <= 8; x++) {
+      for(int y = -8; y <= 8; y++) {
+        MapLocation lookat = currentLocation.add(x, y);
+        if(lookat.distanceSquaredTo(ALLY_PASTR_COUNT > 0 ? ALLY_PASTR_LOCS[0] : currentLocation) <= 5 || !RC.canSenseSquare(lookat)) continue;
+        double t = RC.senseCowsAtLocation(lookat);
+        if(t > numCows) {
+          numCows = t;
+          target = lookat;
+        }
+      }
+    }
+    System.out.println("target" + target + "  numcows " + numCows);
+  }
 
 }

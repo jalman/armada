@@ -25,7 +25,11 @@ public class RobotPlayer {
         robot = new PastrBehavior();
         break;
       case NOISETOWER:
+      try {
         robot = new OctantNoiseTowerBehavior();
+      } catch (GameActionException e1) {
+        e1.printStackTrace();
+      }
         break;
       default: // autokill
         return;

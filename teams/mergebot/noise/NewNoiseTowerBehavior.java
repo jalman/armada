@@ -7,7 +7,7 @@ import static mergebot.utils.Utils.*;
 
 public class NewNoiseTowerBehavior extends BFSNoiseTower {
 	
-	 public NewNoiseTowerBehavior() {
+	 public NewNoiseTowerBehavior() throws GameActionException {
 	   super();
 	 }
 	

@@ -9,7 +9,7 @@ public class OctantNoiseTowerBehavior extends BFSNoiseTower {
 	
   int[] places = new int[8];
   
-	 public OctantNoiseTowerBehavior() {
+	 public OctantNoiseTowerBehavior() throws GameActionException {
 	   super();
 	   
 	   for(int i = at-1; i > 0; i--) {
@@ -53,13 +53,15 @@ public class OctantNoiseTowerBehavior extends BFSNoiseTower {
       }
       
     }
+
+    int x = target.x - currentLocation.x + 17;
+    int y = target.y - currentLocation.y + 17;
     
-    MapLocation realTarget = target.add(currentLocation.directionTo(target), 3);
+    
+    MapLocation realTarget = target.add(dir[x][y].opposite(), 3);
     
     if(RC.canAttackSquare(realTarget)) RC.attackSquare(realTarget);
     
-    int x = target.x - currentLocation.x + 17;
-    int y = target.y - currentLocation.y + 17;
     
     target = target.add(dir[x][y]);
 
@@ -80,8 +82,8 @@ public class OctantNoiseTowerBehavior extends BFSNoiseTower {
 //      target = target2;
 //    }
   }
-    
-    
+  
+  
   public boolean nearbyCows() throws GameActionException {
     MapLocation best = null;
     double numCows = -1.0;
