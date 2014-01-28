@@ -88,7 +88,7 @@ public class OctantNoiseTowerBehavior extends BFSNoiseTower {
     for(int x = -8; x <= 8; x++) {
       for(int y = -8; y <= 8; y++) {
         MapLocation lookat = currentLocation.add(x, y);
-        if(x*x + y*y <= 5 || !RC.canSenseSquare(lookat)) continue;
+        if(lookat.distanceSquaredTo(ALLY_PASTR_COUNT > 0 ? ALLY_PASTR_LOCS[0] : currentLocation) <= 5 || !RC.canSenseSquare(lookat)) continue;
         double t = RC.senseCowsAtLocation(lookat);
         if(t > numCows) {
           numCows = t;
