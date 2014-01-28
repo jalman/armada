@@ -4,10 +4,10 @@ import subprocess
 import re
 
 _maps2 = [ 'fieldsofgreen', 'almsman', 'troll', 'moo', 'temple', 'siege', 'backdoor', 'bakedpotato', 'blocky', 'castles', 'flags', 'cadmic', 'fenced' ] 
-_maps = _maps2[:6]
+_maps = _maps2[:10]
 
 _teamA = 'mergebot'
-_teamB = 'examplefuncsplayer'
+_teamB = 'emptyplayer'
 
 _replayFile = 'gatherspeed.rms'
 
