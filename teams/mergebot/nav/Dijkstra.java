@@ -25,7 +25,6 @@ public class Dijkstra {
   public int distance[][] = new int[MAP_WIDTH][MAP_HEIGHT];
 
   private final boolean inserted[][] = new boolean[MAP_WIDTH][MAP_HEIGHT];
-  private final boolean removed[][] = new boolean[MAP_WIDTH][MAP_HEIGHT];
   private final OnePassQueue<MapLocation> queue = new OnePassQueue<MapLocation>(1000, 50);
 
   public Dijkstra(MapLocation... sources) {
@@ -37,6 +36,10 @@ public class Dijkstra {
       // leave as null to cause exceptions if we accidentally try to use it
       // from[source.x][source.y] = Direction.NONE;
     }
+  }
+
+  public boolean done() {
+    return queue.size == 0;
   }
 
   private static final int WEIGHT[][] = new int[TERRAIN_TILES.length][8];
@@ -69,34 +72,27 @@ public class Dijkstra {
     final OnePassQueue<MapLocation> queue = this.queue;
     final int[][] distance = this.distance;
     final boolean[][] inserted = this.inserted;
-    final boolean[][] removed = this.removed;
     final Direction[][] from = this.from;
 
-    // int iters = 0;
-    // int bc = Clock.getBytecodeNum();
+    int iters = 0;
+    int bc = Clock.getBytecodeNum();
 
     while (queue.size > 0) {
-      // iters++;
+      iters++;
       if (Clock.getBytecodeNum() >= bytecodes - 500) {
         break;
       }
 
       // RC.setIndicatorString(0, Integer.toString(min));
+      // ALERT: queue.min is valid only after a call to deleteMin()!
       next = queue.deleteMin();
       min = queue.min;
 
       x = next.x;
       y = next.y;
 
-      if (removed[x][y]) {
-        // verify that it has smaller distance
-        if (min <= distance[x][y]) {
-          System.out.println("BUG: removed loc had smaller min dist!");
-        }
-      } else {
-        // System.out.println(next + " at distance " + distance[x][y] + " from " + from[x][y]);
-
-        removed[x][y] = true;
+      // check if we have already visited this node
+      if (min == distance[x][y]) {
 
         if (broadcast) {
           try {
@@ -113,11 +109,23 @@ public class Dijkstra {
 
         weight = WEIGHT[RC.senseTerrainTile(next).ordinal()];
 
-        for (int i = 7; i >= 0; i--) {
-          dir = DIRECTIONS[i];
+        dir = from[x][y];
+        int i;
+        if (dir == null) {
+          dir = Direction.NORTH;
+          i = 8;
+        } else if (dir.isDiagonal()) {
+          dir = dir.rotateLeft().rotateLeft();
+          i = 5;
+        } else {
+          dir = dir.rotateLeft();
+          i = 3;
+        }
+
+        for (; --i >= 0; dir = dir.rotateRight()) {
           nbr = next.add(dir);
           if (RC.senseTerrainTile(nbr).isTraversableAtHeight(RobotLevel.ON_GROUND)) {
-            w = min + weight[i];
+            w = min + weight[dir.ordinal()];
 
             x = nbr.x;
             y = nbr.y;
@@ -140,14 +148,15 @@ public class Dijkstra {
       }
     }
 
-    // bc = Clock.getBytecodeNum() - bc;
-    // RC.setIndicatorString(2, "average Dijkstra bytecodes: " + bc / iters);
+    bc = Clock.getBytecodeNum() - bc;
+    RC.setIndicatorString(2, "average Dijkstra bytecodes: " + bc / iters);
 
     return reached != null;
   }
 
   /**
    * Computes a path from a location to the nearest source.
+   * Contains both start and end points.
    * @param loc The location.
    * @return The path as a LocSet.
    */

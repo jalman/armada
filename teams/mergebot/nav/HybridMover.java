@@ -134,11 +134,7 @@ public class HybridMover {
       }
     }
 
-    // System.out.println(outPath.contains(currentLocation));
-
     int index = path.getIndex(currentLocation);
-    // System.out.println(path.contains(currentLocation));
-    // System.out.println(path.get(index).equals(currentLocation));
     Direction dir = currentLocation.directionTo(path.get(index - 1));
     if (!move(dir)) {
       // FIXME: try to move around ally robots?

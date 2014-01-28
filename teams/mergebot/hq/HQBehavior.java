@@ -79,10 +79,18 @@ public class HQBehavior extends RobotBehavior {
     considerTeamAttacking();
   }
 
+  private boolean dijkstraFinished = false;
+
   @Override
   public void endRound() throws GameActionException {
     messagingSystem.endRound();
-    dijkstra.compute(9000, true);
+    if (!dijkstraFinished && currentRound <= 2000) {
+      dijkstra.compute(9000, true);
+      if (dijkstra.done()) {
+        System.out.println("Dijkstra finished on round " + currentRound);
+        dijkstraFinished = true;
+      }
+    }
   }
 
   private void considerTeamAttacking() throws GameActionException {
