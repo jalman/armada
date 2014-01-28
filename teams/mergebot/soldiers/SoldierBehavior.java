@@ -119,7 +119,18 @@ public class SoldierBehavior extends RobotBehavior {
   }
 
   private void think() throws GameActionException {
-    if (enemyRobots.length > (RC.canSenseSquare(ENEMY_HQ) ? 1 : 0)) {
+    //for answering pleas for help
+    boolean hasNearbyPlea = false;
+    for (int i=0; i<SoldierBehavior.microLocations.size; ++i) {
+      MapLocation m = SoldierBehavior.microLocations.get(i);
+      
+      if (currentLocation.distanceSquaredTo(m) <= 8*8) {
+        hasNearbyPlea = true;
+        break;
+      }
+    }
+    
+    if (enemyRobots.length > (RC.canSenseSquare(ENEMY_HQ) ? 1 : 0) || hasNearbyPlea) {
       setMode(Mode.COMBAT);
       return;
     }
@@ -233,7 +244,7 @@ public class SoldierBehavior extends RobotBehavior {
       case COMBAT:
         //micro.micro();
         if (!NathanMicro.luge(mover)) {
-          micro.micro();
+          //micro.micro();
         }
         break;
       case MOVE:

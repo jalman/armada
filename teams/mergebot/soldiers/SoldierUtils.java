@@ -188,13 +188,17 @@ public class SoldierUtils {
    */
   public static int getPriority(RobotInfo r) throws GameActionException
   {
-    if (!inRange(r.location)) {
+    return getPriority(currentLocation, r);
+  }
+  public static int getPriority(MapLocation loc, RobotInfo r) throws GameActionException
+  {
+    if (!inRange(loc, r.location)) {
       return -100;
     } else if (r.type == RobotType.HQ) {
       return -10000;
     }
 
-    int distance = naiveDistance(currentLocation, r.location);
+    int distance = naiveDistance(loc, r.location);
     // int cows = (int) RC.senseCowsAtLocation(r.location);
     double healthPercent = robotHealthPercent(r);
     int priority = robotTypePriority(r);
@@ -250,7 +254,10 @@ public class SoldierUtils {
   }
 
   public static boolean inRange(MapLocation loc) {
-    return currentLocation.distanceSquaredTo(loc) <= RobotType.SOLDIER.attackRadiusMaxSquared;
+    return inRange(currentLocation, loc);
+  }
+  public static boolean inRange(MapLocation myLoc, MapLocation otherLoc) {
+    return myLoc.distanceSquaredTo(otherLoc) <= RobotType.SOLDIER.attackRadiusMaxSquared;
   }
 
   /**
@@ -290,13 +297,17 @@ public class SoldierUtils {
    */
   public static MapLocation getHighestPriority(RobotInfo[] arr) throws GameActionException
   {
+    return getHighestPriority(currentLocation, arr);
+  }
+  public static MapLocation getHighestPriority(MapLocation loc, RobotInfo[] arr) throws GameActionException
+  {
     if (arr.length == 0) return null;
 
     int targetInfoIndex = -1;
     int maxPriority = -100, priority;
 
     for (int i = arr.length - 1; i >= 0; i--) {
-      priority = getPriority(arr[i]);
+      priority = getPriority(loc, arr[i]);
       if (priority < 0) {
         continue;
       } else if (priority > maxPriority) {
