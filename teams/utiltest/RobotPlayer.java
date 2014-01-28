@@ -16,9 +16,63 @@ public class RobotPlayer {
     terrainCache = new TerrainTile[MAP_WIDTH][MAP_HEIGHT];
     terrainCacheNew = new int[MAP_WIDTH][MAP_HEIGHT];
 
+    int tc1d[] = new int[256 * 256];
+
     int TERRAIN_CHANNEL = 5000;
 
-    int x, y;
+    int x = 11, y = 11;
+    countBytecodes(false);
+    terrainCacheNew[x][y] = 1;
+    terrainCacheNew[x + 1][y + 1] = 1;
+    countBytecodes(true);
+
+    countBytecodes(false);
+    terrainCacheNew[x][y] = 1;
+    terrainCacheNew[x + 1][y + 1] = 1;
+    terrainCacheNew[x + 2][y + 2] = 1;
+    countBytecodes(true);
+    rc.yield();
+
+    countBytecodes(false);
+    n = terrainCacheNew[x][y];
+    n = terrainCacheNew[x + 1][y + 1];
+    countBytecodes(true);
+
+    countBytecodes(false);
+    n = terrainCacheNew[x][y];
+    n = terrainCacheNew[x + 1][y + 1];
+    n = terrainCacheNew[x + 2][y + 2];
+    countBytecodes(true);
+    rc.yield();
+
+    countBytecodes(false);
+    tc1d[(y << 8) + x] = 1;
+    tc1d[((y + 1) << 8) + (x + 1)] = 1;
+    countBytecodes(true);
+
+    countBytecodes(false);
+    n = ((y + 2) << 8) + (x + 2);
+    countBytecodes(true);
+
+    countBytecodes(false);
+    tc1d[(y << 8) + x] = 1;
+    tc1d[((y + 1) << 8) + (x + 1)] = 1;
+    tc1d[((y + 2) << 8) + (x + 2)] = 1;
+    countBytecodes(true);
+    rc.yield();
+
+    countBytecodes(false);
+    n = tc1d[(y << 8) + x];
+    n = tc1d[((y + 1) << 8) + (x + 1)];
+    countBytecodes(true);
+
+    countBytecodes(false);
+    n = tc1d[(y << 8) + x];
+    n = tc1d[((y + 1) << 8) + (x + 1)];
+    n = tc1d[((y + 2) << 8) + (x + 2)];
+    countBytecodes(true);
+    rc.yield();
+
     for (TerrainTile t : TerrainTile.values()) {
       System.out.println(t + " is " + t.ordinal());
     }
@@ -303,7 +357,7 @@ public class RobotPlayer {
     int tempRound = Clock.getRoundNum();
     if (print) {
       System.out.println("Bytecodes used since last call: " + ((tempRound - round) * 10000
-          + (tempBytecodes - bytecodes)));
+          + (tempBytecodes - bytecodes - 13))); // 13 = bytecode cost of this method
       System.out.println("---");
     }
     bytecodes = tempBytecodes;
