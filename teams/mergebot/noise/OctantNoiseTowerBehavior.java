@@ -43,8 +43,15 @@ public class OctantNoiseTowerBehavior extends BFSNoiseTower {
     
     if(target.distanceSquaredTo(currentLocation) < 3) {
       a++;
-      if(a==8) a = 0;
-      target = queue[places[a]];
+      if(a>=8) {
+        if(!nearbyCows()) {
+          a = 0;
+          target = queue[places[a]];
+        }
+      } else {
+        target = queue[places[a]];
+      }
+      
     }
     
     MapLocation realTarget = target.add(currentLocation.directionTo(target), 3);
@@ -56,6 +63,46 @@ public class OctantNoiseTowerBehavior extends BFSNoiseTower {
     
     target = target.add(dir[x][y]);
 
+    
+//    int x = target.x - currentLocation.x + 17;
+//    int y = target.y - currentLocation.y + 17;
+//    
+//    MapLocation target2 = target.add(dir[x][y]);
+//    
+//    x = target2.x - currentLocation.x + 17;
+//    y = target2.y - currentLocation.y + 17;
+//    
+//    MapLocation target3 = target2.add(dir[x][y]);
+//
+//    if(target3.directionTo(target2).equals(target2.directionTo(target))) {
+//      target = target3;
+//    } else {
+//      target = target2;
+//    }
+  }
+    
+    
+  public boolean nearbyCows() throws GameActionException {
+    MapLocation best = null;
+    double numCows = -1.0;
+    for(int x = -8; x <= 8; x++) {
+      for(int y = -8; y <= 8; y++) {
+        MapLocation lookat = currentLocation.add(x, y);
+        if(x*x + y*y <= 5 || !RC.canSenseSquare(lookat)) continue;
+        double t = RC.senseCowsAtLocation(lookat);
+        if(t > numCows) {
+          numCows = t;
+          best = lookat;
+        }
+      }
+    }
+    
+    if(numCows > 600) {
+      target = best;
+      System.out.println(target + " " + numCows);
+      return true;
+    }
+    return false;
   }
 
 	/**
@@ -64,6 +111,8 @@ public class OctantNoiseTowerBehavior extends BFSNoiseTower {
 	@Override
   public void endRound() throws GameActionException {
 	  messagingSystem.endRound();
+	  RC.setIndicatorString(0, "the target is " + target + "");
+    RC.setIndicatorString(1, "a is " + a);
   }
 	
 }
