@@ -46,10 +46,8 @@ public class MessagingSystem {
   public static final int MESSAGE_SIZE = 6;
   public static final int BLOCK_SIZE = 1 + MESSAGE_SIZE;
 
-  private static final int RESERVED_CHANNELS = 5000;
-  private static final int MESSAGE_CHANNELS = GameConstants.BROADCAST_MAX_CHANNELS
-      - RESERVED_CHANNELS;
-  private static final int MAX_MESSAGE_INDEX = MESSAGE_CHANNELS / BLOCK_SIZE;
+  private static int MESSAGE_CHANNELS;
+  private static int MAX_MESSAGE_INDEX;
 
   /**
    * Enumerates the reserved message channels.
@@ -59,7 +57,8 @@ public class MessagingSystem {
    */
   public enum ReservedMessageType {
     MESSAGE_INDEX(1),
-    HELP_CHANNEL(1);
+    HELP_CHANNEL(1),
+    PATHING(GameConstants.MAP_MAX_HEIGHT * GameConstants.MAP_MAX_WIDTH);
 
     public final int type = this.ordinal();
     public final int length;
@@ -79,12 +78,14 @@ public class MessagingSystem {
    * Initialize the reserved_channel_indices array, necessary for correct function of reserved channels
    */
   static {
-    int currentChannel = MESSAGE_CHANNELS; // start of reserved channels is at MESSAGE_CHANNELS
+    int currentChannel = GameConstants.BROADCAST_MAX_CHANNELS;
     ReservedMessageType[] rmt = ReservedMessageType.values();
-    for (int i = 0; i < rmt.length; i++) {
+    for (int i = rmt.length - 1; i >= 0; i--) {
+      currentChannel -= rmt[i].length;
       reserved_channel_indices[i] = currentChannel;
-      currentChannel += rmt[i].length;
     }
+    MESSAGE_CHANNELS = currentChannel;
+    MAX_MESSAGE_INDEX = MESSAGE_CHANNELS / BLOCK_SIZE;
   }
 
   public static final double BROADCAST_COST = 10;
@@ -309,5 +310,29 @@ public class MessagingSystem {
 
   public void writeBuildingPastureMessage(MapLocation target) throws GameActionException {
     writeMessage(MessageType.BUILDING_PASTURE, target.x, target.y);
+  }
+
+  /**
+   * Same as Direction.values() but shifted by 1 so that 0 maps to null.
+   */
+  private static final Direction[] INT_TO_DIR = new Direction[DIRECTIONS.length + 1];
+
+  static {
+    INT_TO_DIR[0] = null;
+    for (int i = 0; i < DIRECTIONS.length; i++) {
+      INT_TO_DIR[i + 1] = DIRECTIONS[i];
+    }
+  }
+
+  public void writePathingDirection(MapLocation loc, Direction dir) throws GameActionException {
+    RC.broadcast(ReservedMessageType.PATHING.channel() + loc.x * MAP_HEIGHT + loc.y,
+        dir != null ? (dir.ordinal() + 1) : 0);
+    // System.out.println(before + "\t" + dir + "\t" + after);
+    // System.out.println(ReservedMessageType.PATHING.channel() + loc.x * MAP_HEIGHT + loc.y);
+  }
+
+  public Direction readPathingDirection(MapLocation loc) throws GameActionException {
+    return INT_TO_DIR[RC.readBroadcast(ReservedMessageType.PATHING.channel() + loc.x
+        * MAP_HEIGHT + loc.y)];
   }
 }

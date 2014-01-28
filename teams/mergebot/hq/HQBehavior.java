@@ -82,7 +82,7 @@ public class HQBehavior extends RobotBehavior {
   @Override
   public void endRound() throws GameActionException {
     messagingSystem.endRound();
-    dijkstra.compute(10000, true);
+    dijkstra.compute(9000, true);
   }
 
   private void considerTeamAttacking() throws GameActionException {
