@@ -2,20 +2,12 @@ package mergebot.utils;
 
 import static battlecode.common.Direction.*;
 
-import java.util.Arrays;
-import java.util.Random;
+import java.util.*;
 
-import mergebot.messaging.MessagingSystem;
+import mergebot.messaging.*;
 import battlecode.common.*;
 
 public class Utils {
-
-  //Game constants
-  // public final static int MAX_SOLDIER_ENERGON = 40;
-  // public final static int MAX_ENCAMPMENT_ENERGON = 100;
-  // public final static int MAX_HQ_ENERGON = 500;
-  // public static final RobotType[] ROBOT_TYPE = RobotType.values();
-
   //actual constants
 
   // public static final int[] DX = {-1, -1, -1, 0, 0, 1, 1, 1};
@@ -59,10 +51,6 @@ public class Utils {
   //this is for messaging
   public static MessagingSystem messagingSystem;
 
-  //these might be set at the beginning of the round
-  // public static Strategy strategy = Strategy.NORMAL;
-  // public static Parameters parameters = strategy.parameters.clone();
-
   public static MapLocation currentLocation;
   public static int curX, curY;
   public static double currentCowsHere;
@@ -91,7 +79,7 @@ public class Utils {
 
     HQ_DX = ENEMY_HQ.x - ALLY_HQ.x;
     HQ_DY = ENEMY_HQ.y - ALLY_HQ.y;
-    HQ_DIST = naiveDistance(ALLY_HQ,ENEMY_HQ);
+    // HQ_DIST = naiveDistance(ALLY_HQ,ENEMY_HQ);
 
     currentLocation = RC.getLocation();
     curX = currentLocation.x;
@@ -145,7 +133,10 @@ public class Utils {
       e.printStackTrace();
     }
 
-    updateBuildingUtils();
+    enemyRobots =
+        RC.senseNearbyGameObjects(Robot.class, currentLocation, SENSOR_RADIUS2, ENEMY_TEAM);
+    currentRound = Clock.getRoundNum();
+    bytecodes = Clock.getBytecodeNum();
   }
 
   private static RobotInfo[] enemyRobotInfo = new RobotInfo[0];
@@ -197,11 +188,6 @@ public class Utils {
     return Clock.getRoundNum() == birthRound;
   }
 
-  public static boolean isPassable(MapLocation loc) {
-    TerrainTile t = RC.senseTerrainTile(loc);
-    return (t == TerrainTile.NORMAL || t == TerrainTile.ROAD);
-  }
-
   /**
    * Finds the closest (by naive distance) map location to the target among a set of map locations.
    * @param locs The set of map locations.
@@ -223,33 +209,8 @@ public class Utils {
     return close;
   }
 
-  public static int clamp(int i, int min, int max) {
-    if(i < min) return min;
-    if(i > max) return max;
-    return i;
-  }
-
   public static <T> T[] newArray(int length, T... array) {
     return Arrays.copyOf(array, length);
-  }
-
-  public static int slowSqrt(int n) {
-    int sqrt = 0;
-    while(sqrt * sqrt < n) {
-      sqrt++;
-    }
-
-    return sqrt - 1;
-  }
-
-  public static double evaluate(MapLocation loc) {
-    int dot1 = (loc.x - ALLY_HQ.x) * HQ_DX + (loc.y - ALLY_HQ.y) * HQ_DY;
-    int dot2 = (ENEMY_HQ.x - loc.x) * HQ_DX + (ENEMY_HQ.y - loc.y) * HQ_DY;
-
-    if(dot1 < 0) return -5.0;
-    if(dot2 < 0) return 5.0;
-
-    return Math.log((double)dot1 / dot2);
   }
 
   public static boolean inRangeOfEnemyHQ(MapLocation loc) {
