@@ -25,7 +25,7 @@ public class Dijkstra {
   public int distance[][] = new int[MAP_WIDTH][MAP_HEIGHT];
 
   private final boolean inserted[][] = new boolean[MAP_WIDTH][MAP_HEIGHT];
-  private final OnePassQueue<MapLocation> queue = new OnePassQueue<MapLocation>(1000, 50);
+  private final OnePassQueue<MapLocation> queue = new OnePassQueue<MapLocation>(2*MAP_SIZE, 50);
 
   public Dijkstra(MapLocation... sources) {
     this.sources = new LocSet(sources);
