@@ -1,13 +1,12 @@
 package mergebot.nav;
 
-import battlecode.common.*;
+import battlecode.common.Direction;
+import battlecode.common.MapLocation;
 
 public abstract class NavAlg {
   public static boolean AVOID_ENEMY_HQ = true;
 
   protected MapLocation curLoc = null, finish = null;
-
-  public static final int NORMAL_MOVE_COST = 1;
 
   abstract public void recompute();
 

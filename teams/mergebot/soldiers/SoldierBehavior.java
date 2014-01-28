@@ -20,6 +20,7 @@ public class SoldierBehavior extends RobotBehavior {
 
   // basic data
   int bornRound = Clock.getRoundNum();
+  // HybridMover hybrid = new HybridMover();
   Mover mover = new Mover();
 
   ArraySet<MapLocation> messagedEnemyRobots = new ArraySet<MapLocation>(100);
@@ -248,7 +249,7 @@ public class SoldierBehavior extends RobotBehavior {
         break;
       case FARM:
         mover.setTarget(target);
-        mover.execute(Mover.SNEAK);
+        mover.sneak();
         break;
       case EXPLORE:
         mover.setTarget(target);
