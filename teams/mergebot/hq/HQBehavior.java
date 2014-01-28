@@ -2,16 +2,13 @@ package mergebot.hq;
 
 import static mergebot.utils.Utils.*;
 
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.*;
 
-import mergebot.RobotBehavior;
-import mergebot.messaging.MessageHandler;
+import mergebot.*;
+import mergebot.messaging.*;
 import mergebot.messaging.MessagingSystem.MessageType;
-import mergebot.nav.Dijkstra;
-import mergebot.nav.HybridMover;
-import mergebot.utils.Pair;
-import mergebot.utils.Utils;
+import mergebot.nav.*;
+import mergebot.utils.*;
 import battlecode.common.*;
 
 public class HQBehavior extends RobotBehavior {
@@ -32,7 +29,7 @@ public class HQBehavior extends RobotBehavior {
   private final Dijkstra dijkstra = new Dijkstra(HybridMover.DIJKSTRA_CENTER);
 
   public HQBehavior() {
-
+    macro();
     PASTRLocs = cowMiningLocations();
 
     //pick a strategy
@@ -173,10 +170,6 @@ public class HQBehavior extends RobotBehavior {
     return false;
   }
 
-  private boolean goodPlaceToMakeSoldier(Direction dir) {
-    return RC.canMove(dir);
-  }
-
   private void sendMessagesOnBuild() throws GameActionException {
     // empty for now
   }
@@ -203,7 +196,7 @@ public class HQBehavior extends RobotBehavior {
 
       @Override
       public int compare(Pair<MapLocation, Double> a, Pair<MapLocation, Double> b) {
-        return a == null ? 1 : b == null ? -1 : Double.compare(a.second, b.second);
+        return a == null ? 1 : b == null ? -1 : Double.compare(b.second, a.second);
       }
 
     });
@@ -218,15 +211,9 @@ public class HQBehavior extends RobotBehavior {
     return locs;
   }
 
-  private double effectiveCowGrowth(int x, int y) {
-    if (RC.senseTerrainTile(new MapLocation(x,y)) == TerrainTile.VOID) return 0.0;
-    return COW_GROWTH[x][y];
-  }
-
   private double effectiveCowGrowth(MapLocation loc) {
-    TerrainTile tile = RC.senseTerrainTile(loc);
-    if (tile == TerrainTile.VOID || tile == TerrainTile.OFF_MAP) return 0.0;
-    return COW_GROWTH[loc.x][loc.y];
+    return (RC.senseTerrainTile(loc).isTraversableAtHeight(RobotLevel.ON_GROUND))
+        ? COW_GROWTH[loc.x][loc.y] : 0.0;
   }
 
   private MapLocation randomNearbyLocation(MapLocation loc, int d2) {
@@ -273,7 +260,7 @@ public class HQBehavior extends RobotBehavior {
     boolean changed = false;
 
     for(int i = xl; i <= xu; i++) for(int j = yl; j <= yu; j++) {
-      if(effectiveCowGrowth(i,j) > effectiveCowGrowth(x,y)) {
+        if (COW_GROWTH[i][j] > COW_GROWTH[x][y]) {
         changed = true;
         x = i;
         y = j;
@@ -281,6 +268,6 @@ public class HQBehavior extends RobotBehavior {
     }
 
     return !changed || d == 1 ? new Pair<MapLocation, Double>(new MapLocation(x, y),
-        effectiveCowGrowth(x, y)) : gradientDescentOnNegativeCowScalarField(x, y, d - 1);
+        COW_GROWTH[x][y]) : gradientDescentOnNegativeCowScalarField(x, y, d - 1);
   }
 }
