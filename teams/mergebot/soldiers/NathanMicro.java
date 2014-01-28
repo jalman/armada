@@ -97,7 +97,7 @@ public class NathanMicro {
       }
 
       if (isHelpingOut) {
-        if ((RC.canSenseSquare(m) && RC.senseObjectAtLocation(m) == null) || Clock.getRoundNum() > lastHelpRequest + HELP_DURATION) {
+        if ((RC.canSenseSquare(helpingLoc) && RC.senseObjectAtLocation(helpingLoc) == null) || Clock.getRoundNum() > lastHelpRequest + HELP_DURATION) {
           isHelpingOut = false;
         }
       }
@@ -112,47 +112,46 @@ public class NathanMicro {
 
       if (!JON_SCHNEIDER && (allyWeight >= enemyWeight || GREAT_LUGE)) {
         // choose an aggressive option
-        if (isHelpingOut) {
-          RC.setIndicatorString(2, "helping out to kill guy at " + m.x + "," + m.y);
-        }
-        else {
-          String ss = "";
-          for (int i=0; i<SoldierBehavior.microLocations.size; ++i) {
-            MapLocation k = SoldierBehavior.microLocations.get(i);
-            ss += "(" + k.x + "," + k.y + "),";
-          }
-          RC.setIndicatorString(2, ss);
-        }
+    	  
         if (RC.isActive()) { // willing to attack!
           MapLocation target = getHighestPriority(nearbyEnemies);
           MapLocation nextLoc = new MapLocation(-1, -1);
+          String zyzzl = "";
           float nextWeight = 0;
           if (!isHelpingOut && target == null) {
             // if we don't have to do anything, consider moving towards a nearby enemy
             Direction newDir = Direction.NONE;
-            for (int i=0; i<nearbyEnemies.length; ++i) {
+            /*for (int i=0; i<nearbyEnemies.length; ++i) {
               Direction nd = currentLocation.directionTo(nearbyEnemies[i].location);
+              zyzzl += locToString(currentLocation.add(nd)) + " // " + nearbyEnemies[i].location + "," + currentLocation.add(nd).distanceSquaredTo(nearbyEnemies[i].location)+ "|||";
               if (currentLocation.add(nd).distanceSquaredTo(nearbyEnemies[i].location) <= FIRE_RANGE_SQUARED) {
                 newDir = nd;
                 nextLoc = currentLocation.add(newDir);
                 nextWeight = enemyWeightAboutPoint(nextLoc, nearbyEnemies);
+                zyzzl += "CHOSEN " + locToString(nextLoc) + "," + nextWeight;
 
                 break;
               }
+            }*/
+            if (nearbyEnemies.length > 0) {
+            	Direction nd = currentLocation.directionTo(nearbyEnemies[0].location);
+            	nextLoc = currentLocation.add(nd);
+            	nextWeight = enemyWeightAboutPoint(nextLoc, nearbyEnemies);
+            	target = nearbyEnemies[0].location;
             }
           }
           else if (isHelpingOut && target == null) {
-            nextLoc = currentLocation.add(currentLocation.directionTo(m));
+            nextLoc = currentLocation.add(currentLocation.directionTo(helpingLoc));
             nextWeight = enemyWeightAboutPoint(nextLoc, nearbyEnemies);
             //target = getHighestPriority(nextLoc, nearbyEnemies);
           }
-          RC.setIndicatorString(2, "///" + "nextWeight: " + nextWeight + " at (" + nextLoc.x + "," + nextLoc.y + "))" );
+          zyzzl += "///" + "nextWeight: " + nextWeight + " at (" + nextLoc.x + "," + nextLoc.y + "))";
 
           if (!isHelpingOut && (nearbyEnemies.length == 0 || (enemiesInRange.length == 0 && allyWeight >= 1.10 * nextWeight))) {
             // willing to move forward and attack!
             String ss = "";
             for (int z=0; z<nearbyEnemies.length; ++z) ss += "," + nearbyEnemies[z].location.x + "," + nearbyEnemies[z].location.y;
-            RC.setIndicatorString(2, "///" + "moving forward (enemy weight: " + nextWeight + " at (" + nextLoc.x + "," + nextLoc.y + "))" + (target == null ? " -- ceding control" : locToString(target)) );
+            RC.setIndicatorString(2, "moving forward (enemy weight: " + nextWeight + " at (" + nextLoc.x + "," + nextLoc.y + "))" + (target == null ? " -- ceding control" : locToString(target)) + " | " + zyzzl + " | turn " + Clock.getRoundNum() );
             if (target != null) {
               mover.setTarget(target);
               mover.move();
@@ -162,7 +161,7 @@ public class NathanMicro {
             }
           }
           else if (isHelpingOut && allyWeight >= 1.10 * nextWeight && target == null) {
-            Direction newDir = currentLocation.directionTo(m);
+            Direction newDir = currentLocation.directionTo(helpingLoc);
             if (RC.isActive() && newDir != Direction.NONE && newDir != Direction.OMNI) {
               // go straight towards the target point
               // the point of the helping out flag is to get manpower ASAP
@@ -184,20 +183,24 @@ public class NathanMicro {
               }
             }
           }
-
+          RC.setIndicatorString(2, "" + target + "," + nearestPastrLoc);
           if (target == null) {
             //attack a PASTR i guess
             if (nearestPastrLoc != null) {
               // PASTR_RANGE = 5
-              MapLocation cowTarget =
-                  getMostCowsLoc(MapLocation.getAllMapLocationsWithinRadiusSq(nearestPastrLoc, 5),
-                      500);
-              if (cowTarget != null && RC.canAttackSquare(cowTarget)) {
-                RC.attackSquare(cowTarget);
-                if (m.x != cowTarget.x || m.y != cowTarget.y) {
-                  messagingSystem.writeMicroMessage(cowTarget, 1);
-                }
-              }
+            	Direction newDir = currentLocation.directionTo(nearestPastrLoc);
+            	if (RC.canMove(newDir) && currentLocation.add(newDir).distanceSquaredTo(ENEMY_HQ) < RobotType.HQ.attackRadiusMaxSquared) {
+            		mover.setTarget(nearestPastrLoc);
+            		mover.move();
+            	}
+            	else {
+            		MapLocation cowTarget =
+                            getMostCowsLoc(MapLocation.getAllMapLocationsWithinRadiusSq(nearestPastrLoc, 5),
+                                500);
+                    if (cowTarget != null && RC.canAttackSquare(cowTarget)) {
+                       RC.attackSquare(cowTarget);
+                     }
+            	}
             }
             /*else if (currentLocation.distanceSquaredTo(ENEMY_HQ) <= 100) {
               // copy-pasted from above.
