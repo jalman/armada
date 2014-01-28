@@ -13,8 +13,9 @@ public class OctantNoiseTowerBehavior extends BFSNoiseTower {
 	   super();
 	   
 	   for(int i = at-1; i > 0; i--) {
-	     int dir = currentLocation.directionTo(queue[i]).ordinal();
-	     if(currentLocation.distanceSquaredTo(queue[i]) > currentLocation.distanceSquaredTo(queue[places[dir]])) {
+	     MapLocation loc = queue[i];
+	     int dir = currentLocation.directionTo(loc).ordinal();
+	     if(COW_GROWTH[loc.x][loc.y] > 0 && currentLocation.distanceSquaredTo(loc) > currentLocation.distanceSquaredTo(queue[places[dir]])) {
 	       places[dir] = i;
 	     }
 	   }
@@ -60,10 +61,12 @@ public class OctantNoiseTowerBehavior extends BFSNoiseTower {
     
     MapLocation realTarget = target.add(dir[x][y].opposite(), 3);
     
-    if(RC.canAttackSquare(realTarget)) RC.attackSquare(realTarget);
     
     
     target = target.add(dir[x][y]);
+    
+    if(RC.canAttackSquare(realTarget)) RC.attackSquare(realTarget);
+    else run();
 
     
 //    int x = target.x - currentLocation.x + 17;
