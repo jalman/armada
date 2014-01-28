@@ -212,6 +212,9 @@ public class NathanMicro {
                       500);
               if (cowTarget != null && RC.canAttackSquare(cowTarget)) {
                 RC.attackSquare(cowTarget);
+                if (m.x != cowTarget.x || m.y != cowTarget.y) {
+                  messagingSystem.writeMicroMessage(cowTarget, 1);
+                }
               }
             }
             /*else if (currentLocation.distanceSquaredTo(ENEMY_HQ) <= 100) {
