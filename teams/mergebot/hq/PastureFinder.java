@@ -99,7 +99,7 @@ public class PastureFinder {
     double estimate = 0;
 
     for (MapLocation nearby : MapLocation.getAllMapLocationsWithinRadiusSq(loc, 5)) {
-      estimate += estimateCowGrowth(nearby);
+      estimate += effectiveCowGrowth(nearby);
     }
 
     for (MapLocation nearby : randomUniformNearbyLocations(loc, dist, iters)) {
