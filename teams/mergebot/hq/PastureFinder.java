@@ -2,23 +2,24 @@ package mergebot.hq;
 
 import static mergebot.utils.Utils.*;
 
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.*;
 
-import mergebot.utils.Pair;
+import mergebot.utils.*;
 import battlecode.common.*;
 
 public class PastureFinder {
   public static MapLocation[] cowMiningLocations() {
-
-    int xparts = MAP_WIDTH < 50 ? MAP_WIDTH / 10 : MAP_WIDTH / 15;
-    int yparts = MAP_HEIGHT < 50 ? MAP_HEIGHT / 10 : MAP_HEIGHT / 15;
+    // System.out.println(" > " + Clock.getBytecodeNum());
+    int xparts = MAP_WIDTH < 50 ? 5 : 7;
+    int yparts = MAP_HEIGHT < 50 ? 5 : 7;
     @SuppressWarnings("unchecked")
     Pair<MapLocation, Double>[] ret = new Pair[(1 + xparts) * (1 + yparts) / 2];
     int i = 0;
     for (int x = xparts - 1; x >= 0; x--) {
       for (int y = yparts - 1; y >= 0; y--) {
-        MapLocation inittry = new MapLocation(x * MAP_WIDTH / xparts, y * MAP_HEIGHT / yparts);
+        MapLocation inittry =
+            new MapLocation((2 * x * MAP_WIDTH + 1) / (2 * xparts),
+                (2 * y * MAP_HEIGHT + 1) / (2 * yparts));
         if (inittry.distanceSquaredTo(ALLY_HQ) < inittry.distanceSquaredTo(ENEMY_HQ)) {
           ret[i] = gradientAscent(inittry);
           // ret[i] = gradientDescentOnNegativeCowScalarField(inittry.x, inittry.y, 6);
@@ -26,7 +27,7 @@ public class PastureFinder {
         }
       }
     }
-    System.out.println(Clock.getBytecodeNum());
+    System.out.println(" > " + Clock.getBytecodeNum());
 
     Arrays.sort(ret, new Comparator<Pair<MapLocation, Double>>() {
 
@@ -60,51 +61,63 @@ public class PastureFinder {
   private static MapLocation[] randomNearbyLocations(MapLocation loc, int d2, int num) {
     MapLocation[] locs = MapLocation.getAllMapLocationsWithinRadiusSq(loc, d2);
     MapLocation[] chosen = new MapLocation[num];
-    for (int i = 0; i < num; i++) {
+    for (int i = num - 1; i >= 0; i--) {
       chosen[i] = locs[random.nextInt(locs.length)];
     }
     return chosen;
   }
 
   private static MapLocation[] symmetrize(MapLocation center, int dx, int dy) {
-    MapLocation[] locs = new MapLocation[8];
-    locs[0] = center.add(dx, dy);
-    locs[1] = center.add(dy, dx);
-    locs[2] = center.add(dx, -dy);
-    locs[3] = center.add(dy, -dx);
-    locs[4] = center.add(-dx, dy);
-    locs[5] = center.add(-dy, dx);
-    locs[6] = center.add(-dx, -dy);
-    locs[7] = center.add(-dy, -dx);
+    MapLocation[] locs = {center.add(dx, dy), center.add(dy, dx), center.add(dx, -dy),
+        center.add(dy, -dx), center.add(-dx, dy), center.add(-dy, dx), center.add(-dx, -dy),
+        center.add(-dy, -dx)};
     return locs;
   }
 
   private static MapLocation[] randomUniformNearbyLocations(MapLocation loc, int d2, int num) {
-    MapLocation[] set = MapLocation.getAllMapLocationsWithinRadiusSq(new MapLocation(0, 0), d2);
+    MapLocation[] dxdylist = MapLocation.getAllMapLocationsWithinRadiusSq(new MapLocation(0, 0), d2);
     MapLocation[] chosen = new MapLocation[num * 8];
-    for (int i = 0; i < num; i++) {
-      MapLocation rand = set[random.nextInt(set.length)];
-      MapLocation[] locs = symmetrize(loc, rand.x, rand.y);
-      for (int j = 7; j >= 0; j--) {
-        chosen[i * 8 + j] = locs[j];
-      }
+    for (int i = num - 1; i >= 0; --i) {
+      MapLocation rand = dxdylist[random.nextInt(dxdylist.length)];
+      int dx = rand.x, dy = rand.y;
+      // inlining for performance
+      /*
+       * MapLocation[] locs = symmetrize(loc, rand.x, rand.y);
+       * for (int j = 7; j >= 0; j--) {
+       * chosen[i * 8 + j] = locs[j];
+       * }
+       */
+      chosen[i * 8 + 0] = loc.add(dx, dy);
+      chosen[i * 8 + 1] = loc.add(dy, dx);
+      chosen[i * 8 + 2] = loc.add(dx, -dy);
+      chosen[i * 8 + 3] = loc.add(dy, -dx);
+      chosen[i * 8 + 4] = loc.add(-dx, dy);
+      chosen[i * 8 + 5] = loc.add(-dy, dx);
+      chosen[i * 8 + 6] = loc.add(-dx, -dy);
+      chosen[i * 8 + 7] = loc.add(-dy, -dx);
     }
+
     return chosen;
   }
 
-  private static double estimateCowGrowth(MapLocation loc) {
-    int iters = 4;
-    int dist = 80;
+  static final int COW_GROWTH_RAND_ITERS = 2;
+  static final int COW_GROWTH_RAND_DIST = 80;
 
+  static final int COW_CHECK_RADIUS_SQUARED = 9;
+  private static double estimateCowGrowth(MapLocation loc) {
     double estimate = 0;
 
-    for (MapLocation nearby : MapLocation.getAllMapLocationsWithinRadiusSq(loc, 5)) {
-      estimate += effectiveCowGrowth(nearby);
+    // 5 = PASTR radius
+    MapLocation[] locs =
+        MapLocation.getAllMapLocationsWithinRadiusSq(loc, COW_CHECK_RADIUS_SQUARED);
+    for (int i = locs.length - 1; i >= 0; --i) {
+      estimate += effectiveCowGrowth(locs[i]);
     }
 
-    for (MapLocation nearby : randomUniformNearbyLocations(loc, dist, iters)) {
-      estimate += effectiveCowGrowth(nearby);
-    }
+    // locs = randomUniformNearbyLocations(loc, COW_GROWTH_RAND_DIST, COW_GROWTH_RAND_ITERS);
+    // for (int i = locs.length - 1; i >= 0; --i) {
+    // estimate += effectiveCowGrowth(locs[i]);
+    // }
 
     return estimate;
   }
@@ -113,13 +126,18 @@ public class PastureFinder {
   private static Pair<MapLocation, Double> gradientAscent(MapLocation current) {
     boolean[][] tried = new boolean[MAP_WIDTH][MAP_HEIGHT];
 
-    int tries = 10;
+    // int tries = 10;
     int dist = 9;
     double best = estimateCowGrowth(current);
+    // System.out.println("search started from " + current + ", which had estimate " + best);
 
     loop: {
-      for (MapLocation loc : MapLocation.getAllMapLocationsWithinRadiusSq(current, dist)) {
-        if (!isPathable(loc) || tried[loc.x][loc.y]) continue;
+      MapLocation[] locs = MapLocation.getAllMapLocationsWithinRadiusSq(current, dist);
+      for (int i = locs.length - 1; i >= 0; --i) {
+        MapLocation loc = locs[i];
+        // remove utils function call for bytecode savings
+        if (!RC.senseTerrainTile(loc).isTraversableAtHeight(RobotLevel.ON_GROUND)
+            || tried[loc.x][loc.y]) continue;
         tried[loc.x][loc.y] = true;
         double estimate = estimateCowGrowth(loc);
         if (estimate > best) {

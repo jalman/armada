@@ -1,8 +1,7 @@
 package mergebot.nav;
 
 import static mergebot.utils.Utils.*;
-import mergebot.utils.LocSet;
-import mergebot.utils.OnePassQueue;
+import mergebot.utils.*;
 import battlecode.common.*;
 
 public class Dijkstra {
@@ -42,7 +41,9 @@ public class Dijkstra {
 
   public boolean compute(int bytecodes, boolean broadcast, MapLocation... dests) {
     boolean[][] end = new boolean[MAP_WIDTH][MAP_HEIGHT];
-    for (MapLocation dest : dests) {
+    MapLocation dest;
+    for (int i = dests.length - 1; i >= 0; --i) {
+      dest = dests[i];
       end[dest.x][dest.y] = true;
     }
     return compute(end, bytecodes, broadcast);
