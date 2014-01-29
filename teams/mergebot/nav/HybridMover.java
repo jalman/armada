@@ -105,6 +105,16 @@ public class HybridMover {
       outPath.insert(loc);
       loc = loc.subtract(pathingInfo.first);
     }
+
+    int[] diffs = new int[outPath.size - 1];
+    for (int i = diffs.length; --i > 0;) {
+      diffs[i] = distances[i + 1] - distances[i];
+    }
+
+    // heuristic to prefer further away points on the path (which may be closer to us)
+    for (int i = 1; i < outPath.size; i++) {
+      distances[i] = distances[i - 1] + Math.max(1, diffs[i - 1] * 100 / (100 + 10 * i));
+    }
   }
 
   private boolean moveToPath() throws GameActionException {

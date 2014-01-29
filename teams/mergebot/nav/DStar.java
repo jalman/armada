@@ -68,7 +68,7 @@ public class DStar {
       min = dx;
       diff = dy - dx;
     }
-    return min * NORMAL_DIAGONAL + diff * NORMAL_ORTHOGONAL;
+    return (min * NORMAL_DIAGONAL + diff * NORMAL_ORTHOGONAL);
   }
 
   public boolean compute(int bytecodes) {
