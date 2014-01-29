@@ -96,7 +96,11 @@ public class PastureFinder {
     int iters = 4;
     int dist = 80;
 
-    double estimate = effectiveCowGrowth(loc);
+    double estimate = 0;
+
+    for (MapLocation nearby : MapLocation.getAllMapLocationsWithinRadiusSq(loc, 5)) {
+      estimate += estimateCowGrowth(nearby);
+    }
 
     for (MapLocation nearby : randomUniformNearbyLocations(loc, dist, iters)) {
       estimate += effectiveCowGrowth(nearby);
