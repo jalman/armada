@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# don't have anything else on lines with setIndicatorString / System.out.print[ln] / printStackTrace() !!!!
+if [ $# -eq 1 ]; then
+	rm -r team027/
+	./copyBot $1 team027
+    perl -pi -e 's#(.*).setIndicatorString#//$1.setIndicatorString#g' | grep -ril 'setIndicatorString'
+    perl -pi -e 's#(.*)System.out.print#//$1System.out.print#g' | grep -ril 'System.out.print'
+    perl -pi -e 's#(.*)printStackTrace#//$1printStackTrace#g' | grep -ril 'printStackTrace'
+	jar cf team027.jar team027/
+else
+	echo "Need to pass a team folder!"
+fi
