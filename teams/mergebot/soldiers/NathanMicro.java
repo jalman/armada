@@ -51,6 +51,10 @@ public class NathanMicro {
 
         switch (ri.type){
           case SOLDIER:
+        	if (ri.isConstructing) {
+        		break;
+        	}
+        	
             Robot[] stuff = RC.senseNearbyGameObjects(Robot.class, ri.location, 17, ENEMY_TEAM);
             boolean inCombat = false;
             for (int j=0; j<stuff.length; ++j) {
@@ -320,6 +324,10 @@ public class NathanMicro {
         case HQ:
           break;
         case SOLDIER:
+        	if (ri.isConstructing) {
+        		break;
+        	}
+        	
           int d = loc.distanceSquaredTo(ri.location);
           if (d <= FIRE_RANGE_SQUARED) weight += ri.health;
           else weight += ri.health - ALLY_WEIGHT_DECAY * lazySqrt(d - FIRE_RANGE_SQUARED);
