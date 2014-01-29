@@ -80,7 +80,7 @@ public class Dijkstra {
 
         if (broadcast) {
           try {
-            messagingSystem.writePathingDirection(next, from[x][y], distance[x][y]);
+            messagingSystem.writePathingInfo(next, from[x][y], distance[x][y]);
           } catch (GameActionException e) {
             e.printStackTrace();
           }

@@ -332,7 +332,7 @@ public class MessagingSystem {
   private static final int shift = 16;
   private static final int mask = (1 << shift) - 1;
 
-  public void writePathingDirection(MapLocation loc, Direction dir, int distance)
+  public void writePathingInfo(MapLocation loc, Direction dir, int distance)
       throws GameActionException {
     RC.broadcast(ReservedMessageType.PATHING.channel() + loc.x * MAP_HEIGHT + loc.y,
         (dir != null ? dir.ordinal() + 1 : 0) << shift | distance);
@@ -340,7 +340,7 @@ public class MessagingSystem {
     // System.out.println(ReservedMessageType.PATHING.channel() + loc.x * MAP_HEIGHT + loc.y);
   }
 
-  public Pair<Direction, Integer> readPathingDirection(MapLocation loc) throws GameActionException {
+  public Pair<Direction, Integer> readPathingInfo(MapLocation loc) throws GameActionException {
     int broadcast =
         RC.readBroadcast(ReservedMessageType.PATHING.channel() + loc.x * MAP_HEIGHT + loc.y);
     return new Pair<Direction, Integer>(INT_TO_DIR[broadcast >> shift], broadcast & mask);
