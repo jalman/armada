@@ -33,21 +33,23 @@ public class HQBehavior extends RobotBehavior {
     macro();
     PASTRLocs = PastureFinder.cowMiningLocations();
 
-    //pick a strategy
-    //    double totalcows = 0.0;
-    //    for(int x = Math.max(-17, -curX); x <= Math.min(17, MAP_WIDTH - 1 - curX); x++) {
-    //      int range = yrangefornoise[Math.abs(x)];
-    //      for(int y = Math.max(- range, -curY); y <= Math.min(range, MAP_HEIGHT - 1 - curY); y++) {
-    //        totalcows += COW_GROWTH[curX+x][curY+y];
-    //      }
-    //    }
-    //
-    //    try {
-    //      RC.broadcast(JOSHBOT_CHANNEL, totalcows > 150 && 10*totalcows + MAP_HEIGHT*MAP_WIDTH + 10*HQ_DIST*HQ_DIST > 11000 ? 1 : 0);
-    //    } catch (GameActionException e) {
-    //      e.printStackTrace();
-    //    }
+    pickStrategy();
 
+  }
+  
+  int PASTRThreshold = 5;
+  
+  private void pickStrategy() {
+    //build 2 pastrs
+    //build 1 pastr and defend
+    //build 1 pastr and attack
+    //build no pastrs until late
+    
+    int hqDist = ALLY_HQ.distanceSquaredTo(ENEMY_HQ);
+    if(hqDist > 500 && MAP_SIZE > 2400) {
+      PASTRThreshold = 0;
+    }
+    
   }
 
 
@@ -120,7 +122,7 @@ public class HQBehavior extends RobotBehavior {
 
   private void considerTeamAttacking() throws GameActionException {
 
-    if(ALLY_PASTR_COUNT < ENEMY_PASTR_COUNT) {
+    if(ALLY_PASTR_COUNT <= ENEMY_PASTR_COUNT && ENEMY_PASTR_COUNT > 0) {
       MapLocation closestEnemyPASTR = ENEMY_PASTR_LOCS[0];
       int dist = closestEnemyPASTR.distanceSquaredTo(ALLY_HQ);
       for (int i = ENEMY_PASTR_COUNT - 1; i > 0; i--) {
@@ -146,7 +148,7 @@ public class HQBehavior extends RobotBehavior {
     }
 
 
-    if(!PASTRMessageSent && RC.senseRobotCount() > 5) {
+    if(!PASTRMessageSent && RC.senseRobotCount() > PASTRThreshold) {
       messagingSystem.writeBuildPastureMessage(PASTRLocs[0]);
     }
 
