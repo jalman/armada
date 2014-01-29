@@ -9,7 +9,8 @@ _maps = _maps2[:10]
 _teamA = 'mergebot'
 _teamB = 'emptyplayer'
 
-_replayFile = 'gatherspeed.rms'
+_replayFile = 'testmany.rms'
+_saveFile = 'testmanygamelog.txt'
 
 BUILDFILE = 'multitestbuild.xml'
 CONFFILE = 'multibc.conf'
@@ -21,7 +22,7 @@ bc.server.throttle-count=50
 
 # Game engine settings
 bc.engine.debug-methods=false
-bc.engine.silence-a=true
+bc.engine.silence-a=false
 bc.engine.silence-b=true
 bc.engine.gc=true
 bc.engine.gc-rounds=200
@@ -50,17 +51,19 @@ SERVER_MSG_START = '     [java] [server]'
 
 WIN_LINE_REGEX = re.compile(r' \([AB]\) wins')
 
-def runMatches(maps, teamA, teamB, replayFile):
+def runMatches(maps, teamA, teamB, replayFile, saveFile):
     updateMultiBCConf(maps, teamA, teamB, replayFile)
 
     print 'running matches...'
-    output = subprocess.check_output(['ant', '-f', BUILDFILE, 'file']).split('\n')
+    output = subprocess.check_output(['ant', '-f', BUILDFILE, 'file'])
     linenum = 0
 
-    #print output
+    with open(saveFile, 'w') as f:
+        f.write(output)
 
     ret = []
     
+    output = output.split('\n')
     for i in xrange(len(maps)):
         mapresult = ''
         while(output[linenum].find('- Match Starting -') < 0):
@@ -76,10 +79,13 @@ def runMatches(maps, teamA, teamB, replayFile):
 
     return ret
 
-def main(maps, teamA, teamB, replayFile):
-    results = runMatches(maps, teamA, teamB, replayFile)
+def main(maps, teamA, teamB, replayFile, saveFile):
+    if len(sys.argv) == 3:
+        teamA = sys.argv[1]
+        teamB = sys.argv[2]
+    results = runMatches(maps, teamA, teamB, replayFile, saveFile)
     print '\n'.join(results)
                 
     
 if __name__ == '__main__':
-    main(_maps, _teamA, _teamB, _replayFile)
+    main(_maps, _teamA, _teamB, _replayFile, _saveFile)

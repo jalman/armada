@@ -8,6 +8,7 @@ public class RobotPlayer {
   static int[][] terrainCacheNew;
   static RobotController RC;
   static int MAP_WIDTH, MAP_HEIGHT;
+
   public static void run(RobotController rc) {
     RC = rc;
     int n, startBytecodes, spent, sqrt1, sqrt2;
@@ -18,66 +19,40 @@ public class RobotPlayer {
 
     int tc1d[] = new int[256 * 256];
 
+    int x, y;
+
     int TERRAIN_CHANNEL = 5000;
 
-    int x = 11, y = 11;
-    countBytecodes(false);
-    terrainCacheNew[x][y] = 1;
-    terrainCacheNew[x + 1][y + 1] = 1;
-    countBytecodes(true);
+    MapLocation center = new MapLocation(10, 10);
+    int dx = 3, dy = 4;
+
+    int i = 8;
+    Direction dir = Direction.NORTH;
 
     countBytecodes(false);
-    terrainCacheNew[x][y] = 1;
-    terrainCacheNew[x + 1][y + 1] = 1;
-    terrainCacheNew[x + 2][y + 2] = 1;
-    countBytecodes(true);
-    rc.yield();
-
-    countBytecodes(false);
-    n = terrainCacheNew[x][y];
-    n = terrainCacheNew[x + 1][y + 1];
-    countBytecodes(true);
-
-    countBytecodes(false);
-    n = terrainCacheNew[x][y];
-    n = terrainCacheNew[x + 1][y + 1];
-    n = terrainCacheNew[x + 2][y + 2];
-    countBytecodes(true);
-    rc.yield();
-
-    countBytecodes(false);
-    tc1d[(y << 8) + x] = 1;
-    tc1d[((y + 1) << 8) + (x + 1)] = 1;
-    countBytecodes(true);
-
-    countBytecodes(false);
-    n = ((y + 2) << 8) + (x + 2);
-    countBytecodes(true);
-
-    countBytecodes(false);
-    tc1d[(y << 8) + x] = 1;
-    tc1d[((y + 1) << 8) + (x + 1)] = 1;
-    tc1d[((y + 2) << 8) + (x + 2)] = 1;
-    countBytecodes(true);
-    rc.yield();
-
-    countBytecodes(false);
-    n = tc1d[(y << 8) + x];
-    n = tc1d[((y + 1) << 8) + (x + 1)];
-    countBytecodes(true);
-
-    countBytecodes(false);
-    n = tc1d[(y << 8) + x];
-    n = tc1d[((y + 1) << 8) + (x + 1)];
-    n = tc1d[((y + 2) << 8) + (x + 2)];
-    countBytecodes(true);
-    rc.yield();
-
-    for (TerrainTile t : TerrainTile.values()) {
-      System.out.println(t + " is " + t.ordinal());
+    for (; --i >= 0; dir = dir.rotateRight()) {
+      continue;
     }
+    countBytecodes(true);
 
-    System.out.println("---");
+    i = 8;
+    dir = Direction.NORTH;
+
+    countBytecodes(false);
+    while (--i >= 0) {
+      dir = dir.rotateRight();
+    }
+    countBytecodes(true);
+
+    i = 8;
+    dir = Direction.NORTH;
+
+    countBytecodes(false);
+    while (i > 0) {
+      --i;
+      dir = dir.rotateRight();
+    }
+    countBytecodes(true);
 
     rc.yield();
     System.out.println("sense and cache 100 tiles:");
