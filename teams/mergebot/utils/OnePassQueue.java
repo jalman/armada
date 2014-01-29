@@ -15,7 +15,8 @@ public class OnePassQueue<T> {
 
   public void insert(int key, T value) {
     if (key < min) {
-      throw new ArrayIndexOutOfBoundsException("Attempted to insert " + key + " < " + min);
+      min = key;
+      // throw new ArrayIndexOutOfBoundsException("Attempted to insert " + key + " < " + min);
     }
     queue[key][length[key]++] = value;
     size++;

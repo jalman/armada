@@ -17,7 +17,10 @@ public class HybridMover {
   private LocSet outPath = null;
   private int outIndex;
 
-  private LocSet path = null;
+  /**
+   * Used to move to path.
+   */
+  private DStar dstar;
 
   private MovementType movementType;
 
@@ -25,7 +28,7 @@ public class HybridMover {
     if (!dest.equals(this.dest)) {
       this.dest = dest;
       computeOutPath();
-      path = null;
+      dstar = null;
     }
   }
 
@@ -91,31 +94,20 @@ public class HybridMover {
     }
 
     if (outPath != null) {
-      if (outPath.contains(currentLocation)) {
-        outIndex = outPath.getIndex(currentLocation);
-        Direction dir = currentLocation.directionTo(outPath.get(outIndex - 1));
-        if (!move(dir)) {
-          // FIXME: try to move around ally robots?
-          RC.setIndicatorString(1, "Blocked on outPath");
-        } else {
-          RC.setIndicatorString(1, "Moving on outPath");
-        }
-      } else {
-        if (!moveToPath()) {
-          Direction inDir = messagingSystem.readPathingDirection(currentLocation);
-          if (inDir != null) {
-            inDir = inDir.opposite();
-            if (!move(inDir)) {
-              // FIXME: try to move around ally robots
-              RC.setIndicatorString(1, "Blocked on inDir " + inDir);
-            } else {
-              RC.setIndicatorString(1, "Moving in inDir " + inDir);
-            }
+      if (!moveToPath()) {
+        Direction inDir = messagingSystem.readPathingDirection(currentLocation);
+        if (inDir != null) {
+          inDir = inDir.opposite();
+          if (!move(inDir)) {
+            // FIXME: try to move around ally robots
+            RC.setIndicatorString(1, "Blocked on inDir " + inDir);
           } else {
-            // or DIJKSTRA_CENTER?
-            simpleMove(dest);
-            RC.setIndicatorString(1, "No inDir, simpleMove to dest");
+            RC.setIndicatorString(1, "Moving in inDir " + inDir);
           }
+        } else {
+          // or DIJKSTRA_CENTER?
+          simpleMove(dest);
+          RC.setIndicatorString(1, "No inDir, simpleMove to dest");
         }
       }
     } else {
@@ -125,25 +117,36 @@ public class HybridMover {
   }
 
   private boolean moveToPath() throws GameActionException {
-    if (path == null || !path.contains(currentLocation)) {
-      Dijkstra dijkstra = new Dijkstra(currentLocation);
-      if (dijkstra.compute(outPath.has, 6000, false)) {
-        path = dijkstra.getPath(dijkstra.reached);
-      } else {
-        return false;
+    if (dstar == null) {
+      int[] weights = new int[outPath.size];
+      for (int i = weights.length - 1; i >= 0; i--) {
+        // System.out.print(outPath.get(i));
+        weights[i] = i;
       }
+      // System.out.println();
+      dstar = new DStar(outPath, weights, currentLocation);
     }
 
-    int index = path.getIndex(currentLocation);
-    Direction dir = currentLocation.directionTo(path.get(index - 1));
-    if (!move(dir)) {
-      // FIXME: try to move around ally robots?
-      RC.setIndicatorString(1, "Blocked on move to outPath");
-    } else {
+    dstar.compute(6000);
+
+    Direction dir = Direction.NORTH, best = null;
+    int min = Integer.MAX_VALUE;
+    for (int i = 0; i < 8; i++) {
+
+      int d = RC.canMove(dir) ? dstar.getDistance(currentLocation.add(dir)) : Integer.MAX_VALUE;
+      if (d < min) {
+        min = d;
+        best = dir;
+      }
+      dir = dir.rotateRight();
+    }
+
+    if (best != null && move(best)) {
       RC.setIndicatorString(1, "Moving to outPath");
+      return true;
+    } else {
+      return false;
     }
-
-    return true;
   }
 
   public boolean arrived() {

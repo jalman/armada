@@ -4,6 +4,7 @@ import static mergebot.utils.Utils.*;
 import mergebot.RobotBehavior;
 import mergebot.messaging.MessageHandler;
 import mergebot.messaging.MessagingSystem.MessageType;
+import mergebot.nav.HybridMover;
 import mergebot.nav.Mover;
 import mergebot.utils.ArraySet;
 import battlecode.common.*;
@@ -20,7 +21,7 @@ public class SoldierBehavior extends RobotBehavior {
 
   // basic data
   int bornRound = Clock.getRoundNum();
-  // HybridMover hybrid = new HybridMover();
+  HybridMover hybrid = new HybridMover();
   Mover mover = new Mover();
 
   ArraySet<MapLocation> messagedEnemyRobots = new ArraySet<MapLocation>(100);
@@ -124,13 +125,13 @@ public class SoldierBehavior extends RobotBehavior {
     boolean hasNearbyPlea = false;
     for (int i=0; i<SoldierBehavior.microLocations.size; ++i) {
       MapLocation m = SoldierBehavior.microLocations.get(i);
-      
+
       if (currentLocation.distanceSquaredTo(m) <= 8*8) {
         hasNearbyPlea = true;
         break;
       }
     }
-    
+
     if (enemyRobots.length > (RC.canSenseSquare(ENEMY_HQ) ? 1 : 0) || hasNearbyPlea) {
       setMode(Mode.COMBAT);
       return;
@@ -180,7 +181,7 @@ public class SoldierBehavior extends RobotBehavior {
      * }
      */
 
-    if (mover.arrived() || mode != Mode.MOVE) {
+    if (hybrid.arrived() || mode != Mode.MOVE) {
       target = findExploreLocation();
       setMode(Mode.EXPLORE);
     }
@@ -244,16 +245,16 @@ public class SoldierBehavior extends RobotBehavior {
         }
         break;
       case MOVE:
-        mover.setTarget(target);
-        mover.move();
+        hybrid.setTarget(target);
+        hybrid.move();
         break;
       case FARM:
-        mover.setTarget(target);
-        mover.sneak();
+        hybrid.setTarget(target);
+        hybrid.sneak();
         break;
       case EXPLORE:
-        mover.setTarget(target);
-        mover.move();
+        hybrid.setTarget(target);
+        hybrid.move();
         break;
       case BUILD_PASTURE:
         int d = currentLocation.distanceSquaredTo(target);
@@ -271,16 +272,16 @@ public class SoldierBehavior extends RobotBehavior {
             break;
           }
         }
-        mover.setTarget(target);
-        mover.move();
+        hybrid.setTarget(target);
+        hybrid.move();
         break;
       case DEFEND_PASTURE:
         boolean inRange = currentLocation.distanceSquaredTo(target) < 30;
-        mover.setTarget(target);
+        hybrid.setTarget(target);
         if (inRange) {
-          mover.sneak();
+          hybrid.sneak();
         } else {
-          mover.move();
+          hybrid.move();
         }
         break;
       default:
