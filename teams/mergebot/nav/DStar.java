@@ -36,7 +36,7 @@ public class DStar {
     this.sources = sources;
     this.dest = dest;
 
-    for (int i = sources.size; --i > 0;) {
+    for (int i = sources.size; --i >= 0;) {
       MapLocation source = sources.get(i);
       int e = distances[i] + heuristic(source, dest);
       queue.insert(e, source);
