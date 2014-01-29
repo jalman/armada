@@ -42,19 +42,6 @@ public class Dijkstra {
     return queue.size == 0;
   }
 
-  private static final int WEIGHT[][] = new int[TERRAIN_TILES.length][8];
-
-  static {
-    for (int i = 0; i < 8; i += 2) {
-      WEIGHT[TerrainTile.NORMAL.ordinal()][i] = 10;
-      WEIGHT[TerrainTile.ROAD.ordinal()][i] = 5;
-    }
-    for (int i = 1; i < 8; i += 2) {
-      WEIGHT[TerrainTile.NORMAL.ordinal()][i] = 14;
-      WEIGHT[TerrainTile.ROAD.ordinal()][i] = 7;
-    }
-  }
-
   public boolean compute(int bytecodes, boolean broadcast, MapLocation... dests) {
     boolean[][] end = new boolean[MAP_WIDTH][MAP_HEIGHT];
     for (MapLocation dest : dests) {

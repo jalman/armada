@@ -15,6 +15,24 @@ public class Utils {
   public static final TerrainTile[] TERRAIN_TILES = TerrainTile.values();
   public static final Direction[] DIRECTIONS = Direction.values();
 
+  public static final int ROAD_DIAGONAL = 7;
+  public static final int ROAD_ORTHOGONAL = 5;
+  public static final int NORMAL_DIAGONAL = 14;
+  public static final int NORMAL_ORTHOGONAL = 10;
+
+  public static final int WEIGHT[][] = new int[TERRAIN_TILES.length][8];
+
+  static {
+    for (int i = 0; i < 8; i += 2) {
+      WEIGHT[TerrainTile.NORMAL.ordinal()][i] = NORMAL_ORTHOGONAL;
+      WEIGHT[TerrainTile.ROAD.ordinal()][i] = ROAD_ORTHOGONAL;
+    }
+    for (int i = 1; i < 8; i += 2) {
+      WEIGHT[TerrainTile.NORMAL.ordinal()][i] = NORMAL_DIAGONAL;
+      WEIGHT[TerrainTile.ROAD.ordinal()][i] = ROAD_DIAGONAL;
+    }
+  }
+
   public static final Direction[] REGULAR_DIRECTIONS = new Direction[] {
     EAST, NORTH_EAST, NORTH, NORTH_WEST, WEST, SOUTH_WEST, SOUTH, SOUTH_EAST
   };
