@@ -79,11 +79,11 @@ public class HybridMover {
     if (outPath != null) {
       if (!moveToPath()) {
         simpleMove(dest);
-        RC.setIndicatorString(1, "dstar failed, simpleMove to dest");
+        // RC.setIndicatorString(1, "dstar failed, simpleMove to dest");
       }
     } else {
       simpleMove(dest);
-      RC.setIndicatorString(1, "no outPath, simpleMove to dest");
+      // RC.setIndicatorString(1, "no outPath, simpleMove to dest");
     }
   }
 
@@ -113,7 +113,7 @@ public class HybridMover {
 
     // heuristic to prefer further away points on the path (which may be closer to us)
     for (int i = 1; i < outPath.size; i++) {
-      distances[i] = distances[i - 1] + Math.max(1, diffs[i - 1] * 100 / (100 + 10 * i));
+      distances[i] = distances[i - 1] + Math.max(1, diffs[i - 1] / (1 + i / 10));
     }
   }
 
@@ -130,18 +130,23 @@ public class HybridMover {
 
     Direction dir = Direction.NORTH, best = null;
     int min = Integer.MAX_VALUE;
+    // StringBuilder str = new StringBuilder();
     for (int i = 0; i < 8; i++) {
 
       int d = RC.canMove(dir) ? dstar.getDistance(currentLocation.add(dir)) : Integer.MAX_VALUE;
+      // str.append(dir + "(" + d + "), ");
+
       if (d < min) {
         min = d;
         best = dir;
       }
       dir = dir.rotateRight();
     }
+    // RC.setIndicatorString(1, dest + " " + dstar.getDistance(dest));
+    // RC.setIndicatorString(2, str.toString());
 
     if (best != null && move(best)) {
-      RC.setIndicatorString(1, "Moving to outPath");
+      // RC.setIndicatorString(1, "Moving to outPath");
       return true;
     } else {
       return false;
