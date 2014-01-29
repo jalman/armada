@@ -1,12 +1,11 @@
 package mergebot.soldiers;
 
 import static mergebot.utils.Utils.*;
-import mergebot.RobotBehavior;
-import mergebot.messaging.MessageHandler;
+import mergebot.*;
+import mergebot.messaging.*;
 import mergebot.messaging.MessagingSystem.MessageType;
-import mergebot.nav.HybridMover;
-import mergebot.nav.Mover;
-import mergebot.utils.ArraySet;
+import mergebot.nav.*;
+import mergebot.utils.*;
 import battlecode.common.*;
 
 public class SoldierBehavior extends RobotBehavior {
@@ -95,6 +94,7 @@ public class SoldierBehavior extends RobotBehavior {
     microLocations.clear();
     messagedEnemyRobots.clear();
     messagingSystem.beginRound(handlers);
+    RC.setIndicatorString(1, MAP_SYMMETRY.toString());
   }
 
   @Override
@@ -125,6 +125,7 @@ public class SoldierBehavior extends RobotBehavior {
     boolean hasNearbyPlea = false;
     for (int i=0; i<SoldierBehavior.microLocations.size; ++i) {
       MapLocation m = SoldierBehavior.microLocations.get(i);
+
       if (currentLocation.distanceSquaredTo(m) <= 10*10) {
         hasNearbyPlea = true;
         break;

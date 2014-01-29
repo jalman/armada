@@ -1,6 +1,7 @@
 package mergebot.messaging;
 
 import static mergebot.utils.Utils.*;
+import mergebot.utils.Utils.SymmetryType;
 import battlecode.common.*;
 
 /**
@@ -57,6 +58,7 @@ public class MessagingSystem {
    */
   public enum ReservedMessageType {
     MESSAGE_INDEX(1),
+    MAP_SYMMETRY(1),
     HELP_CHANNEL(1),
     PATHING(GameConstants.MAP_MAX_HEIGHT * GameConstants.MAP_MAX_WIDTH);
 
@@ -218,6 +220,8 @@ public class MessagingSystem {
       message_written = false;
     } else {
       message_index = readReservedMessage(ReservedMessageType.MESSAGE_INDEX);
+      MAP_SYMMETRY =
+          SymmetryType.values()[RC.readBroadcast(ReservedMessageType.MAP_SYMMETRY.channel())];
       first_round = false;
     }
   }
