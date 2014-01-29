@@ -1,11 +1,12 @@
 package mergebot.soldiers;
 
 import static mergebot.utils.Utils.*;
-import mergebot.*;
-import mergebot.messaging.*;
+import mergebot.RobotBehavior;
+import mergebot.messaging.MessageHandler;
 import mergebot.messaging.MessagingSystem.MessageType;
-import mergebot.nav.*;
-import mergebot.utils.*;
+import mergebot.nav.HybridMover;
+import mergebot.nav.Mover;
+import mergebot.utils.ArraySet;
 import battlecode.common.*;
 
 public class SoldierBehavior extends RobotBehavior {
@@ -234,10 +235,10 @@ public class SoldierBehavior extends RobotBehavior {
   }
 
   private void act() throws GameActionException {
-    if (!RC.isActive()) return;
 
     switch (mode) {
       case COMBAT:
+        if (!RC.isActive()) return;
         //micro.micro();
         if (!NathanMicro.luge(mover)) {
           //micro.micro();
@@ -259,10 +260,12 @@ public class SoldierBehavior extends RobotBehavior {
         int d = currentLocation.distanceSquaredTo(target);
         // if we're there build a noise tower
         if (d == 0) {
+          if (!RC.isActive()) break;
           RC.construct(RobotType.NOISETOWER);
           RC.setIndicatorString(1, "Building Noise Tower");
           break;
         } else if (d <= 2) {
+          if (!RC.isActive()) break;
           // if noise tower has been built build a pasture
           if (!RC.canMove(currentLocation.directionTo(target))) {
             messagingSystem.writeBuildingPastureMessage(target);

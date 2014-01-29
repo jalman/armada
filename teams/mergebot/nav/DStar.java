@@ -15,10 +15,6 @@ public class DStar {
   private final MapLocation dest;
 
   /**
-   * First location reached among the destinations.
-   */
-  public MapLocation reached = null;
-  /**
    * Direction in which we traveled to get to this location.
    */
   public Direction[][] from = new Direction[MAP_WIDTH][MAP_HEIGHT];
@@ -30,11 +26,11 @@ public class DStar {
   /**
    * Estimated distance from source + distance to dest.
    */
-  private final int estimate[][] = new int[MAP_WIDTH][MAP_HEIGHT];
+  // private final int estimate[][] = new int[MAP_WIDTH][MAP_HEIGHT];
 
   private final boolean visited[][] = new boolean[MAP_WIDTH][MAP_HEIGHT];
 
-  private final OnePassQueue<MapLocation> queue = new OnePassQueue<MapLocation>(MAP_SIZE, 100);
+  private final OnePassQueue<MapLocation> queue = new OnePassQueue<MapLocation>(MAP_SIZE, 200);
 
   public DStar(LocSet sources, int[] weights, MapLocation dest) {
     this.sources = sources;
@@ -45,7 +41,7 @@ public class DStar {
       int e = weights[i] + heuristic(source, dest);
       queue.insert(e, source);
       distance[source.x][source.y] = weights[i];
-      estimate[source.x][source.y] = e;
+      // estimate[source.x][source.y] = e;
       // leave as null to cause exceptions if we accidentally try to use it?
       from[source.x][source.y] = Direction.NONE;
     }
@@ -77,20 +73,19 @@ public class DStar {
 
   public boolean compute(int bytecodes) {
     // cache variables
-    int min, d, w, e, x, y;
+    int d, w, e, x, y;
     int[] weight;
     MapLocation next, nbr;
     Direction dir;
     final OnePassQueue<MapLocation> queue = this.queue;
     final int[][] distance = this.distance;
-    final int[][] estimate = this.estimate;
     final Direction[][] from = this.from;
 
-    int iters = 0;
-    int bc = Clock.getBytecodeNum();
+    // int iters = 0;
+    // int bc = Clock.getBytecodeNum();
 
     while (queue.size > 0) {
-      iters++;
+      // iters++;
       if (Clock.getBytecodeNum() >= bytecodes - 600) {
         break;
       }
@@ -98,7 +93,6 @@ public class DStar {
       // RC.setIndicatorString(0, Integer.toString(min));
       // ALERT: queue.min is valid only after a call to deleteMin()!
       next = queue.deleteMin();
-      min = queue.min;
 
       x = next.x;
       y = next.y;
@@ -116,11 +110,6 @@ public class DStar {
          * }
          * }
          */
-
-        if (next.equals(dest)) {
-          reached = next;
-          break;
-        }
 
         weight = WEIGHT[RC.senseTerrainTile(next).ordinal()];
 
@@ -167,10 +156,10 @@ public class DStar {
       }
     }
 
-    bc = Clock.getBytecodeNum() - bc;
-    RC.setIndicatorString(2, "average DStar bytecodes: " + (iters > 0 ? bc / iters : bc));
+    // bc = Clock.getBytecodeNum() - bc;
+    // RC.setIndicatorString(2, "average DStar bytecodes: " + (iters > 0 ? bc / iters : bc));
 
-    return reached != null;
+    return arrived(dest);
   }
 
   /**
@@ -197,5 +186,9 @@ public class DStar {
 
   public int getDistance(MapLocation loc) {
     return getDistance(loc.x, loc.y);
+  }
+
+  public boolean arrived(MapLocation loc) {
+    return visited[loc.x][loc.y];
   }
 }

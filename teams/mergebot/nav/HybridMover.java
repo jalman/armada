@@ -43,24 +43,6 @@ public class HybridMover {
     }
   }
 
-  private void computeOutPath() throws GameActionException {
-    Direction dir = messagingSystem.readPathingDirection(dest);
-    if (dir == null) {
-      outPath = null;
-      return;
-    }
-    outPath = new LocSet();
-    MapLocation loc = dest;
-    // System.out.println(dest);
-    while (!loc.equals(DIJKSTRA_CENTER)) {
-      // System.out.print(dir + ", ");
-      dir = messagingSystem.readPathingDirection(loc);
-      outPath.insert(loc);
-      loc = loc.subtract(dir);
-    }
-    // System.out.println();
-  }
-
   public void sneak() throws GameActionException {
     move(MovementType.SNEAK);
   }
@@ -70,7 +52,7 @@ public class HybridMover {
   }
 
   private boolean move(Direction dir) throws GameActionException {
-    if (!RC.canMove(dir)) return false;
+    if (!RC.isActive() || !RC.canMove(dir)) return false;
     switch (movementType) {
       case SNEAK:
         RC.sneak(dir);
@@ -99,8 +81,28 @@ public class HybridMover {
       }
     } else {
       simpleMove(dest);
-      RC.setIndicatorString(1, "No outPath, simpleMove to dest");
+      RC.setIndicatorString(1, "no outPath, simpleMove to dest");
     }
+  }
+
+  private void computeOutPath() throws GameActionException {
+    Direction dir = messagingSystem.readPathingDirection(dest);
+    if (dir == null) {
+      outPath = null;
+      return;
+    }
+    RC.setIndicatorString(1, "Computing outPath");
+
+    outPath = new LocSet();
+    MapLocation loc = dest;
+    // System.out.println(dest);
+    while (!loc.equals(DIJKSTRA_CENTER)) {
+      // System.out.print(dir + ", ");
+      dir = messagingSystem.readPathingDirection(loc);
+      outPath.insert(loc);
+      loc = loc.subtract(dir);
+    }
+    // System.out.println();
   }
 
   private boolean moveToPath() throws GameActionException {
@@ -108,13 +110,17 @@ public class HybridMover {
       int[] weights = new int[outPath.size];
       for (int i = weights.length - 1; i >= 0; i--) {
         // System.out.print(outPath.get(i));
-        weights[i] = i;
+        weights[i] = 4 * i;
       }
       // System.out.println();
       dstar = new DStar(outPath, weights, currentLocation);
     }
 
-    dstar.compute(6000);
+    if (!dstar.arrived(currentLocation)) {
+      dstar.compute(7000);
+    }
+
+    if (!RC.isActive()) return true;
 
     Direction dir = Direction.NORTH, best = null;
     int min = Integer.MAX_VALUE;
