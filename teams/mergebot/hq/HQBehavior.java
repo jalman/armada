@@ -2,13 +2,15 @@ package mergebot.hq;
 
 import static mergebot.utils.Utils.*;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
 
-import mergebot.*;
+import mergebot.RobotBehavior;
 import mergebot.messaging.*;
 import mergebot.messaging.MessagingSystem.MessageType;
 import mergebot.messaging.MessagingSystem.ReservedMessageType;
-import mergebot.nav.*;
+import mergebot.nav.Dijkstra;
+import mergebot.nav.HybridMover;
 import mergebot.utils.*;
 import mergebot.utils.Utils.SymmetryType;
 import battlecode.common.*;
@@ -214,7 +216,8 @@ public class HQBehavior extends RobotBehavior {
       for(int y = yparts - 1; y >= 0; y--) {
         MapLocation inittry = new MapLocation(x * MAP_WIDTH / xparts,y * MAP_HEIGHT / yparts);
         if(inittry.distanceSquaredTo(ALLY_HQ) < inittry.distanceSquaredTo(ENEMY_HQ)) {
-          ret[i] = gradientDescentOnNegativeCowScalarField(inittry.x, inittry.y, 3);
+          // ret[i] = gradientDescentOnNegativeCowScalarField(inittry.x, inittry.y, 3);
+          ret[i] = gradientAscent(inittry);
           i++;
         }
       }
@@ -250,14 +253,23 @@ public class HQBehavior extends RobotBehavior {
     return locs[random.nextInt(locs.length)];
   }
 
+  private MapLocation[] randomNearbyLocations(MapLocation loc, int d2, int num) {
+    MapLocation[] locs = MapLocation.getAllMapLocationsWithinRadiusSq(loc, d2);
+    MapLocation[] chosen = new MapLocation[num];
+    for (int i = 0; i < num; i++) {
+      chosen[i] = locs[random.nextInt(locs.length)];
+    }
+    return chosen;
+  }
+
   private double estimateCowGrowth(MapLocation loc) {
-    int iters = 10;
-    int dist = 35;
+    int iters = 20;
+    int dist = 100;
 
     double estimate = effectiveCowGrowth(loc);
 
-    while (--iters > 0) {
-      estimate += effectiveCowGrowth(randomNearbyLocation(loc, dist));
+    for (MapLocation nearby : randomNearbyLocations(loc, dist, iters)) {
+      estimate += effectiveCowGrowth(nearby);
     }
 
     return estimate;
@@ -289,7 +301,7 @@ public class HQBehavior extends RobotBehavior {
     boolean changed = false;
 
     for(int i = xl; i <= xu; i++) for(int j = yl; j <= yu; j++) {
-        if (COW_GROWTH[i][j] > COW_GROWTH[x][y]) {
+      if (COW_GROWTH[i][j] > COW_GROWTH[x][y]) {
         changed = true;
         x = i;
         y = j;
