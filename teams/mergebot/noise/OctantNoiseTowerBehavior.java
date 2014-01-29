@@ -88,6 +88,8 @@ public class OctantNoiseTowerBehavior extends BFSNoiseTower {
   
   
   public boolean nearbyCows() throws GameActionException {
+    if(a > 16) return false;
+    
     MapLocation best = null;
     double numCows = -1.0;
     for(int x = -8; x <= 8; x++) {
