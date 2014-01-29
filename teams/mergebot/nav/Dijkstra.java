@@ -24,14 +24,12 @@ public class Dijkstra {
    */
   public int distance[][] = new int[MAP_WIDTH][MAP_HEIGHT];
 
-  private final boolean inserted[][] = new boolean[MAP_WIDTH][MAP_HEIGHT];
   private final OnePassQueue<MapLocation> queue = new OnePassQueue<MapLocation>(2*MAP_SIZE, 50);
 
   public Dijkstra(MapLocation... sources) {
     this.sources = new LocSet(sources);
     for (MapLocation source : sources) {
       queue.insert(0, source);
-      inserted[source.x][source.y] = true;
       distance[source.x][source.y] = 0;
       // leave as null to cause exceptions if we accidentally try to use it
       // from[source.x][source.y] = Direction.NONE;
@@ -58,7 +56,6 @@ public class Dijkstra {
     Direction dir;
     final OnePassQueue<MapLocation> queue = this.queue;
     final int[][] distance = this.distance;
-    final boolean[][] inserted = this.inserted;
     final Direction[][] from = this.from;
 
     int iters = 0;
@@ -117,15 +114,14 @@ public class Dijkstra {
             x = nbr.x;
             y = nbr.y;
 
-            if (!inserted[x][y]) {
-              queue.insert(w, nbr);
+            if (from[x][y] == null) {
+              queue.insert2(w, nbr);
               // System.out.println("inserted " + nbr + " with distance " + w + " from " + dir);
               distance[x][y] = w;
-              inserted[x][y] = true;
               from[x][y] = dir;
             } else {
               if (w < distance[x][y]) {
-                queue.insert(w, nbr);
+                queue.insert2(w, nbr);
                 distance[x][y] = w;
                 from[x][y] = dir;
               }

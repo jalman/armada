@@ -22,6 +22,14 @@ public class OnePassQueue<T> {
     size++;
   }
 
+  /**
+   * Does not check key < min.
+   */
+  public void insert2(int key, T value) {
+    queue[key][length[key]++] = value;
+    size++;
+  }
+
   public T deleteMin() {
     while(length[min] == 0) {
       min++;
