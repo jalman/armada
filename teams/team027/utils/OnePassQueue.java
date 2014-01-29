@@ -1,5 +1,7 @@
 package team027.utils;
 
+import java.util.Arrays;
+
 public class OnePassQueue<T> {
 
   private final T[][] queue;
@@ -18,14 +20,20 @@ public class OnePassQueue<T> {
       min = key;
       // throw new ArrayIndexOutOfBoundsException("Attempted to insert " + key + " < " + min);
     }
-    queue[key][length[key]++] = value;
+    T[] q = queue[key];
+    if (length[key] == q.length) {
+      // System.out.println("Increasing queue length (" + q.length + ") for " + key);
+      q = Arrays.copyOf(q, 10 * q.length);
+    }
+    q[length[key]++] = value;
+    queue[key] = q;
     size++;
   }
 
   /**
-   * Does not check key < min.
+   * Does not check key < min or increase queue lengths.
    */
-  public void insert2(int key, T value) {
+  public void insert_fast(int key, T value) {
     queue[key][length[key]++] = value;
     size++;
   }

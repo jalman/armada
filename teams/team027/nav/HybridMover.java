@@ -2,6 +2,7 @@ package team027.nav;
 
 import static team027.utils.Utils.*;
 import team027.utils.LocSet;
+import team027.utils.Pair;
 import battlecode.common.*;
 
 
@@ -14,7 +15,8 @@ public class HybridMover {
 
   private MapLocation simpleTarget;
 
-  private LocSet outPath = null;
+  private LocSet outPath;
+  private int[] distances;
 
   /**
    * Used to move to path.
@@ -43,24 +45,6 @@ public class HybridMover {
     }
   }
 
-  private void computeOutPath() throws GameActionException {
-    Direction dir = messagingSystem.readPathingDirection(dest);
-    if (dir == null) {
-      outPath = null;
-      return;
-    }
-    outPath = new LocSet();
-    MapLocation loc = dest;
-    // System.out.println(dest);
-    while (!loc.equals(DIJKSTRA_CENTER)) {
-      // System.out.print(dir + ", ");
-      dir = messagingSystem.readPathingDirection(loc);
-      outPath.insert(loc);
-      loc = loc.subtract(dir);
-    }
-    // System.out.println();
-  }
-
   public void sneak() throws GameActionException {
     move(MovementType.SNEAK);
   }
@@ -70,7 +54,7 @@ public class HybridMover {
   }
 
   private boolean move(Direction dir) throws GameActionException {
-    if (!RC.canMove(dir)) return false;
+    if (!RC.isActive() || !RC.canMove(dir)) return false;
     switch (movementType) {
       case SNEAK:
         RC.sneak(dir);
@@ -99,22 +83,50 @@ public class HybridMover {
       }
     } else {
       simpleMove(dest);
-      RC.setIndicatorString(1, "No outPath, simpleMove to dest");
+      RC.setIndicatorString(1, "no outPath, simpleMove to dest");
+    }
+  }
+
+  private void computeOutPath() throws GameActionException {
+    Pair<Direction, Integer> pathingInfo = messagingSystem.readPathingInfo(dest);
+    if (pathingInfo.first == null) {
+      outPath = null;
+      return;
+    }
+    RC.setIndicatorString(1, "Computing outPath");
+
+    outPath = new LocSet();
+    distances = new int[MAP_SIZE];
+    MapLocation loc = dest;
+    int d = pathingInfo.second;
+    while (!loc.equals(DIJKSTRA_CENTER)) {
+      pathingInfo = messagingSystem.readPathingInfo(loc);
+      distances[outPath.size] = d - pathingInfo.second;
+      outPath.insert(loc);
+      loc = loc.subtract(pathingInfo.first);
+    }
+
+    int[] diffs = new int[outPath.size - 1];
+    for (int i = diffs.length; --i > 0;) {
+      diffs[i] = distances[i + 1] - distances[i];
+    }
+
+    // heuristic to prefer further away points on the path (which may be closer to us)
+    for (int i = 1; i < outPath.size; i++) {
+      distances[i] = distances[i - 1] + Math.max(1, diffs[i - 1] * 100 / (100 + 10 * i));
     }
   }
 
   private boolean moveToPath() throws GameActionException {
     if (dstar == null) {
-      int[] weights = new int[outPath.size];
-      for (int i = weights.length - 1; i >= 0; i--) {
-        // System.out.print(outPath.get(i));
-        weights[i] = i;
-      }
-      // System.out.println();
-      dstar = new DStar(outPath, weights, currentLocation);
+      dstar = new DStar(outPath, distances, currentLocation);
     }
 
-    dstar.compute(6000);
+    if (!dstar.arrived(currentLocation)) {
+      dstar.compute(7000);
+    }
+
+    if (!RC.isActive()) return true;
 
     Direction dir = Direction.NORTH, best = null;
     int min = Integer.MAX_VALUE;

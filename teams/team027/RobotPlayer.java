@@ -5,6 +5,7 @@ import battlecode.common.RobotController;
 import team027.hq.HQBehavior;
 import team027.noise.NewNoiseTowerBehavior;
 import team027.noise.OctantNoiseTowerBehavior;
+import team027.noise.SmartNoiseTowerBehavior;
 import team027.noise.SpiralNoiseTowerBehavior;
 import team027.soldiers.SoldierBehavior;
 import team027.utils.Utils;
@@ -15,8 +16,8 @@ public class RobotPlayer {
     RobotBehavior robot = null;
     switch (rc.getType()) {
       case HQ:
-        // Strategy strategy = Strategy.decide();
         robot = new HQBehavior();
+        // Strategy strategy = Strategy.decide();
         break;
       case SOLDIER:
         robot = new SoldierBehavior();
