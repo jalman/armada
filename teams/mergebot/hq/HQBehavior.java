@@ -214,7 +214,7 @@ public class HQBehavior extends RobotBehavior {
       for(int y = yparts - 1; y >= 0; y--) {
         MapLocation inittry = new MapLocation(x * MAP_WIDTH / xparts,y * MAP_HEIGHT / yparts);
         if(inittry.distanceSquaredTo(ALLY_HQ) < inittry.distanceSquaredTo(ENEMY_HQ)) {
-          ret[i] = gradientDescentOnNegativeCowScalarField(inittry.x, inittry.y, 3);
+          ret[i] = gradientDescentOnNegativeCowScalarField(inittry.x, inittry.y, 6);
           i++;
         }
       }

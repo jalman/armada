@@ -5,6 +5,7 @@ import battlecode.common.RobotController;
 import mergebot.hq.HQBehavior;
 import mergebot.noise.NewNoiseTowerBehavior;
 import mergebot.noise.OctantNoiseTowerBehavior;
+import mergebot.noise.SmartNoiseTowerBehavior;
 import mergebot.noise.SpiralNoiseTowerBehavior;
 import mergebot.soldiers.SoldierBehavior;
 import mergebot.utils.Utils;
@@ -15,8 +16,8 @@ public class RobotPlayer {
     RobotBehavior robot = null;
     switch (rc.getType()) {
       case HQ:
-        // Strategy strategy = Strategy.decide();
         robot = new HQBehavior();
+        // Strategy strategy = Strategy.decide();
         break;
       case SOLDIER:
         robot = new SoldierBehavior();
