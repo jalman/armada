@@ -183,7 +183,7 @@ public class SoldierBehavior extends RobotBehavior {
 
     if (hybrid.arrived() || mode != Mode.MOVE) {
       target = findExploreLocation();
-      setMode(Mode.EXPLORE);
+      setMode(Mode.EXPLORE, target);
     }
   }
 
