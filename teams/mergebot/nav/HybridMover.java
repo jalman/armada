@@ -88,7 +88,7 @@ public class HybridMover {
   }
 
   private void computeOutPath() throws GameActionException {
-    Pair<Direction, Integer> pathingInfo = messagingSystem.readPathingDirection(dest);
+    Pair<Direction, Integer> pathingInfo = messagingSystem.readPathingInfo(dest);
     if (pathingInfo.first == null) {
       outPath = null;
       return;
@@ -100,7 +100,7 @@ public class HybridMover {
     MapLocation loc = dest;
     int d = pathingInfo.second;
     while (!loc.equals(DIJKSTRA_CENTER)) {
-      pathingInfo = messagingSystem.readPathingDirection(loc);
+      pathingInfo = messagingSystem.readPathingInfo(loc);
       distances[outPath.size] = d - pathingInfo.second;
       outPath.insert(loc);
       loc = loc.subtract(pathingInfo.first);

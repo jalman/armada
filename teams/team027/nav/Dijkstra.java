@@ -1,8 +1,7 @@
 package team027.nav;
 
 import static team027.utils.Utils.*;
-import team027.utils.LocSet;
-import team027.utils.OnePassQueue;
+import team027.utils.*;
 import battlecode.common.*;
 
 public class Dijkstra {
@@ -42,7 +41,9 @@ public class Dijkstra {
 
   public boolean compute(int bytecodes, boolean broadcast, MapLocation... dests) {
     boolean[][] end = new boolean[MAP_WIDTH][MAP_HEIGHT];
-    for (MapLocation dest : dests) {
+    MapLocation dest;
+    for (int i = dests.length - 1; i >= 0; --i) {
+      dest = dests[i];
       end[dest.x][dest.y] = true;
     }
     return compute(end, bytecodes, broadcast);
@@ -58,11 +59,11 @@ public class Dijkstra {
     final int[][] distance = this.distance;
     final Direction[][] from = this.from;
 
-    int iters = 0;
-    int bc = Clock.getBytecodeNum();
+    // int iters = 0;
+    // int bc = Clock.getBytecodeNum();
 
     while (queue.size > 0) {
-      iters++;
+      // iters++;
       if (Clock.getBytecodeNum() >= bytecodes - 500) {
         break;
       }
@@ -80,7 +81,7 @@ public class Dijkstra {
 
         if (broadcast) {
           try {
-            messagingSystem.writePathingDirection(next, from[x][y]);
+            messagingSystem.writePathingInfo(next, from[x][y], distance[x][y]);
           } catch (GameActionException e) {
             e.printStackTrace();
           }
@@ -115,13 +116,13 @@ public class Dijkstra {
             y = nbr.y;
 
             if (from[x][y] == null) {
-              queue.insert2(w, nbr);
+              queue.insert_fast(w, nbr);
               // System.out.println("inserted " + nbr + " with distance " + w + " from " + dir);
               distance[x][y] = w;
               from[x][y] = dir;
             } else {
               if (w < distance[x][y]) {
-                queue.insert2(w, nbr);
+                queue.insert_fast(w, nbr);
                 distance[x][y] = w;
                 from[x][y] = dir;
               }
@@ -131,8 +132,8 @@ public class Dijkstra {
       }
     }
 
-    bc = Clock.getBytecodeNum() - bc;
-    RC.setIndicatorString(2, "average Dijkstra bytecodes: " + bc / iters);
+    // bc = Clock.getBytecodeNum() - bc;
+    // RC.setIndicatorString(2, "average Dijkstra bytecodes: " + bc / iters);
 
     return reached != null;
   }

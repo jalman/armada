@@ -1,6 +1,7 @@
 package team027.messaging;
 
 import static team027.utils.Utils.*;
+import team027.utils.Pair;
 import team027.utils.Utils.SymmetryType;
 import battlecode.common.*;
 
@@ -328,15 +329,20 @@ public class MessagingSystem {
     }
   }
 
-  public void writePathingDirection(MapLocation loc, Direction dir) throws GameActionException {
+  private static final int shift = 16;
+  private static final int mask = (1 << shift) - 1;
+
+  public void writePathingInfo(MapLocation loc, Direction dir, int distance)
+      throws GameActionException {
     RC.broadcast(ReservedMessageType.PATHING.channel() + loc.x * MAP_HEIGHT + loc.y,
-        dir != null ? (dir.ordinal() + 1) : 0);
+        (dir != null ? dir.ordinal() + 1 : 0) << shift | distance);
     // System.out.println(before + "\t" + dir + "\t" + after);
     // System.out.println(ReservedMessageType.PATHING.channel() + loc.x * MAP_HEIGHT + loc.y);
   }
 
-  public Direction readPathingDirection(MapLocation loc) throws GameActionException {
-    return INT_TO_DIR[RC.readBroadcast(ReservedMessageType.PATHING.channel() + loc.x
-        * MAP_HEIGHT + loc.y)];
+  public Pair<Direction, Integer> readPathingInfo(MapLocation loc) throws GameActionException {
+    int broadcast =
+        RC.readBroadcast(ReservedMessageType.PATHING.channel() + loc.x * MAP_HEIGHT + loc.y);
+    return new Pair<Direction, Integer>(INT_TO_DIR[broadcast >> shift], broadcast & mask);
   }
 }

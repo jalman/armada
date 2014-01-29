@@ -5,11 +5,12 @@ import team027.utils.Utils;
 import battlecode.common.*;
 import static team027.utils.Utils.*;
 
-public class OctantNoiseTowerBehavior extends BFSNoiseTower {
+public class SmartNoiseTowerBehavior extends BFSNoiseTower {
 	
   int[] places = new int[8];
+  boolean[] skip = new boolean[8];
   
-	 public OctantNoiseTowerBehavior() throws GameActionException {
+	 public SmartNoiseTowerBehavior() throws GameActionException {
 	   super();
 	   
 	   for(int i = at-1; i > 0; i--) {
@@ -20,7 +21,29 @@ public class OctantNoiseTowerBehavior extends BFSNoiseTower {
 	     }
 	   }
 	   
-	   target = queue[places[0]];
+	   
+	   System.out.println("SKIP" + Clock.getBytecodeNum());
+	   for(int i = 7; i >= 0; i--) for(int j = i-1; j >= 0; j--) {
+	     if(skip[i] || skip[j]) continue;
+	     MapLocation ml = queue[places[i]];
+	     MapLocation comp = queue[places[j]];
+	     while(ml.distanceSquaredTo(currentLocation) > 5) {
+	       if(ml.distanceSquaredTo(comp) <= 4) {
+	         skip[j] = true;
+	         break;
+	       }
+	       ml = ml.add(dir[ml.x - currentLocation.x + 17][ml.y - currentLocation.y + 17]);
+	     }
+	   }
+     System.out.println("SKIP" + Clock.getBytecodeNum());
+	   
+	   for(int i = 7; i >= 0; i--) {
+	     if(!skip[i]) {
+	       target = queue[places[i]];
+	       break;
+	     }
+	   }
+	   
 	 }
 	
 	/**
@@ -44,6 +67,8 @@ public class OctantNoiseTowerBehavior extends BFSNoiseTower {
     
     if(target.distanceSquaredTo(currentLocation) < 3) {
       a++;
+      while(a < 8 && skip[a]) a++;
+      
       if(a>=8) {
         if(!nearbyCows()) {
           a = 0;
