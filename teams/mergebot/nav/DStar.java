@@ -30,17 +30,17 @@ public class DStar {
 
   private final boolean visited[][] = new boolean[MAP_WIDTH][MAP_HEIGHT];
 
-  private final OnePassQueue<MapLocation> queue = new OnePassQueue<MapLocation>(MAP_SIZE, 200);
+  private final OnePassQueue<MapLocation> queue = new OnePassQueue<MapLocation>(5 * MAP_SIZE, 4);
 
-  public DStar(LocSet sources, int[] weights, MapLocation dest) {
+  public DStar(LocSet sources, int[] distances, MapLocation dest) {
     this.sources = sources;
     this.dest = dest;
 
-    for (int i = sources.size - 1; i >= 0; --i) {
+    for (int i = sources.size; --i > 0;) {
       MapLocation source = sources.get(i);
-      int e = weights[i] + heuristic(source, dest);
+      int e = distances[i] + heuristic(source, dest);
       queue.insert(e, source);
-      distance[source.x][source.y] = weights[i];
+      distance[source.x][source.y] = distances[i];
       // estimate[source.x][source.y] = e;
       // leave as null to cause exceptions if we accidentally try to use it?
       from[source.x][source.y] = Direction.NONE;

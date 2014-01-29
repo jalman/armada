@@ -2,6 +2,7 @@ package mergebot.nav;
 
 import static mergebot.utils.Utils.*;
 import mergebot.utils.LocSet;
+import mergebot.utils.Pair;
 import battlecode.common.*;
 
 
@@ -14,7 +15,8 @@ public class HybridMover {
 
   private MapLocation simpleTarget;
 
-  private LocSet outPath = null;
+  private LocSet outPath;
+  private int[] distances;
 
   /**
    * Used to move to path.
@@ -86,34 +88,28 @@ public class HybridMover {
   }
 
   private void computeOutPath() throws GameActionException {
-    Direction dir = messagingSystem.readPathingDirection(dest);
-    if (dir == null) {
+    Pair<Direction, Integer> pathingInfo = messagingSystem.readPathingDirection(dest);
+    if (pathingInfo.first == null) {
       outPath = null;
       return;
     }
     RC.setIndicatorString(1, "Computing outPath");
 
     outPath = new LocSet();
+    distances = new int[MAP_SIZE];
     MapLocation loc = dest;
-    // System.out.println(dest);
+    int d = pathingInfo.second;
     while (!loc.equals(DIJKSTRA_CENTER)) {
-      // System.out.print(dir + ", ");
-      dir = messagingSystem.readPathingDirection(loc);
+      pathingInfo = messagingSystem.readPathingDirection(loc);
+      distances[outPath.size] = d - pathingInfo.second;
       outPath.insert(loc);
-      loc = loc.subtract(dir);
+      loc = loc.subtract(pathingInfo.first);
     }
-    // System.out.println();
   }
 
   private boolean moveToPath() throws GameActionException {
     if (dstar == null) {
-      int[] weights = new int[outPath.size];
-      for (int i = weights.length - 1; i >= 0; i--) {
-        // System.out.print(outPath.get(i));
-        weights[i] = 4 * i;
-      }
-      // System.out.println();
-      dstar = new DStar(outPath, weights, currentLocation);
+      dstar = new DStar(outPath, distances, currentLocation);
     }
 
     if (!dstar.arrived(currentLocation)) {

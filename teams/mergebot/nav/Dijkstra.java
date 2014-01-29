@@ -80,7 +80,7 @@ public class Dijkstra {
 
         if (broadcast) {
           try {
-            messagingSystem.writePathingDirection(next, from[x][y]);
+            messagingSystem.writePathingDirection(next, from[x][y], distance[x][y]);
           } catch (GameActionException e) {
             e.printStackTrace();
           }
@@ -115,13 +115,13 @@ public class Dijkstra {
             y = nbr.y;
 
             if (from[x][y] == null) {
-              queue.insert2(w, nbr);
+              queue.insert_fast(w, nbr);
               // System.out.println("inserted " + nbr + " with distance " + w + " from " + dir);
               distance[x][y] = w;
               from[x][y] = dir;
             } else {
               if (w < distance[x][y]) {
-                queue.insert2(w, nbr);
+                queue.insert_fast(w, nbr);
                 distance[x][y] = w;
                 from[x][y] = dir;
               }
