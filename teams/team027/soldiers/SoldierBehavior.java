@@ -1,11 +1,11 @@
-package mergebot.soldiers;
+package team027.soldiers;
 
-import static mergebot.utils.Utils.*;
-import mergebot.*;
-import mergebot.messaging.*;
-import mergebot.messaging.MessagingSystem.MessageType;
-import mergebot.nav.*;
-import mergebot.utils.*;
+import static team027.utils.Utils.*;
+import team027.*;
+import team027.messaging.*;
+import team027.messaging.MessagingSystem.MessageType;
+import team027.nav.*;
+import team027.utils.*;
 import battlecode.common.*;
 
 public class SoldierBehavior extends RobotBehavior {
@@ -94,6 +94,7 @@ public class SoldierBehavior extends RobotBehavior {
     microLocations.clear();
     messagedEnemyRobots.clear();
     messagingSystem.beginRound(handlers);
+    RC.setIndicatorString(1, MAP_SYMMETRY.toString());
   }
 
   @Override

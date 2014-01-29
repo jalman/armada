@@ -1,16 +1,16 @@
-package mergebot.hq;
+package team027.hq;
 
-import static mergebot.utils.Utils.*;
+import static team027.utils.Utils.*;
 
 import java.util.*;
 
-import mergebot.*;
-import mergebot.messaging.*;
-import mergebot.messaging.MessagingSystem.MessageType;
-import mergebot.messaging.MessagingSystem.ReservedMessageType;
-import mergebot.nav.*;
-import mergebot.utils.*;
-import mergebot.utils.Utils.SymmetryType;
+import team027.*;
+import team027.messaging.*;
+import team027.messaging.MessagingSystem.MessageType;
+import team027.messaging.MessagingSystem.ReservedMessageType;
+import team027.nav.*;
+import team027.utils.*;
+import team027.utils.Utils.SymmetryType;
 import battlecode.common.*;
 
 public class HQBehavior extends RobotBehavior {
@@ -70,6 +70,8 @@ public class HQBehavior extends RobotBehavior {
     // " is pow");
     numBots = RC.senseNearbyGameObjects(Robot.class, currentLocation, 10000, ALLY_TEAM).length;
     messagingSystem.beginRound(handlers);
+
+    RC.setIndicatorString(1, MAP_SYMMETRY.toString());
   }
 
   @Override

@@ -1,8 +1,8 @@
-package mergebot.nav;
+package team027.nav;
 
-import static mergebot.utils.Utils.*;
-import mergebot.utils.LocSet;
-import mergebot.utils.OnePassQueue;
+import static team027.utils.Utils.*;
+import team027.utils.LocSet;
+import team027.utils.OnePassQueue;
 import battlecode.common.*;
 
 public class Dijkstra {
