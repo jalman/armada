@@ -1,17 +1,13 @@
 package mergebot.hq;
 
 import static mergebot.utils.Utils.*;
-
-import java.util.Arrays;
-import java.util.Comparator;
-
 import mergebot.RobotBehavior;
 import mergebot.messaging.*;
 import mergebot.messaging.MessagingSystem.MessageType;
 import mergebot.messaging.MessagingSystem.ReservedMessageType;
 import mergebot.nav.Dijkstra;
 import mergebot.nav.HybridMover;
-import mergebot.utils.*;
+import mergebot.utils.Utils;
 import mergebot.utils.Utils.SymmetryType;
 import battlecode.common.*;
 
@@ -35,7 +31,7 @@ public class HQBehavior extends RobotBehavior {
   public HQBehavior() {
     initialGuessMapSymmetry();
     macro();
-    PASTRLocs = cowMiningLocations();
+    PASTRLocs = PastureFinder.cowMiningLocations();
 
     //pick a strategy
     //    double totalcows = 0.0;
@@ -205,109 +201,4 @@ public class HQBehavior extends RobotBehavior {
     // empty for now
   }
 
-  private MapLocation[] cowMiningLocations() {
-
-    int xparts = MAP_WIDTH < 50 ? MAP_WIDTH/10 : MAP_WIDTH/15;
-    int yparts = MAP_HEIGHT < 50 ? MAP_HEIGHT/10 : MAP_HEIGHT/15;
-    @SuppressWarnings("unchecked")
-    Pair<MapLocation, Double>[] ret = new Pair[(1 + xparts) * (1 + yparts) / 2];
-    int i = 0;
-    for(int x = xparts - 1; x >= 0; x--) {
-      for(int y = yparts - 1; y >= 0; y--) {
-        MapLocation inittry = new MapLocation(x * MAP_WIDTH / xparts,y * MAP_HEIGHT / yparts);
-        if(inittry.distanceSquaredTo(ALLY_HQ) < inittry.distanceSquaredTo(ENEMY_HQ)) {
-          ret[i] = gradientAscent(inittry);
-          i++;
-        }
-      }
-    }
-    System.out.println(Clock.getBytecodeNum());
-
-    Arrays.sort(ret, new Comparator<Pair<MapLocation, Double>>() {
-
-      @Override
-      public int compare(Pair<MapLocation, Double> a, Pair<MapLocation, Double> b) {
-        return a == null ? 1 : b == null ? -1 : Double.compare(b.second, a.second);
-      }
-
-    });
-
-    System.out.println(Clock.getBytecodeNum());
-
-    MapLocation[] locs = new MapLocation[i];
-    while (i-- > 0) {
-      locs[i] = ret[i].first;
-    }
-
-    return locs;
-  }
-
-  private double effectiveCowGrowth(MapLocation loc) {
-    return (RC.senseTerrainTile(loc).isTraversableAtHeight(RobotLevel.ON_GROUND))
-        ? COW_GROWTH[loc.x][loc.y] : 0.0;
-  }
-
-  private MapLocation randomNearbyLocation(MapLocation loc, int d2) {
-    MapLocation[] locs = MapLocation.getAllMapLocationsWithinRadiusSq(loc, d2);
-    return locs[random.nextInt(locs.length)];
-  }
-
-  private MapLocation[] randomNearbyLocations(MapLocation loc, int d2, int num) {
-    MapLocation[] locs = MapLocation.getAllMapLocationsWithinRadiusSq(loc, d2);
-    MapLocation[] chosen = new MapLocation[num];
-    for (int i = 0; i < num; i++) {
-      chosen[i] = locs[random.nextInt(locs.length)];
-    }
-    return chosen;
-  }
-
-  private double estimateCowGrowth(MapLocation loc) {
-    int iters = 20;
-    int dist = 100;
-
-    double estimate = effectiveCowGrowth(loc);
-
-    for (MapLocation nearby : randomNearbyLocations(loc, dist, iters)) {
-      estimate += effectiveCowGrowth(nearby);
-    }
-
-    return estimate;
-  }
-
-  private Pair<MapLocation, Double> gradientAscent(MapLocation current) {
-    int dist = 4;
-    double best = estimateCowGrowth(current);
-
-    loop: {
-      for (int i = 8; i > 0; --i) {
-        MapLocation loc = randomNearbyLocation(current, dist);
-        double estimate = estimateCowGrowth(loc);
-        if (estimate > best) {
-          best = estimate;
-          current = loc;
-          break loop;
-        }
-      }
-    }
-    return new Pair<MapLocation, Double>(current, best);
-  }
-
-  private Pair<MapLocation, Double> gradientDescentOnNegativeCowScalarField(int x, int y, int d) {
-    int xl = Math.max(x-d, 0);
-    int xu = Math.min(x+d, MAP_WIDTH-1);
-    int yl = Math.max(y-d, 0);
-    int yu = Math.min(y+d, MAP_HEIGHT-1);
-    boolean changed = false;
-
-    for(int i = xl; i <= xu; i++) for(int j = yl; j <= yu; j++) {
-      if (COW_GROWTH[i][j] > COW_GROWTH[x][y]) {
-        changed = true;
-        x = i;
-        y = j;
-      }
-    }
-
-    return !changed || d == 1 ? new Pair<MapLocation, Double>(new MapLocation(x, y),
-        COW_GROWTH[x][y]) : gradientDescentOnNegativeCowScalarField(x, y, d - 1);
-  }
 }

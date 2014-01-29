@@ -2,9 +2,10 @@ package mergebot.utils;
 
 import static battlecode.common.Direction.*;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Random;
 
-import mergebot.messaging.*;
+import mergebot.messaging.MessagingSystem;
 import mergebot.messaging.MessagingSystem.ReservedMessageType;
 import battlecode.common.*;
 
@@ -377,6 +378,10 @@ public class Utils {
 
     bytecodes = bc;
     return d;
+  }
+
+  public static boolean isPathable(MapLocation loc) {
+    return RC.senseTerrainTile(loc).isTraversableAtHeight(RobotLevel.ON_GROUND);
   }
 
 }
