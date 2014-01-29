@@ -70,8 +70,6 @@ public class HQBehavior extends RobotBehavior {
     // " is pow");
     numBots = RC.senseNearbyGameObjects(Robot.class, currentLocation, 10000, ALLY_TEAM).length;
     messagingSystem.beginRound(handlers);
-
-    RC.setIndicatorString(1, MAP_SYMMETRY.toString());
   }
 
   @Override

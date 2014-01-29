@@ -94,7 +94,6 @@ public class SoldierBehavior extends RobotBehavior {
     microLocations.clear();
     messagedEnemyRobots.clear();
     messagingSystem.beginRound(handlers);
-    RC.setIndicatorString(1, MAP_SYMMETRY.toString());
   }
 
   @Override
