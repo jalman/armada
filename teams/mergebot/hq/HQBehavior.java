@@ -7,8 +7,10 @@ import java.util.*;
 import mergebot.*;
 import mergebot.messaging.*;
 import mergebot.messaging.MessagingSystem.MessageType;
+import mergebot.messaging.MessagingSystem.ReservedMessageType;
 import mergebot.nav.*;
 import mergebot.utils.*;
+import mergebot.utils.Utils.SymmetryType;
 import battlecode.common.*;
 
 public class HQBehavior extends RobotBehavior {
@@ -29,6 +31,7 @@ public class HQBehavior extends RobotBehavior {
   private final Dijkstra dijkstra = new Dijkstra(HybridMover.DIJKSTRA_CENTER);
 
   public HQBehavior() {
+    initialGuessMapSymmetry();
     macro();
     PASTRLocs = cowMiningLocations();
 
@@ -67,6 +70,8 @@ public class HQBehavior extends RobotBehavior {
     // " is pow");
     numBots = RC.senseNearbyGameObjects(Robot.class, currentLocation, 10000, ALLY_TEAM).length;
     messagingSystem.beginRound(handlers);
+
+    RC.setIndicatorString(1, MAP_SYMMETRY.toString());
   }
 
   @Override
@@ -88,6 +93,32 @@ public class HQBehavior extends RobotBehavior {
         System.out.println("Dijkstra finished on round " + currentRound);
         dijkstraFinished = true;
       }
+    }
+  }
+
+  /**
+   * To be called only on turn 1
+   */
+  public static void initialGuessMapSymmetry() {
+    if (ALLY_HQ.x == ENEMY_HQ.x) {
+      if (ALLY_HQ.x * 2 == MAP_WIDTH - 1) {
+        MAP_SYMMETRY = SymmetryType.ROTATION_OR_VERTICAL;
+      } else {
+        MAP_SYMMETRY = SymmetryType.VERTICAL_REFLECTION;
+      }
+    } else if (ALLY_HQ.y == ENEMY_HQ.y) {
+      if (ALLY_HQ.y * 2 == MAP_HEIGHT - 1) {
+        MAP_SYMMETRY = SymmetryType.ROTATION_OR_HORIZONTAL;
+      } else {
+        MAP_SYMMETRY = SymmetryType.HORIZONTAL_REFLECTION;
+      }
+    } else {
+      MAP_SYMMETRY = SymmetryType.ROTATION;
+    }
+    try {
+      RC.broadcast(ReservedMessageType.MAP_SYMMETRY.channel(), MAP_SYMMETRY.ordinal());
+    } catch (GameActionException e) {
+      e.printStackTrace();
     }
   }
 
