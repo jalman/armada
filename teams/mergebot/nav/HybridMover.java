@@ -15,7 +15,6 @@ public class HybridMover {
   private MapLocation simpleTarget;
 
   private LocSet outPath = null;
-  private int outIndex;
 
   /**
    * Used to move to path.
@@ -95,20 +94,8 @@ public class HybridMover {
 
     if (outPath != null) {
       if (!moveToPath()) {
-        Direction inDir = messagingSystem.readPathingDirection(currentLocation);
-        if (inDir != null) {
-          inDir = inDir.opposite();
-          if (!move(inDir)) {
-            // FIXME: try to move around ally robots
-            RC.setIndicatorString(1, "Blocked on inDir " + inDir);
-          } else {
-            RC.setIndicatorString(1, "Moving in inDir " + inDir);
-          }
-        } else {
-          // or DIJKSTRA_CENTER?
-          simpleMove(dest);
-          RC.setIndicatorString(1, "No inDir, simpleMove to dest");
-        }
+        simpleMove(dest);
+        RC.setIndicatorString(1, "dstar failed, simpleMove to dest");
       }
     } else {
       simpleMove(dest);
