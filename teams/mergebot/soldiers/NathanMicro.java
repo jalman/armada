@@ -113,7 +113,7 @@ public class NathanMicro {
         JON_SCHNEIDER = true;
       }
       if (JON_SCHNEIDER && RC.getHealth() >= 50) JON_SCHNEIDER = false;
-
+      
       if (!JON_SCHNEIDER && (allyWeight >= enemyWeight || GREAT_LUGE)) {
         // choose an aggressive option
     	  
@@ -124,19 +124,7 @@ public class NathanMicro {
           float nextWeight = 0;
           if (!isHelpingOut && target == null) {
             // if we don't have to do anything, consider moving towards a nearby enemy
-            Direction newDir = Direction.NONE;
-            /*for (int i=0; i<nearbyEnemies.length; ++i) {
-              Direction nd = currentLocation.directionTo(nearbyEnemies[i].location);
-              zyzzl += locToString(currentLocation.add(nd)) + " // " + nearbyEnemies[i].location + "," + currentLocation.add(nd).distanceSquaredTo(nearbyEnemies[i].location)+ "|||";
-              if (currentLocation.add(nd).distanceSquaredTo(nearbyEnemies[i].location) <= FIRE_RANGE_SQUARED) {
-                newDir = nd;
-                nextLoc = currentLocation.add(newDir);
-                nextWeight = enemyWeightAboutPoint(nextLoc, nearbyEnemies);
-                zyzzl += "CHOSEN " + locToString(nextLoc) + "," + nextWeight;
-
-                break;
-              }
-            }*/
+        	  
             if (nearbyEnemies.length > 0) {
             	Direction nd = currentLocation.directionTo(nearbyEnemies[0].location);
             	nextLoc = currentLocation.add(nd);
@@ -181,7 +169,9 @@ public class NathanMicro {
             if (RC.isActive() && newDir != Direction.NONE && newDir != Direction.OMNI) {
               // go straight towards the target point
               // the point of the helping out flag is to get manpower ASAP
-              RC.setIndicatorString(2, "/// helping out " + locToString(currentLocation.add(newDir)));
+            	String sz = "";
+            	for (int z=0; z<nearbyEnemies.length; ++z) sz += "/" + locToString(nearbyEnemies[z].location);
+              RC.setIndicatorString(2, "/// helping out " + locToString(nextLoc) + "," + allyWeight + "," + nextWeight + "|" + sz);
               if (RC.canMove(newDir)) {
                 mover.setTarget(currentLocation.add(newDir));
                 mover.move();
@@ -310,9 +300,8 @@ public class NathanMicro {
 		  navAlg.recompute(loc);
 	  }
   }
-  public static boolean isEnemyHQScary() {
-	  return false;
-	  //return RC.senseObjectAtLocation(RC.)
+  public static boolean isEnemyHQScary() throws GameActionException {
+	  return true;
   }
   public static int lazySqrt(int k) {
     if (k <= 1) return 1;
@@ -322,13 +311,13 @@ public class NathanMicro {
   }
   public static float enemyWeightAboutPoint(MapLocation loc, RobotInfo[] nearbyEnemies) {
     float weight = 0;
+    if (loc.distanceSquaredTo(ENEMY_HQ) <= 25) {
+    	weight += 1000;
+    }
     for (int i = nearbyEnemies.length - 1; i >= 0; --i) {
       RobotInfo ri = nearbyEnemies[i];
       switch (ri.type) {
         case HQ:
-          if (loc.distanceSquaredTo(ri.location) <= 25) {
-            weight += 1000;
-          }
           break;
         case SOLDIER:
           int d = loc.distanceSquaredTo(ri.location);
