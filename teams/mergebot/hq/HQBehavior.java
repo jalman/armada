@@ -371,7 +371,7 @@ public class HQBehavior extends RobotBehavior {
       // break;
       // }
       // }
-      numTakenPASTRs++;
+      numTakenPASTRs = ALLY_PASTR_COUNT;
       PASTRMessageSent = false;
     }
 

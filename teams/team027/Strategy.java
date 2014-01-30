@@ -49,6 +49,6 @@ public class Strategy {
   @Override
   public String toString() {
     return "p: " + this.desiredPASTRNum + ", 1: " + this.PASTRThresholds[0] + ", 2: "
-        + this.PASTRThresholds[0] + ", a: " + this.aggressive;
+        + this.PASTRThresholds[1] + ", a: " + this.aggressive;
   }
 }
