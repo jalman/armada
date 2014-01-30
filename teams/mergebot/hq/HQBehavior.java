@@ -157,8 +157,8 @@ public class HQBehavior extends RobotBehavior {
         }
       }
     }
-    System.out.println("defend (" + loc.x + "," + loc.y + ") -> (" + toEnemy.dx + "," + toEnemy.dy + "): " + ourSquaresFree + "/" + ourSquaresTotal + " vs " + theirSquaresFree + "/" + theirSquaresTotal + " | " + 
-    ((float)ourSquaresFree / ourSquaresTotal - (float)theirSquaresFree / theirSquaresTotal) + " | turn " + Clock.getRoundNum());
+    //System.out.println("defend (" + loc.x + "," + loc.y + ") -> (" + toEnemy.dx + "," + toEnemy.dy + "): " + ourSquaresFree + "/" + ourSquaresTotal + " vs " + theirSquaresFree + "/" + theirSquaresTotal + " | " + 
+    //((float)ourSquaresFree / ourSquaresTotal - (float)theirSquaresFree / theirSquaresTotal) + " | turn " + Clock.getRoundNum());
     return (float)ourSquaresFree / ourSquaresTotal - (float)theirSquaresFree / theirSquaresTotal;
   }
 
@@ -175,9 +175,10 @@ public class HQBehavior extends RobotBehavior {
 
     if(!PASTRMessageSent && RC.senseRobotCount() > PASTRThreshold) {
       messagingSystem.writeBuildPastureMessage(PASTRLocs[0]);
-      defendabilityScore(PASTRLocs[0], PASTRLocs[0].directionTo(ENEMY_HQ));
-      defendabilityScore(PASTRLocs[0].add(Direction.NORTH), PASTRLocs[0].directionTo(ENEMY_HQ));
-      defendabilityScore(PASTRLocs[0].add(Direction.NORTH).add(Direction.NORTH), PASTRLocs[0].directionTo(ENEMY_HQ));
+      //testing
+      //defendabilityScore(PASTRLocs[0], PASTRLocs[0].directionTo(ENEMY_HQ));
+      //defendabilityScore(PASTRLocs[0].add(Direction.NORTH), PASTRLocs[0].directionTo(ENEMY_HQ));
+      //defendabilityScore(PASTRLocs[0].add(Direction.NORTH).add(Direction.NORTH), PASTRLocs[0].directionTo(ENEMY_HQ));
     }
 
   }
