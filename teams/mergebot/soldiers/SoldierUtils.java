@@ -208,10 +208,12 @@ public class SoldierUtils {
     }
     
     int healthFactor = -(int)(healthPercent * 50);
-    int distFactor = 50 / distance;
-    int delayFactor = -5 * roundsUntilActive;
+    int distFactor = 0; /* 50 / distance; */
+    int delayFactor = 0; /* -5 * roundsUntilActive; */
     
-    if (r.health <= 10) healthFactor = 1000;
+    // might want to improve efficiency
+    Robot[] bystanders = RC.senseNearbyGameObjects(Robot.class, loc, 2, ALLY_TEAM);
+    if (bystanders.length > 0) distFactor += 2000;
 
     return 5000 + priority + healthFactor + distFactor + delayFactor;
   }

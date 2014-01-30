@@ -23,7 +23,8 @@ public class NathanMicro {
    * TODO give actual names and/or definitions for these constants so other people know what's going on
    */
   public static boolean GREAT_LUGE = false; // flag for if the bot is suiciding
-  public static boolean JON_SCHNEIDER = false; // flag for if the bot is running away
+  public static boolean JON_SCHNEIDER = false; // flag for if the bot is running away (low health)
+  public static boolean AIRBENDER = false; // flag for if the bot is running away (imminent explosion)
 
   public static boolean isHelpingOut = false;
   public static MapLocation helpingLoc = new MapLocation(0, 0);
@@ -93,7 +94,28 @@ public class NathanMicro {
 
       MapLocation target = getHighestPriority(nearbyEnemies);
       
-      if ((!JON_SCHNEIDER || (RC.getHealth() >= 30 && allyWeight >= enemyWeight + 100)) && (allyWeight >= enemyWeight || GREAT_LUGE)) {
+      Robot[] threaten = new Robot[0];
+      if (target != null) threaten = RC.senseNearbyGameObjects(Robot.class, target, 2, ALLY_TEAM);
+      
+      AIRBENDER = false;
+      if (threaten.length > 0) {
+        
+        int count = 0;
+        for (int i=0; i<nearbyTeam.length; ++i) {
+          RobotInfo k = RC.senseRobotInfo(threaten[i]);
+          if (k.actionDelay < 1.) {
+            count++;
+          }
+        }
+        if (count * 10 > threaten.length) {
+          //blow it up!
+        }
+        else {
+          AIRBENDER = true;
+        }
+      }
+      
+      if ((!JON_SCHNEIDER || (RC.getHealth() >= 30 && allyWeight >= enemyWeight + 100)) && (allyWeight >= enemyWeight || GREAT_LUGE) && !AIRBENDER) {
         // choose an aggressive option
     	  
         if (RC.isActive()) { // willing to attack!
@@ -327,6 +349,7 @@ public class NathanMicro {
         if (ri.isConstructing) {
           break;
         }
+        if (loc.distanceSquaredTo(ri.location) > 25) break;
         
           Robot[] stuff = RC.senseNearbyGameObjects(Robot.class, ri.location, 17, ENEMY_TEAM);
           boolean inCombat = false;
@@ -364,6 +387,7 @@ public class NathanMicro {
         	}
         	
           int d = loc.distanceSquaredTo(ri.location);
+          if (d > 25) break;
           if (d <= FIRE_RANGE_SQUARED) weight += ri.health;
           else weight += ri.health - ALLY_WEIGHT_DECAY * lazySqrt(d - FIRE_RANGE_SQUARED);
           break;
