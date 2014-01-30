@@ -33,7 +33,7 @@ public class SoldierBehavior extends RobotBehavior {
   private MapLocation buildPastureLoc = null;
   private int buildPastureRound;
 
-  private final Micro micro = new Micro(this);
+  // private final Micro micro = new Micro(this);
 
   public SoldierBehavior() {
   }
@@ -227,11 +227,12 @@ public class SoldierBehavior extends RobotBehavior {
   }
 
   /**
-   * TODO: Make this smarter.
+   * Rallies to the place chosen by the HQ.
    * @return Place to explore to.
+   * @throws GameActionException
    */
-  private MapLocation findExploreLocation() {
-    return ALLY_HQ.add(HQ_DX / 4, HQ_DY / 4);
+  private MapLocation findExploreLocation() throws GameActionException {
+    return messagingSystem.readRallyPoint();
   }
 
   private void act() throws GameActionException {

@@ -1,12 +1,13 @@
 package mergebot.hq;
 
 import static mergebot.utils.Utils.*;
-import mergebot.*;
+import mergebot.RobotBehavior;
 import mergebot.messaging.*;
 import mergebot.messaging.MessagingSystem.MessageType;
 import mergebot.messaging.MessagingSystem.ReservedMessageType;
-import mergebot.nav.*;
-import mergebot.utils.*;
+import mergebot.nav.Dijkstra;
+import mergebot.nav.HybridMover;
+import mergebot.utils.Utils;
 import mergebot.utils.Utils.SymmetryType;
 import battlecode.common.*;
 
@@ -21,7 +22,7 @@ public class HQBehavior extends RobotBehavior {
   private final AttackSystem attackSystem = new AttackSystem();
 
   public static final int[] yrangefornoise = { 17, 17, 17, 17, 16, 16, 16, 15, 15, 14, 14, 13, 12, 11, 10, 8, 6, 3 };
-  
+
   //public static final int[]
 
   public static MapLocation[] PASTRLocs;
@@ -33,9 +34,15 @@ public class HQBehavior extends RobotBehavior {
     initialGuessMapSymmetry();
     macro();
     PASTRLocs = PastureFinder.cowMiningLocations();
-
     pickStrategy();
-
+    // TODO: take into account the strategy
+    if (PASTRLocs.length > 0) {
+      try {
+        messagingSystem.writeRallyPoint(PASTRLocs[0]);
+      } catch (GameActionException e) {
+        e.printStackTrace();
+      }
+    }
   }
 
   int PASTRThreshold = 5;
@@ -187,7 +194,7 @@ public class HQBehavior extends RobotBehavior {
     }
     //System.out.println(s1); System.out.println(s2);
     System.out.println(Clock.getBytecodeNum() + "," + Clock.getRoundNum() + "!");
-    //System.out.println("defend (" + loc.x + "," + loc.y + ") -> (" + toEnemy.dx + "," + toEnemy.dy + "): " + ourSquaresFree + "/" + ourSquaresTotal + " vs " + theirSquaresFree + "/" + theirSquaresTotal + " | " + 
+    //System.out.println("defend (" + loc.x + "," + loc.y + ") -> (" + toEnemy.dx + "," + toEnemy.dy + "): " + ourSquaresFree + "/" + ourSquaresTotal + " vs " + theirSquaresFree + "/" + theirSquaresTotal + " | " +
     //((float)ourSquaresFree / ourSquaresTotal - (float)theirSquaresFree / theirSquaresTotal) + " | turn " + Clock.getRoundNum());
     return (float)ourSquaresFree / ourSquaresTotal - (float)theirSquaresFree / theirSquaresTotal;
   }
@@ -269,7 +276,7 @@ public class HQBehavior extends RobotBehavior {
   private void sendMessagesOnBuild() throws GameActionException {
     // empty for now
   }
-  
+
 
   public Direction wayToEnemy(MapLocation m) {
     MapLocation m2 = Utils.getSymmetricSquare(m);
