@@ -76,12 +76,12 @@ public class NathanMicro {
           break;
         }
       }
-
       if (isHelpingOut) {
         if ((RC.canSenseSquare(helpingLoc) && RC.senseObjectAtLocation(helpingLoc) == null) || Clock.getRoundNum() > lastHelpRequest + HELP_DURATION) {
           isHelpingOut = false;
         }
       }
+      
       zzz += (isHelpingOut ? "HELPING " + locToString(helpingLoc) : "") + "last help: " + lastHelpRequest + " | round: " + Clock.getRoundNum();
       RC.setIndicatorString(1, "in range " + enemiesInRange.length + " | " + "ally " + allyWeight + " / enemy " + enemyWeight + " (turn " + Clock.getRoundNum() + ") | " + zzz + (JON_SCHNEIDER ? " RUNAWAY" : ""));
 
@@ -152,20 +152,30 @@ public class NathanMicro {
             	String sz = "";
             	for (int z=0; z<nearbyEnemies.length; ++z) sz += "/" + locToString(nearbyEnemies[z].location);
               RC.setIndicatorString(2, "/// helping out " + locToString(nextLoc) + "," + nextAllyWeight + "," + nextEnemyWeight + "|" + sz);
-              if (RC.canMove(newDir)) {
-                mover.setTarget(currentLocation.add(newDir));
-                mover.move();
-                return true;
+              setTarget(helpingLoc);
+              Direction navDir = navAlg.getNextDir();
+              
+              if (navDir == newDir || navDir == newDir.rotateLeft() || navDir == newDir.rotateRight()) {
+                if (RC.canMove(navDir)) {
+                  RC.move(navDir);
+                }
               }
-              else if (RC.canMove(newDir.rotateLeft())) {
-                mover.setTarget(currentLocation.add(newDir.rotateLeft()));
-                mover.move();
-                return true;
-              }
-              else if (RC.canMove(newDir.rotateRight())) {
-                mover.setTarget(currentLocation.add(newDir.rotateRight()));
-                mover.move();
-                return true;
+              else {
+                if (RC.canMove(newDir)) {
+                  mover.setTarget(currentLocation.add(newDir));
+                  mover.move();
+                  return true;
+                }
+                else if (RC.canMove(newDir.rotateLeft())) {
+                  mover.setTarget(currentLocation.add(newDir.rotateLeft()));
+                  mover.move();
+                  return true;
+                }
+                else if (RC.canMove(newDir.rotateRight())) {
+                  mover.setTarget(currentLocation.add(newDir.rotateRight()));
+                  mover.move();
+                  return true;
+                }
               }
             }
           }
@@ -253,7 +263,7 @@ public class NathanMicro {
         if (RC.isActive() && newDir != Direction.NONE && newDir != Direction.OMNI) {
           Direction wayBack = messagingSystem.readPathingInfo(currentLocation).first.opposite();
           
-          if (wayBack == newDir || wayBack == newDir.rotateLeft() || wayBack == newDir.rotateRight()) {
+          if (RC.canMove(wayBack) && (wayBack == newDir || wayBack == newDir.rotateLeft() || wayBack == newDir.rotateRight())) {
             mover.setTarget(currentLocation.add(wayBack));
             mover.move();
           }
