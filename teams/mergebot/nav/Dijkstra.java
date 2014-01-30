@@ -2,7 +2,7 @@ package mergebot.nav;
 
 import static mergebot.utils.Utils.*;
 import mergebot.utils.LocSet;
-import mergebot.utils.OnePassQueue;
+import mergebot.utils.BucketQueue;
 import battlecode.common.*;
 
 public class Dijkstra {
@@ -24,7 +24,7 @@ public class Dijkstra {
    */
   public int distance[][] = new int[MAP_WIDTH][MAP_HEIGHT];
 
-  private final OnePassQueue<MapLocation> queue = new OnePassQueue<MapLocation>(2*MAP_SIZE, 50);
+  private final BucketQueue<MapLocation> queue = new BucketQueue<MapLocation>(2*MAP_SIZE, 50);
 
   public Dijkstra(MapLocation... sources) {
     this.sources = new LocSet(sources);
@@ -70,7 +70,7 @@ public class Dijkstra {
     int[] weight;
     MapLocation next, nbr;
     Direction dir;
-    final OnePassQueue<MapLocation> queue = this.queue;
+    final BucketQueue<MapLocation> queue = this.queue;
     final int[][] distance = this.distance;
     final Direction[][] from = this.from;
 

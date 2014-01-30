@@ -2,7 +2,7 @@ package mergebot.nav;
 
 import static mergebot.utils.Utils.*;
 import mergebot.utils.LocSet;
-import mergebot.utils.OnePassQueue;
+import mergebot.utils.BucketQueue;
 import battlecode.common.*;
 
 public class DStar {
@@ -30,7 +30,7 @@ public class DStar {
 
   private final boolean visited[][] = new boolean[MAP_WIDTH][MAP_HEIGHT];
 
-  private final OnePassQueue<MapLocation> queue = new OnePassQueue<MapLocation>(5 * MAP_SIZE, 4);
+  private final BucketQueue<MapLocation> queue = new BucketQueue<MapLocation>(5 * MAP_SIZE, 4);
 
   public DStar(LocSet sources, int[] distances, MapLocation dest) {
     this.sources = sources;
@@ -77,7 +77,7 @@ public class DStar {
     int[] weight;
     MapLocation next, nbr;
     Direction dir;
-    final OnePassQueue<MapLocation> queue = this.queue;
+    final BucketQueue<MapLocation> queue = this.queue;
     final int[][] distance = this.distance;
     final Direction[][] from = this.from;
 
