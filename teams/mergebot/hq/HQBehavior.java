@@ -202,5 +202,13 @@ public class HQBehavior extends RobotBehavior {
   private void sendMessagesOnBuild() throws GameActionException {
     // empty for now
   }
+  
+
+  public Direction wayToEnemy(MapLocation m) {
+    MapLocation m2 = Utils.getSymmetricSquare(m);
+    Direction fromD = dijkstra.from[m.x][m.y];
+    fromD = getSymmetricDirection(fromD);
+    return fromD != null ? fromD : m.directionTo(ENEMY_HQ);
+  }
 
 }
