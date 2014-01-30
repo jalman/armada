@@ -267,7 +267,7 @@ public class SoldierBehavior extends RobotBehavior {
         } else if (d <= 2) {
           if (!RC.isActive()) break;
           // if noise tower has been built build a pasture
-          if (!RC.canMove(currentLocation.directionTo(target))) {
+          if (!RC.canMove(currentLocation.directionTo(target)) && RC.senseRobotInfo((Robot)RC.senseObjectAtLocation(target)).constructingRounds < 50 ) {
             messagingSystem.writeBuildingPastureMessage(target);
             RC.setIndicatorString(1, "Building Pasture");
             RC.construct(RobotType.PASTR);
