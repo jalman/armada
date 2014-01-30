@@ -95,6 +95,7 @@ public class SoldierBehavior extends RobotBehavior {
       public void handleMessage(int[] message) throws GameActionException {
         MapLocation loc = new MapLocation(message[0], message[1]);
         if (!buildingSecondPastr && mode == Mode.BUILD_PASTURE && !loc.equals(currentLocation)) {
+          System.out.println("received BUILDING_PASTR at " + loc);
           buildPastureLoc = null;
           target = loc;
           setMode(Mode.DEFEND_PASTURE, target);
@@ -172,6 +173,9 @@ public class SoldierBehavior extends RobotBehavior {
       // build a pasture! Overwrites previous pasture target.
       target = buildPastureLoc;
       setMode(Mode.BUILD_PASTURE, target);
+      if (currentRound > 400 && currentRound < 420) {
+        System.out.println("I've been told to build pastr at " + target);
+      }
       return;
       // } else {
       // // already building a pasture
@@ -303,16 +307,17 @@ public class SoldierBehavior extends RobotBehavior {
             RobotInfo targetInfo = RC.senseRobotInfo((Robot) RC.senseObjectAtLocation(target));
             if ((targetInfo.type == RobotType.SOLDIER && targetInfo.constructingRounds < 50 && targetInfo.constructingType == RobotType.NOISETOWER)
                 || targetInfo.type == RobotType.NOISETOWER) {
-            if (buildingSecondPastr) {
-              messagingSystem.writeMessage(MessageType.BUILDING_SECOND_SIMULTANEOUS_PASTURE,
-                  target.x, target.y);
-            } else {
-              messagingSystem.writeBuildingPastureMessage(target);
+              System.out.println("now building pastr at " + currentLocation);
+              if (buildingSecondPastr) {
+                messagingSystem.writeMessage(MessageType.BUILDING_SECOND_SIMULTANEOUS_PASTURE,
+                    target.x, target.y);
+              } else {
+                messagingSystem.writeBuildingPastureMessage(target);
+              }
+              RC.setIndicatorString(1, "Building Pasture");
+              RC.construct(RobotType.PASTR);
+              break;
             }
-            RC.setIndicatorString(1, "Building Pasture");
-            RC.construct(RobotType.PASTR);
-            break;
-          }
           }
         }
         hybrid.setTarget(target);

@@ -46,7 +46,13 @@ public class HQBehavior extends RobotBehavior {
    * requested, but the noise tower is built there and the PASTR might
    * be placed adjacent to it.
    */
-  public static FastIterableLocSet takenPASTRLocs;
+  // public static FastIterableLocSet takenPASTRLocs;
+
+  /**
+   * Number of PASTRs we think we have. If this goes up, we've built one; if this
+   * goes down, we've lost one.
+   */
+  public static int numTakenPASTRs = 0;
 
   /**
    * Location where HQ requests a PASTR be built. Here we assume that
@@ -84,7 +90,7 @@ public class HQBehavior extends RobotBehavior {
       e.printStackTrace();
     }
 
-    takenPASTRLocs = new FastIterableLocSet();
+    // takenPASTRLocs = new FastIterableLocSet();
     knownAlliedIDs[ID] = true;
 
     initialGuessMapSymmetry();
@@ -133,9 +139,9 @@ public class HQBehavior extends RobotBehavior {
       initialStrategy = Strategy.INIT_LATE_SINGLE_PASTR;
       midgameStrategy = Strategy.MID_SINGLE_PASTR_AGGRESSIVE;
     }
-    RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy + ", phase "
-        + gamePhase);
     currentStrategy = initialStrategy;
+    RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy
+        + ", phase " + gamePhase + ", cur: " + currentStrategy);
 
     try {
       determineNewPASTRLocations();
@@ -212,13 +218,9 @@ public class HQBehavior extends RobotBehavior {
   @Override
   public void beginRound() throws GameActionException {
     Utils.updateBuildingUtils();
-    // RC.setIndicatorString(0, generators.size + " generators. " + Double.toString(actualFlux) +
-    // " is pow");
     alliedRobots = RC.senseNearbyGameObjects(Robot.class, currentLocation, 10000, ALLY_TEAM);
     numBots = alliedRobots.length;
-
     turnsSinceLastSpawn++;
-
     messagingSystem.beginRound(handlers);
   }
 
@@ -252,21 +254,21 @@ public class HQBehavior extends RobotBehavior {
     strategyloop: while (true) {
       switch (gamePhase) {
         case OPENING:
-          if (ALLY_PASTR_COUNT > initialStrategy.desiredPASTRNum) {
+          if (ALLY_PASTR_COUNT >= initialStrategy.desiredPASTRNum) {
             gamePhase = GamePhase.MIDGAME;
             currentStrategy = midgameStrategy;
             break;
           }
           RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy
-              + ", phase " + gamePhase);
+              + ", phase " + gamePhase + ", cur: " + currentStrategy);
           break strategyloop;
         case MIDGAME:
           RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy
-              + ", phase " + gamePhase);
+              + ", phase " + gamePhase + ", cur: " + currentStrategy);
           break strategyloop;
         case ENDGAME:
           RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy
-              + ", phase " + gamePhase);
+              + ", phase " + gamePhase + ", cur: " + currentStrategy);
           break strategyloop;
         default:
           break strategyloop;
@@ -355,21 +357,24 @@ public class HQBehavior extends RobotBehavior {
   }
 
   private static void PASTRMessages() throws GameActionException {
-    if (takenPASTRLocs.getSize() > ALLY_PASTR_COUNT) { // if PASTR dies
+    if (ALLY_PASTR_COUNT < numTakenPASTRs) { // if PASTR dies
       PASTRMessageSent = false;
+      numTakenPASTRs = ALLY_PASTR_COUNT;
     }
 
-    if(PASTRMessageSent && ALLY_PASTR_COUNT > 0) {
+    if (PASTRMessageSent && ALLY_PASTR_COUNT > numTakenPASTRs) {
+      // on successful build
       for (int i = ALLY_PASTR_COUNT - 1; i >= 0; --i) {
-        if (ALLY_PASTR_LOCS[i].distanceSquaredTo(requestedPASTRLoc) < 5) {
-          // 5 is some arbitrary small number... 2 might even suffice
-          takenPASTRLocs.add(requestedPASTRLoc);
-          break;
-        }
+        // if (ALLY_PASTR_LOCS[i].distanceSquaredTo(requestedPASTRLoc) < 5) {
+        // // 5 is some arbitrary small number... 2 might even suffice
+        // takenPASTRLocs.add(requestedPASTRLoc);
+        // break;
+        // }
+        numTakenPASTRs++;
       }
     }
 
-    if (!PASTRMessageSent && numBots > initialStrategy.PASTRThreshold
+    if (!PASTRMessageSent && numBots > currentStrategy.PASTRThresholds[ALLY_PASTR_COUNT]
         && ALLY_PASTR_COUNT < currentStrategy.desiredPASTRNum) {
       messagingSystem.writeBuildPastureMessage(requestedPASTRLoc);
     }
@@ -380,19 +385,21 @@ public class HQBehavior extends RobotBehavior {
     if (gamePhase == GamePhase.OPENING && initialStrategy == Strategy.INIT_DOUBLE_PASTR
         && numSoldiersSpawned >= 3) {
 
-      if (secondPASTRMessageSent && numberRequestedForSecondPASTR == 2 && ALLY_PASTR_COUNT > 0) {
+      if (secondPASTRMessageSent && numberRequestedForSecondPASTR == 2
+          && ALLY_PASTR_COUNT > numTakenPASTRs) {
         // here we should actually check that the correct PASTR has been built
-        for (int i = ALLY_PASTR_COUNT - 1; i >= 0; --i) {
-          if (ALLY_PASTR_LOCS[i].distanceSquaredTo(secondRequestedPASTRLoc) < 5) {
-            // 5 is some arbitrary small number... 2 might even suffice
-            takenPASTRLocs.add(secondRequestedPASTRLoc);
-            break;
-          }
-        }
+        // for (int i = ALLY_PASTR_COUNT - 1; i >= 0; --i) {
+        // if (ALLY_PASTR_LOCS[i].distanceSquaredTo(secondRequestedPASTRLoc) < 5) {
+        // // 5 is some arbitrary small number... 2 might even suffice
+        // takenPASTRLocs.add(secondRequestedPASTRLoc);
+        // break;
+        // }
+        // }
+        numTakenPASTRs++;
       }
 
       if (turnsSinceLastSpawn == 1 && numberRequestedForSecondPASTR < 2
-          && numBots > currentStrategy.secondPASTRThreshold) {
+          && numBots > currentStrategy.PASTRThresholds[1]) {
         // This depends on macro() happening before PASTRMessages()!!!!!!!
         messagingSystem.writeMessage(MessageType.BUILD_SECOND_SIMULTANEOUS_PASTURE,
             mostRecentlySpawnedSoldierID, secondRequestedPASTRLoc.x, secondRequestedPASTRLoc.y);

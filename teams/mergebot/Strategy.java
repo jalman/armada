@@ -1,5 +1,7 @@
 package mergebot;
 
+import java.util.*;
+
 public class Strategy {
 
   public enum GamePhase {
@@ -9,16 +11,15 @@ public class Strategy {
   }
 
   public int desiredPASTRNum; // desired # PASTRs
-  public int PASTRThreshold; // # bots required to build a PASTR
-  public int secondPASTRThreshold; // # bots required to build second PASTR
+  public int[] PASTRThresholds; // # index i: bots required to build (i+1)st PASTR
+  // public int secondPASTRThreshold; // # bots required to build second PASTR
   public boolean aggressive; // whether to be aggressive or not (maybe change to int and use in
                              // deciding to defend/attack and/or in micro?)
 
   public Strategy(int desiredPASTRNum, int PASTRThreshold, int secondPASTRThreshold,
       boolean aggressive) {
     this.desiredPASTRNum = desiredPASTRNum;
-    this.PASTRThreshold = PASTRThreshold;
-    this.secondPASTRThreshold = secondPASTRThreshold;
+    this.PASTRThresholds = new int[] {PASTRThreshold, secondPASTRThreshold, 1000, 1000};
     this.aggressive = aggressive;
   }
 
@@ -39,15 +40,15 @@ public class Strategy {
     if (obj == null) return false;
     if (obj instanceof Strategy) {
       Strategy s = (Strategy) obj;
-      return (this.desiredPASTRNum == s.desiredPASTRNum && this.PASTRThreshold == s.PASTRThreshold
-          && this.secondPASTRThreshold == s.secondPASTRThreshold && this.aggressive == s.aggressive);
+      return (this.desiredPASTRNum == s.desiredPASTRNum
+          && Arrays.equals(this.PASTRThresholds, s.PASTRThresholds) && this.aggressive == s.aggressive);
     }
     return false;
   }
 
   @Override
   public String toString() {
-    return "p: " + this.desiredPASTRNum + ", 1: " + this.PASTRThreshold + ", 2: "
-        + this.secondPASTRThreshold + ", a: " + this.aggressive;
+    return "p: " + this.desiredPASTRNum + ", 1: " + this.PASTRThresholds[0] + ", 2: "
+        + this.PASTRThresholds[0] + ", a: " + this.aggressive;
   }
 }
