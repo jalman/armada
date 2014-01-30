@@ -136,6 +136,31 @@ public class HQBehavior extends RobotBehavior {
     }
 
   }
+  public static float defendabilityScore(MapLocation loc, Direction toEnemy) {
+    //this is pretty inefficient at the moment
+    int ourSquaresFree = 0, ourSquaresTotal = 0, theirSquaresFree = 0, theirSquaresTotal = 0;
+    for (int i=-5; i<=5; ++i) {
+      for (int j=-5; j<=5; ++j) {
+        MapLocation l = new MapLocation(loc.x + i, loc.y + j);
+        if (l.x >= 0 && l.y >= 0 && l.x < MAP_WIDTH && l.y < MAP_HEIGHT) {
+          Direction toL = loc.directionTo(l);
+          if (toL == toEnemy || toL.rotateLeft() == toEnemy || toL.rotateRight() == toEnemy) {
+            if ((i >= -2 && i <= 2) && (j >= -2 && j <= 2)) {
+              ourSquaresFree += (RC.senseTerrainTile(l) != TerrainTile.VOID ? 1 : 0);
+              ourSquaresTotal ++;
+            }
+            else {
+              theirSquaresFree += (RC.senseTerrainTile(l) != TerrainTile.VOID ? 1 : 0);
+              theirSquaresTotal ++;
+            }
+          }
+        }
+      }
+    }
+    System.out.println("defend (" + loc.x + "," + loc.y + ") -> (" + toEnemy.dx + "," + toEnemy.dy + "): " + ourSquaresFree + "/" + ourSquaresTotal + " vs " + theirSquaresFree + "/" + theirSquaresTotal + " | " + 
+    ((float)ourSquaresFree / ourSquaresTotal - (float)theirSquaresFree / theirSquaresTotal) + " | turn " + Clock.getRoundNum());
+    return (float)ourSquaresFree / ourSquaresTotal - (float)theirSquaresFree / theirSquaresTotal;
+  }
 
   private void PASTRMessages() throws GameActionException {
     if(PASTRBuilt && ALLY_PASTR_COUNT == 0) {
@@ -150,6 +175,9 @@ public class HQBehavior extends RobotBehavior {
 
     if(!PASTRMessageSent && RC.senseRobotCount() > PASTRThreshold) {
       messagingSystem.writeBuildPastureMessage(PASTRLocs[0]);
+      defendabilityScore(PASTRLocs[0], PASTRLocs[0].directionTo(ENEMY_HQ));
+      defendabilityScore(PASTRLocs[0].add(Direction.NORTH), PASTRLocs[0].directionTo(ENEMY_HQ));
+      defendabilityScore(PASTRLocs[0].add(Direction.NORTH).add(Direction.NORTH), PASTRLocs[0].directionTo(ENEMY_HQ));
     }
 
   }
