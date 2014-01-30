@@ -364,14 +364,15 @@ public class HQBehavior extends RobotBehavior {
 
     if (PASTRMessageSent && ALLY_PASTR_COUNT > numTakenPASTRs) {
       // on successful build
-      for (int i = ALLY_PASTR_COUNT - 1; i >= 0; --i) {
-        // if (ALLY_PASTR_LOCS[i].distanceSquaredTo(requestedPASTRLoc) < 5) {
-        // // 5 is some arbitrary small number... 2 might even suffice
-        // takenPASTRLocs.add(requestedPASTRLoc);
-        // break;
-        // }
-        numTakenPASTRs++;
-      }
+      // for (int i = ALLY_PASTR_COUNT - 1; i >= 0; --i) {
+      // if (ALLY_PASTR_LOCS[i].distanceSquaredTo(requestedPASTRLoc) < 5) {
+      // // 5 is some arbitrary small number... 2 might even suffice
+      // takenPASTRLocs.add(requestedPASTRLoc);
+      // break;
+      // }
+      // }
+      numTakenPASTRs++;
+      PASTRMessageSent = false;
     }
 
     if (!PASTRMessageSent && numBots > currentStrategy.PASTRThresholds[ALLY_PASTR_COUNT]

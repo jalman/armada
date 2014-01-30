@@ -144,7 +144,8 @@ public class NathanMicro {
                   break;
                 }
               }
-              if (nextDir != null) RC.move(nextDir);
+              if (nextDir != null && nextDir != Direction.NONE && nextDir != Direction.OMNI)
+                RC.move(nextDir);
               return true;
             } else {
               return false;
