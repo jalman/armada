@@ -375,37 +375,44 @@ public class HQBehavior extends RobotBehavior {
       PASTRMessageSent = false;
     }
 
-    if (!PASTRMessageSent && numBots > currentStrategy.PASTRThresholds[ALLY_PASTR_COUNT]
-        && ALLY_PASTR_COUNT < currentStrategy.desiredPASTRNum) {
-      messagingSystem.writeBuildPastureMessage(requestedPASTRLoc);
-    }
+    // we don't want to attempt to build a 2nd PASTR if our special-case 2nd PASTR
+    // is already building...
 
+    int desiredPASTRNumAdjusted = currentStrategy.desiredPASTRNum;
     /**
      * Special-case code for the second PASTR in an early-game 2-PASTR strat
      */
-    if (gamePhase == GamePhase.OPENING && initialStrategy == Strategy.INIT_DOUBLE_PASTR
-        && numSoldiersSpawned >= 3) {
+    if (gamePhase == GamePhase.OPENING && initialStrategy == Strategy.INIT_DOUBLE_PASTR) {
+      desiredPASTRNumAdjusted--;
+      if (numSoldiersSpawned >= 3) {
+        if (secondPASTRMessageSent && numberRequestedForSecondPASTR == 2
+            && ALLY_PASTR_COUNT > numTakenPASTRs) {
+          // here we should actually check that the correct PASTR has been built
+          // for (int i = ALLY_PASTR_COUNT - 1; i >= 0; --i) {
+          // if (ALLY_PASTR_LOCS[i].distanceSquaredTo(secondRequestedPASTRLoc) < 5) {
+          // // 5 is some arbitrary small number... 2 might even suffice
+          // takenPASTRLocs.add(secondRequestedPASTRLoc);
+          // break;
+          // }
+          // }
+          numTakenPASTRs++;
+        }
 
-      if (secondPASTRMessageSent && numberRequestedForSecondPASTR == 2
-          && ALLY_PASTR_COUNT > numTakenPASTRs) {
-        // here we should actually check that the correct PASTR has been built
-        // for (int i = ALLY_PASTR_COUNT - 1; i >= 0; --i) {
-        // if (ALLY_PASTR_LOCS[i].distanceSquaredTo(secondRequestedPASTRLoc) < 5) {
-        // // 5 is some arbitrary small number... 2 might even suffice
-        // takenPASTRLocs.add(secondRequestedPASTRLoc);
-        // break;
-        // }
-        // }
-        numTakenPASTRs++;
+        if (turnsSinceLastSpawn == 1 && numberRequestedForSecondPASTR < 2
+            && numBots > currentStrategy.PASTRThresholds[1]) {
+          // This depends on macro() happening before PASTRMessages()!!!!!!!
+          messagingSystem.writeMessage(MessageType.BUILD_SECOND_SIMULTANEOUS_PASTURE,
+              mostRecentlySpawnedSoldierID, secondRequestedPASTRLoc.x, secondRequestedPASTRLoc.y);
+          numberRequestedForSecondPASTR++;
+        }
       }
+    }
 
-      if (turnsSinceLastSpawn == 1 && numberRequestedForSecondPASTR < 2
-          && numBots > currentStrategy.PASTRThresholds[1]) {
-        // This depends on macro() happening before PASTRMessages()!!!!!!!
-        messagingSystem.writeMessage(MessageType.BUILD_SECOND_SIMULTANEOUS_PASTURE,
-            mostRecentlySpawnedSoldierID, secondRequestedPASTRLoc.x, secondRequestedPASTRLoc.y);
-        numberRequestedForSecondPASTR++;
-      }
+
+    if (!PASTRMessageSent
+        && numBots > currentStrategy.PASTRThresholds[ALLY_PASTR_COUNT]
+        && ALLY_PASTR_COUNT < desiredPASTRNumAdjusted) {
+      messagingSystem.writeBuildPastureMessage(requestedPASTRLoc);
     }
   }
 
