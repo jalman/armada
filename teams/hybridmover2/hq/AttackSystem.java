@@ -1,6 +1,6 @@
-package mergebot.hq;
+package hybridmover2.hq;
 
-import static mergebot.utils.Utils.*;
+import static hybridmover2.utils.Utils.*;
 import battlecode.common.*;
 
 public class AttackSystem {
@@ -25,7 +25,7 @@ public class AttackSystem {
     return (type == RobotType.HQ) ? 0 : 2;
   }
 
-  public void tryAttack() {
+  void tryAttack() {
     if (!RC.isActive()) return;
 
     Robot[] robots = RC.senseNearbyGameObjects(Robot.class, 18);

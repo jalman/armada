@@ -1,8 +1,8 @@
-package mergebot.nav;
+package hybridmover2.nav;
 
-import static mergebot.utils.Utils.*;
-import mergebot.utils.LocSet;
-import mergebot.utils.BucketQueue;
+import static hybridmover2.utils.Utils.*;
+import hybridmover2.utils.LocSet;
+import hybridmover2.utils.OnePassQueue;
 import battlecode.common.*;
 
 public class DStar {
@@ -30,13 +30,13 @@ public class DStar {
 
   private final boolean visited[][] = new boolean[MAP_WIDTH][MAP_HEIGHT];
 
-  private final BucketQueue<MapLocation> queue = new BucketQueue<MapLocation>(5 * MAP_SIZE, 4);
+  private final OnePassQueue<MapLocation> queue = new OnePassQueue<MapLocation>(5 * MAP_SIZE, 4);
 
   public DStar(LocSet sources, int[] distances, MapLocation dest) {
     this.sources = sources;
     this.dest = dest;
 
-    for (int i = sources.size; --i >= 0;) {
+    for (int i = sources.size; --i > 0;) {
       MapLocation source = sources.get(i);
       int e = distances[i] + heuristic(source, dest);
       queue.insert(e, source);
@@ -77,7 +77,7 @@ public class DStar {
     int[] weight;
     MapLocation next, nbr;
     Direction dir;
-    final BucketQueue<MapLocation> queue = this.queue;
+    final OnePassQueue<MapLocation> queue = this.queue;
     final int[][] distance = this.distance;
     final Direction[][] from = this.from;
 

@@ -8,5 +8,8 @@ replays/
 team027.zip
 team027.jar
 bc.conf
-compute_area.py
 gatherspeed.rms
+testmany.rms
+testmanygamelog.txt
+multibc.conf
+*~

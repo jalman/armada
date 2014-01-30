@@ -1,58 +1,51 @@
-package mergebot.hq;
+package hybridmover2.hq;
 
-import static mergebot.utils.Utils.*;
+import static hybridmover2.utils.Utils.*;
 
 import java.util.*;
 
-import mergebot.utils.*;
+import hybridmover2.utils.*;
 import battlecode.common.*;
 
 public class PastureFinder {
-  public static Pair<MapLocation, Double>[] cowMiningLocations() {
+  public static MapLocation[] cowMiningLocations() {
     // System.out.println(" > " + Clock.getBytecodeNum());
     int xparts = MAP_WIDTH < 50 ? 5 : 7;
     int yparts = MAP_HEIGHT < 50 ? 5 : 7;
     @SuppressWarnings("unchecked")
-    // ArraySet<Pair<MapLocation, Double>> pastrLocs = new ArraySet<Pair<MapLocation, Double>>(50);
-    Pair<MapLocation, Double>[] pastrLocs = new Pair[(1 + xparts) * (1 + yparts)];
-    int num = 0;
-    for (int x = xparts; --x >= 0;) {
-      for (int y = yparts; --y >= 0;) {
+    Pair<MapLocation, Double>[] ret = new Pair[(1 + xparts) * (1 + yparts) / 2];
+    int i = 0;
+    for (int x = xparts - 1; x >= 0; x--) {
+      for (int y = yparts - 1; y >= 0; y--) {
         MapLocation inittry =
-            // new MapLocation(x * (MAP_WIDTH) / xparts, y * (MAP_HEIGHT) / yparts);
-            new MapLocation((2 * x + 1) * (MAP_WIDTH) / (2 * xparts), (2 * y + 1) * (MAP_HEIGHT)
-                / (2 * yparts));
-        int distDiff = inittry.distanceSquaredTo(ENEMY_HQ) - inittry.distanceSquaredTo(ALLY_HQ);
-        if (distDiff > 0) {
-          Pair<MapLocation, Double> pastrLoc = gradientAscent(inittry);
-          if (pastrLoc != null && pastrLoc.second > 0) {
-            pastrLoc.second += distDiff / 4;
-            pastrLocs[num++] = pastrLoc;
-          }
+            new MapLocation((2 * x * MAP_WIDTH + 1) / (2 * xparts),
+                (2 * y * MAP_HEIGHT + 1) / (2 * yparts));
+        if (inittry.distanceSquaredTo(ALLY_HQ) < inittry.distanceSquaredTo(ENEMY_HQ)) {
+          ret[i] = gradientAscent(inittry);
           // ret[i] = gradientDescentOnNegativeCowScalarField(inittry.x, inittry.y, 6);
+          i++;
         }
       }
     }
-    // System.out.println(" > " + Clock.getBytecodeNum());
+    System.out.println(" > " + Clock.getBytecodeNum());
 
-    pastrLocs = Arrays.copyOf(pastrLocs, num);
+    Arrays.sort(ret, new Comparator<Pair<MapLocation, Double>>() {
 
-    Arrays.sort(pastrLocs, new Comparator<Pair<MapLocation, Double>>() {
       @Override
       public int compare(Pair<MapLocation, Double> a, Pair<MapLocation, Double> b) {
-        return Double.compare(b.second, a.second);
+        return a == null ? 1 : b == null ? -1 : Double.compare(b.second, a.second);
       }
+
     });
 
-    // MapLocation[] locs = new MapLocation[num];
-    // while (num-- > 0) {
-    // locs[num] = pastrLocs[num].first;
-    // }
-    //
-    // System.out.println(Clock.getBytecodeNum());
-    System.out.println("Finished finding cow mining locations.");
+    System.out.println(Clock.getBytecodeNum());
 
-    return pastrLocs;
+    MapLocation[] locs = new MapLocation[i];
+    while (i-- > 0) {
+      locs[i] = ret[i].first;
+    }
+
+    return locs;
   }
 
   private static double effectiveCowGrowth(MapLocation loc) {
@@ -117,7 +110,7 @@ public class PastureFinder {
     // 5 = PASTR radius
     MapLocation[] locs =
         MapLocation.getAllMapLocationsWithinRadiusSq(loc, COW_CHECK_RADIUS_SQUARED);
-    for (int i = locs.length - 1; i >= 0; i -= 2) {
+    for (int i = locs.length - 1; i >= 0; --i) {
       estimate += effectiveCowGrowth(locs[i]);
     }
 
@@ -129,35 +122,20 @@ public class PastureFinder {
     return estimate;
   }
 
-  private static boolean[][] tried = new boolean[MAP_WIDTH][MAP_HEIGHT];
 
   private static Pair<MapLocation, Double> gradientAscent(MapLocation current) {
+    boolean[][] tried = new boolean[MAP_WIDTH][MAP_HEIGHT];
+
+    // int tries = 10;
+    int dist = 9;
     double best = estimateCowGrowth(current);
-    tried[current.x][current.y] = true;
+    // System.out.println("search started from " + current + ", which had estimate " + best);
 
-    Direction dir = null;
-
-    // System.out.println("Gradient Ascent:");
-
-    loop: while (true) {
-      // System.out.println("   now at " + current + " with estimate " + best);
-
-      int i;
-      if (dir == null) {
-        dir = current.directionTo(ALLY_HQ).rotateLeft().rotateLeft();
-        i = 8;
-      } else if (dir.isDiagonal()) {
-        dir = dir.rotateLeft().rotateLeft();
-        i = 5;
-      } else {
-        dir = dir.rotateLeft();
-        i = 3;
-      }
-
-      for (; i > 0; i--) {
-        MapLocation loc = current.add(dir);
-        dir = dir.rotateRight();
-        // remove utils function call for bytecode savings?
+    loop: {
+      MapLocation[] locs = MapLocation.getAllMapLocationsWithinRadiusSq(current, dist);
+      for (int i = locs.length - 1; i >= 0; --i) {
+        MapLocation loc = locs[i];
+        // remove utils function call for bytecode savings
         if (!RC.senseTerrainTile(loc).isTraversableAtHeight(RobotLevel.ON_GROUND)
             || tried[loc.x][loc.y]) continue;
         tried[loc.x][loc.y] = true;
@@ -165,14 +143,10 @@ public class PastureFinder {
         if (estimate > best) {
           best = estimate;
           current = loc;
-          continue loop;
+          break loop;
         }
       }
-      break;
     }
-
-    //System.out.println("...gradient ascent finished");
-
     return new Pair<MapLocation, Double>(current, best);
   }
 

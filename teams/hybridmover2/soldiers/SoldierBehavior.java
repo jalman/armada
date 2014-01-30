@@ -1,11 +1,12 @@
-package mergebot.soldiers;
+package hybridmover2.soldiers;
 
-import static mergebot.utils.Utils.*;
-import mergebot.*;
-import mergebot.messaging.*;
-import mergebot.messaging.MessagingSystem.MessageType;
-import mergebot.nav.*;
-import mergebot.utils.*;
+import static hybridmover2.utils.Utils.*;
+import hybridmover2.RobotBehavior;
+import hybridmover2.messaging.MessageHandler;
+import hybridmover2.messaging.MessagingSystem.MessageType;
+import hybridmover2.nav.HybridMover;
+import hybridmover2.nav.Mover;
+import hybridmover2.utils.ArraySet;
 import battlecode.common.*;
 
 public class SoldierBehavior extends RobotBehavior {
@@ -16,25 +17,23 @@ public class SoldierBehavior extends RobotBehavior {
 
   // state machine stuff
   Mode mode;
-  static MapLocation target;
+  MapLocation target;
 
   // basic data
-  static int bornRound = Clock.getRoundNum();
+  int bornRound = Clock.getRoundNum();
   HybridMover hybrid = new HybridMover();
   Mover mover = new Mover();
 
-  static ArraySet<MapLocation> messagedEnemyRobots = new ArraySet<MapLocation>(100);
-  static int[][] enemyLastSeen = new int[MAP_WIDTH][MAP_HEIGHT];
+  ArraySet<MapLocation> messagedEnemyRobots = new ArraySet<MapLocation>(100);
+  int[][] enemyLastSeen = new int[MAP_WIDTH][MAP_HEIGHT];
 
-  static ArraySet<MapLocation> attackLocations = new ArraySet<MapLocation>(100);
+  ArraySet<MapLocation> attackLocations = new ArraySet<MapLocation>(100);
   static ArraySet<MapLocation> microLocations = new ArraySet<MapLocation>(100);
 
-  static MapLocation buildPastureLoc = null;
+  private MapLocation buildPastureLoc = null;
+  private int buildPastureRound;
 
-  static boolean buildingSecondPastr;
-  // private int buildPastureRound;
-
-  // private final Micro micro = new Micro(this);
+  private final Micro micro = new Micro(this);
 
   public SoldierBehavior() {
   }
@@ -71,22 +70,8 @@ public class SoldierBehavior extends RobotBehavior {
     handlers[MessageType.BUILD_PASTURE.type] = new MessageHandler() {
       @Override
       public void handleMessage(int[] message) {
-        if (!buildingSecondPastr) {
-          buildPastureLoc = new MapLocation(message[0], message[1]);
-        }
-        // buildPastureRound = currentRound;
-      }
-    };
-
-    handlers[MessageType.BUILD_SECOND_SIMULTANEOUS_PASTURE.type] = new MessageHandler() {
-      @Override
-      public void handleMessage(int[] message) {
-        if (ID == message[0]) {
-          buildingSecondPastr = true;
-          buildPastureLoc = new MapLocation(message[1], message[2]);
-          target = buildPastureLoc;
-          setMode(Mode.BUILD_PASTURE, target);
-        }
+        buildPastureLoc = new MapLocation(message[0], message[1]);
+        buildPastureRound = currentRound;
       }
     };
 
@@ -94,22 +79,10 @@ public class SoldierBehavior extends RobotBehavior {
       @Override
       public void handleMessage(int[] message) throws GameActionException {
         MapLocation loc = new MapLocation(message[0], message[1]);
-        if (!buildingSecondPastr && mode == Mode.BUILD_PASTURE && !loc.equals(currentLocation)) {
+        if (!loc.equals(currentLocation)) {
           buildPastureLoc = null;
           target = loc;
           setMode(Mode.DEFEND_PASTURE, target);
-        }
-      }
-    };
-
-
-    handlers[MessageType.BUILDING_SECOND_SIMULTANEOUS_PASTURE.type] = new MessageHandler() {
-      @Override
-      public void handleMessage(int[] message) throws GameActionException {
-        MapLocation loc = new MapLocation(message[0], message[1]);
-        if (mode == Mode.BUILD_PASTURE && buildingSecondPastr && !loc.equals(currentLocation)) {
-          buildPastureLoc = null;
-          target = loc;
         }
       }
     };
@@ -164,19 +137,16 @@ public class SoldierBehavior extends RobotBehavior {
       return;
     }
 
-    if (buildingSecondPastr) {
-      return;
-    }
-
     if (buildPastureLoc != null) {
-      // build a pasture! Overwrites previous pasture target.
-      target = buildPastureLoc;
-      setMode(Mode.BUILD_PASTURE, target);
-      return;
-      // } else {
-      // // already building a pasture
-      // return;
-      // }
+      // build a pasture!
+      if (mode != Mode.BUILD_PASTURE) {
+        target = buildPastureLoc;
+        setMode(Mode.BUILD_PASTURE, target);
+        return;
+      } else {
+        // already building a pasture
+        return;
+      }
     }
 
     // TODO: use priorities for where to be?
@@ -223,7 +193,7 @@ public class SoldierBehavior extends RobotBehavior {
   }
 
   private void setMode(Mode m, MapLocation target) {
-    RC.setIndicatorString(0, m + " " + target + " 2nd? " + buildingSecondPastr);
+    RC.setIndicatorString(0, m + " " + target);
     mode = m;
   }
 
@@ -257,12 +227,11 @@ public class SoldierBehavior extends RobotBehavior {
   }
 
   /**
-   * Rallies to the place chosen by the HQ.
+   * TODO: Make this smarter.
    * @return Place to explore to.
-   * @throws GameActionException
    */
-  private MapLocation findExploreLocation() throws GameActionException {
-    return messagingSystem.readRallyPoint();
+  private MapLocation findExploreLocation() {
+    return ALLY_HQ.add(HQ_DX / 4, HQ_DY / 4);
   }
 
   private void act() throws GameActionException {
@@ -289,7 +258,6 @@ public class SoldierBehavior extends RobotBehavior {
         break;
       case BUILD_PASTURE:
         int d = currentLocation.distanceSquaredTo(target);
-
         // if we're there build a noise tower
         if (d == 0) {
           if (!RC.isActive()) break;
@@ -300,19 +268,10 @@ public class SoldierBehavior extends RobotBehavior {
           if (!RC.isActive()) break;
           // if noise tower has been built build a pasture
           if (!RC.canMove(currentLocation.directionTo(target))) {
-            RobotInfo targetInfo = RC.senseRobotInfo((Robot) RC.senseObjectAtLocation(target));
-            if ((targetInfo.type == RobotType.SOLDIER && targetInfo.constructingRounds < 50 && targetInfo.constructingType == RobotType.NOISETOWER)
-                || targetInfo.type == RobotType.NOISETOWER) {
-            if (buildingSecondPastr) {
-              messagingSystem.writeMessage(MessageType.BUILDING_SECOND_SIMULTANEOUS_PASTURE,
-                  target.x, target.y);
-            } else {
-              messagingSystem.writeBuildingPastureMessage(target);
-            }
+            messagingSystem.writeBuildingPastureMessage(target);
             RC.setIndicatorString(1, "Building Pasture");
             RC.construct(RobotType.PASTR);
             break;
-          }
           }
         }
         hybrid.setTarget(target);

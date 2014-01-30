@@ -3,8 +3,8 @@ import os
 import subprocess
 import re
 
-_maps2 = [ 'fieldsofgreen', 'almsman', 'troll', 'moo', 'temple', 'siege', 'backdoor', 'bakedpotato', 'blocky', 'castles', 'flags', 'cadmic', 'fenced' ] 
-_maps = _maps2[:10]
+_maps2 = [ 'fieldsofgreen', 'almsman', 'troll', 'moo', 'temple', 'siege', 'backdoor', 'bakedpotato', 'blocky', 'castles', 'flagsoftheworld', 'cadmic', 'fenced' ] 
+_maps = _maps2[:]
 
 _teamA = 'mergebot'
 _teamB = 'emptyplayer'
@@ -79,13 +79,21 @@ def runMatches(maps, teamA, teamB, replayFile, saveFile):
 
     return ret
 
+def getRounds(result):
+    search = "(round"
+    index = result.index(search) + len(search)
+    
+    return int(result[index:-1])
+
 def main(maps, teamA, teamB, replayFile, saveFile):
     if len(sys.argv) == 3:
         teamA = sys.argv[1]
         teamB = sys.argv[2]
+        print teamA, teamB
     results = runMatches(maps, teamA, teamB, replayFile, saveFile)
+    
     print '\n'.join(results)
-                
+    print "Total rounds: %d" % sum(map(getRounds, results))
     
 if __name__ == '__main__':
     main(_maps, _teamA, _teamB, _replayFile, _saveFile)
