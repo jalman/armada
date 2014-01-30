@@ -25,7 +25,7 @@ public class AttackSystem {
     return (type == RobotType.HQ) ? 0 : 2;
   }
 
-  void tryAttack() {
+  public void tryAttack() {
     if (!RC.isActive()) return;
 
     Robot[] robots = RC.senseNearbyGameObjects(Robot.class, 18);

@@ -1,7 +1,7 @@
 package mergebot.messaging;
 
 import static mergebot.utils.Utils.*;
-import mergebot.utils.Pair;
+import mergebot.utils.*;
 import mergebot.utils.Utils.SymmetryType;
 import battlecode.common.*;
 
@@ -25,7 +25,9 @@ public class MessagingSystem {
     ENEMY_BOT(2),
     MILK_INFO(4),
     BUILD_PASTURE(2),
+    BUILD_SECOND_SIMULTANEOUS_PASTURE(3), // target soldier ID, (x, y)
     BUILDING_PASTURE(2),
+    BUILDING_SECOND_SIMULTANEOUS_PASTURE(3), // (x, y)
     ;
 
     public final int type = this.ordinal();

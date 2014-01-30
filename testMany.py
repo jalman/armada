@@ -89,6 +89,7 @@ def main(maps, teamA, teamB, replayFile, saveFile):
     if len(sys.argv) == 3:
         teamA = sys.argv[1]
         teamB = sys.argv[2]
+        print teamA, teamB
     results = runMatches(maps, teamA, teamB, replayFile, saveFile)
     
     print '\n'.join(results)
