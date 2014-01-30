@@ -14,38 +14,41 @@ public class PastureFinder {
     int xparts = MAP_WIDTH < 50 ? 5 : 7;
     int yparts = MAP_HEIGHT < 50 ? 5 : 7;
     @SuppressWarnings("unchecked")
-    Pair<MapLocation, Double>[] ret = new Pair[(1 + xparts) * (1 + yparts) / 2];
-    int i = 0;
+    // ArraySet<Pair<MapLocation, Double>> pastrLocs = new ArraySet<Pair<MapLocation, Double>>(50);
+    Pair<MapLocation, Double>[] pastrLocs = new Pair[(1 + xparts) * (1 + yparts)];
+    int num = 0;
     for (int x = xparts - 1; x >= 0; x--) {
       for (int y = yparts - 1; y >= 0; y--) {
         MapLocation inittry =
-            new MapLocation((2 * x * MAP_WIDTH + 1) / (2 * xparts),
-                (2 * y * MAP_HEIGHT + 1) / (2 * yparts));
+            // new MapLocation(x * (MAP_WIDTH) / xparts, y * (MAP_HEIGHT) / yparts);
+            new MapLocation((2 * x + 1) * (MAP_WIDTH) / (2 * xparts), (2 * y + 1) * (MAP_HEIGHT)
+                / (2 * yparts));
         if (inittry.distanceSquaredTo(ALLY_HQ) < inittry.distanceSquaredTo(ENEMY_HQ)) {
-          ret[i] = gradientAscent(inittry);
+          Pair<MapLocation, Double> pastrLoc = gradientAscent(inittry);
+          if (pastrLoc != null && pastrLoc.second > 0) {
+            pastrLocs[num++] = pastrLoc;
+          }
           // ret[i] = gradientDescentOnNegativeCowScalarField(inittry.x, inittry.y, 6);
-          i++;
         }
       }
     }
-    System.out.println(" > " + Clock.getBytecodeNum());
+    // System.out.println(" > " + Clock.getBytecodeNum());
 
-    Arrays.sort(ret, new Comparator<Pair<MapLocation, Double>>() {
+    pastrLocs = Arrays.copyOf(pastrLocs, num);
 
+    Arrays.sort(pastrLocs, new Comparator<Pair<MapLocation, Double>>() {
       @Override
       public int compare(Pair<MapLocation, Double> a, Pair<MapLocation, Double> b) {
-        return a == null ? 1 : b == null ? -1 : Double.compare(b.second, a.second);
+        return Double.compare(b.second, a.second);
       }
-
     });
 
-    System.out.println(Clock.getBytecodeNum());
-
-    MapLocation[] locs = new MapLocation[i];
-    while (i-- > 0) {
-      locs[i] = ret[i].first;
+    MapLocation[] locs = new MapLocation[num];
+    while (num-- > 0) {
+      locs[num] = pastrLocs[num].first;
     }
 
+    // System.out.println(Clock.getBytecodeNum());
     System.out.println("Finished finding cow mining locations.");
 
     return locs;
@@ -140,7 +143,7 @@ public class PastureFinder {
 
       int i;
       if (dir == null) {
-        dir = current.directionTo(ALLY_HQ);
+        dir = current.directionTo(ALLY_HQ).rotateLeft().rotateLeft();
         i = 8;
       } else if (dir.isDiagonal()) {
         dir = dir.rotateLeft().rotateLeft();
