@@ -1,7 +1,7 @@
 package team027.messaging;
 
 import static team027.utils.Utils.*;
-import team027.utils.Pair;
+import team027.utils.*;
 import team027.utils.Utils.SymmetryType;
 import battlecode.common.*;
 
@@ -25,7 +25,9 @@ public class MessagingSystem {
     ENEMY_BOT(2),
     MILK_INFO(4),
     BUILD_PASTURE(2),
-    BUILDING_PASTURE(2);
+    BUILD_SECOND_SIMULTANEOUS_PASTURE(3), // target soldier ID, (x, y)
+    BUILDING_PASTURE(2),
+    BUILDING_SECOND_SIMULTANEOUS_PASTURE(3), // (x, y)
     ;
 
     public final int type = this.ordinal();
@@ -61,6 +63,7 @@ public class MessagingSystem {
     MESSAGE_INDEX(1),
     MAP_SYMMETRY(1),
     HELP_CHANNEL(1),
+    RALLY_POINT(2),
     PATHING(GameConstants.MAP_MAX_HEIGHT * GameConstants.MAP_MAX_WIDTH);
 
     public final int type = this.ordinal();
@@ -136,8 +139,12 @@ public class MessagingSystem {
    * @param message Message
    * @throws GameActionException
    */
-  public void writeReservedMessage(ReservedMessageType rm, int message) throws GameActionException {
-    RC.broadcast(rm.channel(), message);
+  public void writeReservedMessage(ReservedMessageType rm, int... message)
+      throws GameActionException {
+    int channel = rm.channel();
+    for (int msg : message) {
+      RC.broadcast(channel++, msg);
+    }
   }
 
   /**
@@ -148,7 +155,7 @@ public class MessagingSystem {
    * @param message Message
    * @throws GameActionException
    */
-  public void writeReservedMessage(ReservedMessageType rm, int offset, int message)
+  public void writeReservedMessageAtOffset(ReservedMessageType rm, int offset, int message)
       throws GameActionException {
     RC.broadcast(rm.channel() + offset, message);
   }
@@ -317,6 +324,15 @@ public class MessagingSystem {
     writeMessage(MessageType.BUILDING_PASTURE, target.x, target.y);
   }
 
+  public void writeRallyPoint(MapLocation loc) throws GameActionException {
+    writeReservedMessage(ReservedMessageType.RALLY_POINT, loc.x, loc.y);
+  }
+
+  public MapLocation readRallyPoint() throws GameActionException {
+    int channel = ReservedMessageType.RALLY_POINT.channel();
+    return new MapLocation(RC.readBroadcast(channel), RC.readBroadcast(channel + 1));
+  }
+
   /**
    * Same as Direction.values() but shifted by 1 so that 0 maps to null.
    */
@@ -345,4 +361,5 @@ public class MessagingSystem {
         RC.readBroadcast(ReservedMessageType.PATHING.channel() + loc.x * MAP_HEIGHT + loc.y);
     return new Pair<Direction, Integer>(INT_TO_DIR[broadcast >> shift], broadcast & mask);
   }
+
 }

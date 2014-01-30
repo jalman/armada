@@ -206,8 +206,12 @@ public class SoldierUtils {
     if (r.type == RobotType.SOLDIER) {
       roundsUntilActive = (int) r.actionDelay;
     }
+    
+    int healthFactor = -(int)(healthPercent * 50);
+    int distFactor = 50 / distance;
+    int delayFactor = -5 * roundsUntilActive;
 
-    return (5000 - (int) (healthPercent * 50) + 50 / distance + priority - (5 * roundsUntilActive));
+    return 5000 + priority + healthFactor + distFactor + delayFactor;
   }
 
   // Helper method to get "weight" of enemy robots (determining whether to move toward/away)

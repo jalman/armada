@@ -59,11 +59,11 @@ public class OctantNoiseTowerBehavior extends BFSNoiseTower {
     int y = target.y - currentLocation.y + 17;
     
     
-    MapLocation realTarget = target.add(dir[x][y].opposite(), 3);
+    MapLocation realTarget = dir[x][y] != null ? target.add(dir[x][y].opposite(), 3) : target;
     
     
     
-    target = target.add(dir[x][y]);
+    target = dir[x][y] != null ? target.add(dir[x][y]) : currentLocation;
     
     if(RC.canAttackSquare(realTarget)) RC.attackSquare(realTarget);
     else run();
