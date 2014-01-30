@@ -1,7 +1,8 @@
 package mergebot.nav;
 
 import static mergebot.utils.Utils.*;
-import mergebot.utils.*;
+import mergebot.utils.LocSet;
+import mergebot.utils.OnePassQueue;
 import battlecode.common.*;
 
 public class Dijkstra {
@@ -39,6 +40,13 @@ public class Dijkstra {
     return queue.size == 0;
   }
 
+  /**
+   * Compute until either bytecodes have run out or we find a destination.
+   * @param bytecodes The bytecode limit.
+   * @param broadcast Whether to broadcast the results (used by the HQ).
+   * @param dests Destinations to stop at.
+   * @return Whether we found a destination.
+   */
   public boolean compute(int bytecodes, boolean broadcast, MapLocation... dests) {
     boolean[][] end = new boolean[MAP_WIDTH][MAP_HEIGHT];
     MapLocation dest;
@@ -49,6 +57,13 @@ public class Dijkstra {
     return compute(end, bytecodes, broadcast);
   }
 
+  /**
+   * Compute until either bytecodes have run out or we find a destination.
+   * @param end Hash-map of destination.
+   * @param bytecodes The bytecode limit.
+   * @param broadcast Whether to broadcast the results (used by the HQ).
+   * @return Whether we found a destination.
+   */
   public boolean compute(boolean[][] end, int bytecodes, boolean broadcast) {
     // cache variables
     int min, w, x, y;
