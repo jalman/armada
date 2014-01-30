@@ -8,6 +8,7 @@ import static mergebot.utils.Utils.*;
 public class OctantNoiseTowerBehavior extends BFSNoiseTower {
 	
   int[] places = new int[8];
+  boolean hasbeenPASTR = false;
   
 	 public OctantNoiseTowerBehavior() throws GameActionException {
 	   super();
@@ -35,12 +36,31 @@ public class OctantNoiseTowerBehavior extends BFSNoiseTower {
   
   int a = 0;
   MapLocation target;
+  
+  public boolean isNearbyPASTR() {
+    for (MapLocation m : ALLY_PASTR_LOCS) {
+      if(m.distanceSquaredTo(currentLocation) <= 2) return true;
+    }
+    return false;
+  }
+  
 	/**
 	 * Called every round.
 	 */
   @Override
   public void run() throws GameActionException {
     if(!RC.isActive()) return;
+    
+    if(isNearbyPASTR()) {
+      hasbeenPASTR = true;
+    } else if(hasbeenPASTR) {
+      for(MapLocation m : ENEMY_PASTR_LOCS) {
+        if(RC.canAttackSquare(m)) {
+          RC.attackSquare(m);
+          return;
+        }
+      }
+    }
     
     if(target.distanceSquaredTo(currentLocation) < 3) {
       a++;
