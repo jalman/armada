@@ -2,9 +2,10 @@ package mergebot.hq;
 
 import static mergebot.utils.Utils.*;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
 
-import mergebot.utils.*;
+import mergebot.utils.Pair;
 import battlecode.common.*;
 
 public class PastureFinder {
@@ -44,6 +45,8 @@ public class PastureFinder {
     while (i-- > 0) {
       locs[i] = ret[i].first;
     }
+
+    System.out.println("Finished finding cow mining locations.");
 
     return locs;
   }
@@ -110,7 +113,7 @@ public class PastureFinder {
     // 5 = PASTR radius
     MapLocation[] locs =
         MapLocation.getAllMapLocationsWithinRadiusSq(loc, COW_CHECK_RADIUS_SQUARED);
-    for (int i = locs.length - 1; i >= 0; --i) {
+    for (int i = locs.length - 1; i >= 0; i -= 2) {
       estimate += effectiveCowGrowth(locs[i]);
     }
 
@@ -122,31 +125,49 @@ public class PastureFinder {
     return estimate;
   }
 
+  private static boolean[][] tried = new boolean[MAP_WIDTH][MAP_HEIGHT];
 
   private static Pair<MapLocation, Double> gradientAscent(MapLocation current) {
-    boolean[][] tried = new boolean[MAP_WIDTH][MAP_HEIGHT];
-
-    // int tries = 10;
-    int dist = 9;
     double best = estimateCowGrowth(current);
-    // System.out.println("search started from " + current + ", which had estimate " + best);
+    tried[current.x][current.y] = true;
 
-    loop: {
-      MapLocation[] locs = MapLocation.getAllMapLocationsWithinRadiusSq(current, dist);
-      for (int i = locs.length - 1; i >= 0; --i) {
-        MapLocation loc = locs[i];
-        // remove utils function call for bytecode savings
-        if (!RC.senseTerrainTile(loc).isTraversableAtHeight(RobotLevel.ON_GROUND)
-            || tried[loc.x][loc.y]) continue;
+    Direction dir = null;
+
+    // System.out.println("Gradient Ascent:");
+
+    loop: while (true) {
+      // System.out.println("   now at " + current + " with estimate " + best);
+
+      int i;
+      if (dir == null) {
+        dir = current.directionTo(ALLY_HQ);
+        i = 8;
+      } else if (dir.isDiagonal()) {
+        dir = dir.rotateLeft().rotateLeft();
+        i = 5;
+      } else {
+        dir = dir.rotateLeft();
+        i = 3;
+      }
+
+      for (; i > 0; i--) {
+        MapLocation loc = current.add(dir);
+        dir = dir.rotateRight();
+        // remove utils function call for bytecode savings?
+        if (!isPathable(loc) || tried[loc.x][loc.y]) continue;
         tried[loc.x][loc.y] = true;
         double estimate = estimateCowGrowth(loc);
         if (estimate > best) {
           best = estimate;
           current = loc;
-          break loop;
+          continue loop;
         }
       }
+      break;
     }
+
+    //System.out.println("...gradient ascent finished");
+
     return new Pair<MapLocation, Double>(current, best);
   }
 
