@@ -2,10 +2,9 @@ package mergebot.utils;
 
 import static battlecode.common.Direction.*;
 
-import java.util.Arrays;
-import java.util.Random;
+import java.util.*;
 
-import mergebot.messaging.MessagingSystem;
+import mergebot.messaging.*;
 import mergebot.messaging.MessagingSystem.ReservedMessageType;
 import battlecode.common.*;
 
@@ -273,6 +272,58 @@ public class Utils {
       return null;
     }
   }
+
+  public static Direction getSymmetricDirection(Direction d) {
+    switch (MAP_SYMMETRY) {
+      case ROTATION:
+        return d.opposite();
+      case VERTICAL_REFLECTION:
+        switch (d) {
+          case NORTH:
+            return Direction.SOUTH;
+          case NORTH_EAST:
+            return Direction.SOUTH_EAST;
+          case EAST:
+            return Direction.EAST;
+          case SOUTH_EAST:
+            return Direction.NORTH_EAST;
+          case SOUTH:
+            return Direction.NORTH;
+          case SOUTH_WEST:
+            return Direction.NORTH_WEST;
+          case WEST:
+            return Direction.WEST;
+          case NORTH_WEST:
+            return Direction.SOUTH_WEST;
+          default:
+            return d;
+        }
+      case HORIZONTAL_REFLECTION:
+        switch (d) {
+          case NORTH:
+            return Direction.NORTH;
+          case NORTH_EAST:
+            return Direction.NORTH_WEST;
+          case EAST:
+            return Direction.WEST;
+          case SOUTH_EAST:
+            return Direction.SOUTH_WEST;
+          case SOUTH:
+            return Direction.SOUTH;
+          case SOUTH_WEST:
+            return Direction.SOUTH_EAST;
+          case WEST:
+            return Direction.EAST;
+          case NORTH_WEST:
+            return Direction.NORTH_EAST;
+          default:
+            return d;
+        }
+      default:
+        return null;
+    }
+  }
+
 
 
   private static int dx, dy;
