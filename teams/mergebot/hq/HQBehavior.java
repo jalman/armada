@@ -282,10 +282,9 @@ public class HQBehavior extends RobotBehavior {
     // empty for now
   }
 
-
   public Direction wayToEnemy(MapLocation m) {
     MapLocation m2 = Utils.getSymmetricSquare(m);
-    Direction fromD = dijkstra.from[m.x][m.y];
+    Direction fromD = dijkstra.from[m2.x][m2.y];
     fromD = getSymmetricDirection(fromD);
     return fromD != null ? fromD : m.directionTo(ENEMY_HQ);
   }
