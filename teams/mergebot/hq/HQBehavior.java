@@ -31,6 +31,11 @@ public class HQBehavior extends RobotBehavior {
   private final Dijkstra dijkstra = new Dijkstra(HybridMover.DIJKSTRA_CENTER);
 
   public HQBehavior() {
+    try {
+      messagingSystem.writeRallyPoint(ALLY_HQ.add(HQ_DX / 3, HQ_DX / 3));
+    } catch (GameActionException e) {
+      e.printStackTrace();
+    }
     initialGuessMapSymmetry();
     macro();
     PASTRLocs = PastureFinder.cowMiningLocations();
