@@ -2,6 +2,7 @@ package mergebot.soldiers;
 
 import static mergebot.soldiers.SoldierUtils.*;
 import static mergebot.utils.Utils.*;
+import examplejurgzplayer.utils.Utils;
 import mergebot.messaging.MessagingSystem.ReservedMessageType;
 import mergebot.nav.*;
 import battlecode.common.*;
@@ -68,8 +69,7 @@ public class NathanMicro {
       String zzz = "";
       for (int i=0; i<SoldierBehavior.microLocations.size; ++i) {
         m = SoldierBehavior.microLocations.get(i);
-        zzz += "(" + m.x + "," + m.y + "),";
-        if (currentLocation.distanceSquaredTo(m) <= 10*10) {
+        if ((!isHelpingOut && currentLocation.distanceSquaredTo(m) <= 10*10) || currentLocation.distanceSquaredTo(m) <= currentLocation.distanceSquaredTo(helpingLoc)) {
           isHelpingOut = true;
           helpingLoc = m;
           lastHelpRequest = Clock.getRoundNum();
@@ -90,12 +90,13 @@ public class NathanMicro {
         JON_SCHNEIDER = true;
       }
       if (JON_SCHNEIDER && RC.getHealth() >= 50) JON_SCHNEIDER = false;
+
+      MapLocation target = getHighestPriority(nearbyEnemies);
       
       if ((!JON_SCHNEIDER || (RC.getHealth() >= 30 && allyWeight >= enemyWeight + 100)) && (allyWeight >= enemyWeight || GREAT_LUGE)) {
         // choose an aggressive option
     	  
         if (RC.isActive()) { // willing to attack!
-          MapLocation target = getHighestPriority(nearbyEnemies);
           MapLocation nextLoc = new MapLocation(-1, -1);
           String zyzzl = "";
           double nextAllyWeight = 0, nextEnemyWeight = 0;
@@ -105,14 +106,14 @@ public class NathanMicro {
             if (nearbyEnemies.length > 0) {
             	Direction nd = currentLocation.directionTo(nearbyEnemies[0].location);
             	nextLoc = currentLocation.add(nd);
-              nextAllyWeight = RC.getHealth() + allyWeightAboutPoint(currentLocation, nearbyTeam);
+              nextAllyWeight = RC.getHealth() + allyWeightAboutPoint(nextLoc, nearbyTeam);
             	nextEnemyWeight = enemyWeightAboutPoint(nextLoc, nearbyEnemies);
             	target = nearbyEnemies[0].location;
             }
           }
           else if (isHelpingOut && target == null) {
             nextLoc = currentLocation.add(currentLocation.directionTo(helpingLoc));
-            nextAllyWeight = RC.getHealth() + allyWeightAboutPoint(currentLocation, nearbyTeam);
+            nextAllyWeight = RC.getHealth() + allyWeightAboutPoint(nextLoc, nearbyTeam);
             nextEnemyWeight = enemyWeightAboutPoint(nextLoc, nearbyEnemies);
             //target = getHighestPriority(nextLoc, nearbyEnemies);
           }
@@ -122,7 +123,7 @@ public class NathanMicro {
             // willing to move forward and attack!
             String ss = "";
             for (int z=0; z<nearbyEnemies.length; ++z) ss += "," + nearbyEnemies[z].location.x + "," + nearbyEnemies[z].location.y;
-            String zzss = "moving forward (enemy weight: " + nextEnemyWeight + " at (" + nextLoc.x + "," + nextLoc.y + "))" + (target == null ? " -- ceding control" : locToString(target)) + " | " + zyzzl + " | turn " + Clock.getRoundNum();
+            String zzss = "moving forward (ally weight: " + nextAllyWeight + ", enemy weight: " + nextEnemyWeight + " at (" + nextLoc.x + "," + nextLoc.y + "))" + (target == null ? " -- ceding control" : locToString(target)) + " | " + zyzzl + " | turn " + Clock.getRoundNum();
             RC.setIndicatorString(2, zzss);
             if (target != null) {
         		setTarget(target);
@@ -137,7 +138,7 @@ public class NathanMicro {
                         break;
         			}
         		}
-        		RC.move(nextDir);
+        		if (nextDir != null) RC.move(nextDir);
         		return true;
             } else {
               return false;
@@ -250,17 +251,33 @@ public class NathanMicro {
             currentLocation.directionTo(new MapLocation(2 * curX - dx, 2 * curY - dy));
 
         if (RC.isActive() && newDir != Direction.NONE && newDir != Direction.OMNI) {
-          if (RC.canMove(newDir)) {
-            mover.setTarget(currentLocation.add(newDir, 3));
+          Direction wayBack = messagingSystem.readPathingInfo(currentLocation).first.opposite();
+          
+          if (wayBack == newDir || wayBack == newDir.rotateLeft() || wayBack == newDir.rotateRight()) {
+            mover.setTarget(currentLocation.add(wayBack));
             mover.move();
           }
-          else if (RC.canMove(newDir.rotateLeft())) {
-            mover.setTarget(currentLocation.add(newDir.rotateLeft(), 3));
-            mover.move();
-          }
-          else if (RC.canMove(newDir.rotateRight())) {
-            mover.setTarget(currentLocation.add(newDir.rotateRight(), 3));
-            mover.move();
+          else {
+            if (RC.canMove(newDir)) {
+              mover.setTarget(currentLocation.add(newDir));
+              mover.move();
+            }
+            else if (RC.canMove(newDir.rotateLeft())) {
+              mover.setTarget(currentLocation.add(newDir.rotateLeft(), 3));
+              mover.move();
+            }
+            else if (RC.canMove(newDir.rotateRight())) {
+              mover.setTarget(currentLocation.add(newDir.rotateRight(), 3));
+              mover.move();
+            }
+            else {
+              if (target != null && RC.canAttackSquare(target)) {
+                RC.attackSquare(target);
+                if (m.x != target.x || m.y != target.y) {
+                  messagingSystem.writeMicroMessage(target, 1);
+                }
+              }
+            }
           }
         }
       }
@@ -290,7 +307,7 @@ public class NathanMicro {
   }
   public static float allyWeightAboutPoint(MapLocation loc, Robot[] nearbyEnemies) throws GameActionException {
     float allyWeight = 0;
-    Robot[] nearbyTeam = RC.senseNearbyGameObjects(Robot.class, 35, ALLY_TEAM);
+    Robot[] nearbyTeam = RC.senseNearbyGameObjects(Robot.class, loc, 17, ALLY_TEAM);
     
     for (int i = 0; i < nearbyTeam.length; ++i) {
       RobotInfo ri = RC.senseRobotInfo(nearbyTeam[i]);
@@ -312,7 +329,7 @@ public class NathanMicro {
             allyWeight += ri.health;
           }
           else {
-            allyWeight += Math.max(0, ri.health - ALLY_WEIGHT_DECAY * lazySqrt(ri.location.distanceSquaredTo(currentLocation)));
+            allyWeight += Math.max(0, ri.health - ALLY_WEIGHT_DECAY * lazySqrt(ri.location.distanceSquaredTo(loc)));
           }
           break;
         default:
