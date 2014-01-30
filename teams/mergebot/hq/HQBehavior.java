@@ -1,13 +1,12 @@
 package mergebot.hq;
 
 import static mergebot.utils.Utils.*;
-import mergebot.RobotBehavior;
+import mergebot.*;
 import mergebot.messaging.*;
 import mergebot.messaging.MessagingSystem.MessageType;
 import mergebot.messaging.MessagingSystem.ReservedMessageType;
-import mergebot.nav.Dijkstra;
-import mergebot.nav.HybridMover;
-import mergebot.utils.Utils;
+import mergebot.nav.*;
+import mergebot.utils.*;
 import mergebot.utils.Utils.SymmetryType;
 import battlecode.common.*;
 
@@ -36,15 +35,15 @@ public class HQBehavior extends RobotBehavior {
     pickStrategy();
 
   }
-  
+
   int PASTRThreshold = 5;
-  
+
   private void pickStrategy() {
     //build 2 pastrs
     //build 1 pastr and defend
     //build 1 pastr and attack
     //build no pastrs until late
-    
+
     int hqDist = ALLY_HQ.distanceSquaredTo(ENEMY_HQ);
     if(hqDist > 500 && MAP_SIZE > 2400) {
       PASTRThreshold = 0;
@@ -98,19 +97,38 @@ public class HQBehavior extends RobotBehavior {
    * To be called only on turn 1
    */
   public static void initialGuessMapSymmetry() {
-    if (ALLY_HQ.x == ENEMY_HQ.x) {
-      if (ALLY_HQ.x * 2 == MAP_WIDTH - 1) {
+    int ax = ALLY_HQ.x, ay = ALLY_HQ.y;
+    int ex = ENEMY_HQ.x, ey = ENEMY_HQ.y;
+
+    if (ax == ex) { // equal x-values of HQs
+      if (ax * 2 == MAP_WIDTH - 1) {
         MAP_SYMMETRY = SymmetryType.ROTATION_OR_VERTICAL;
       } else {
         MAP_SYMMETRY = SymmetryType.VERTICAL_REFLECTION;
       }
-    } else if (ALLY_HQ.y == ENEMY_HQ.y) {
-      if (ALLY_HQ.y * 2 == MAP_HEIGHT - 1) {
+    } else if (ay == ey) { // equal y-values of HQs
+      if (ay * 2 == MAP_HEIGHT - 1) {
         MAP_SYMMETRY = SymmetryType.ROTATION_OR_HORIZONTAL;
       } else {
         MAP_SYMMETRY = SymmetryType.HORIZONTAL_REFLECTION;
       }
-    } else {
+    } else if (MAP_WIDTH == MAP_HEIGHT) { // square map; maybe diag reflection
+      if (ax == ey && ay == ex) {
+        if (ax == ay) {
+          MAP_SYMMETRY = SymmetryType.ROTATION_OR_DIAGONAL_SW_NE;
+        } else {
+          MAP_SYMMETRY = SymmetryType.DIAGONAL_REFLECTION_SW_NE;
+        }
+      } else if (ax + ey == MAP_WIDTH - 1 && ay + ex == MAP_HEIGHT - 1) {
+        if (ax == ay) {
+          MAP_SYMMETRY = SymmetryType.ROTATION_OR_DIAGONAL_SE_NW;
+        } else {
+          MAP_SYMMETRY = SymmetryType.DIAGONAL_REFLECTION_SE_NW;
+        }
+      } else {
+        MAP_SYMMETRY = SymmetryType.ROTATION;
+      }
+    } else { // that's all, folks (only remaining case)
       MAP_SYMMETRY = SymmetryType.ROTATION;
     }
     try {
