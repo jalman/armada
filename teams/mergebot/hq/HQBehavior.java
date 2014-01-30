@@ -49,7 +49,7 @@ public class HQBehavior extends RobotBehavior {
     if(hqDist > 500 && MAP_SIZE > 2400) {
       PASTRThreshold = 0;
     }
-    
+    if (ALLY_TEAM == Team.B) PASTRThreshold = 3;
   }
 
 
