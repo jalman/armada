@@ -94,11 +94,13 @@ public class SoldierBehavior extends RobotBehavior {
       @Override
       public void handleMessage(int[] message) throws GameActionException {
         MapLocation loc = new MapLocation(message[0], message[1]);
-        if (!buildingSecondPastr && mode == Mode.BUILD_PASTURE && !loc.equals(currentLocation)) {
-          System.out.println("received BUILDING_PASTR at " + loc);
+        if (!buildingSecondPastr) {
+          if (mode == Mode.BUILD_PASTURE && !loc.equals(currentLocation)) {
+            System.out.println("received BUILDING_PASTR at " + loc);
+            target = loc;
+            setMode(Mode.DEFEND_PASTURE, target);
+          }
           buildPastureLoc = null;
-          target = loc;
-          setMode(Mode.DEFEND_PASTURE, target);
         }
       }
     };
