@@ -79,14 +79,27 @@ public class Utils {
 
 
   /**
-   * Type of map symmetry
+   * Type of map symmetry. Reflection orientations describe the line connecting the HQs.
+   *
+   * Initially computed by HQ. If uncertain, every time we request the symmetric square,
+   * we check the possible symmetric squares, and throw a symmetry out if possible. If both
+   * squares are identical to the requested square, we'll pretend the map has rotational symmetry
+   * when returning, but maintain the uncertain state.
+   *
+   * This may be inefficient on maps which have both reflectional and rotational symmetry...
+   * On the other hand, we can't be certain about symmetry until such maps unless we check EVERY square.
    */
   public enum SymmetryType {
     ROTATION(true),
-    HORIZONTAL_REFLECTION(true), // reflect across a vertical line
-    VERTICAL_REFLECTION(true), // reflect across a horizontal line
+    HORIZONTAL_REFLECTION(true), // reflect across vertical line
+    VERTICAL_REFLECTION(true), // reflect across horizontal line
+    // diagonal reflection only occurs if MAP_WIDTH = MAP_HEIGHT = X
+    DIAGONAL_REFLECTION_SW_NE(true), // reflect across the line (0, 0)--(X, X)
+    DIAGONAL_REFLECTION_SE_NW(true), // reflect across the line (0, X)--(X, 0)
     ROTATION_OR_HORIZONTAL(false), // unsure about rotation or horizontal
     ROTATION_OR_VERTICAL(false), // unsure about rotation or vertical
+    ROTATION_OR_DIAGONAL_SW_NE(false), // etc
+    ROTATION_OR_DIAGONAL_SE_NW(false),
     ;
 
     public boolean certainty;
@@ -222,6 +235,10 @@ public class Utils {
           return new MapLocation(MAP_WIDTH - 1 - x, y);
         case VERTICAL_REFLECTION:
           return new MapLocation(x, MAP_HEIGHT - 1 - y);
+        case DIAGONAL_REFLECTION_SW_NE:
+          return new MapLocation(y, x);
+        case DIAGONAL_REFLECTION_SE_NW:
+          return new MapLocation(MAP_WIDTH - 1 - y, MAP_HEIGHT - 1 - x);
         case ROTATION_OR_HORIZONTAL:
           rotLoc = new MapLocation(MAP_WIDTH - 1 - x, MAP_HEIGHT - 1 - y);
           refLoc = new MapLocation(MAP_WIDTH - 1 - x, y);
@@ -252,6 +269,48 @@ public class Utils {
               || cowGrowthHere != COW_GROWTH[rotLoc.x][rotLoc.y]) {
             // check rotation first
             MAP_SYMMETRY = SymmetryType.VERTICAL_REFLECTION;
+            RC.broadcast(ReservedMessageType.MAP_SYMMETRY.channel(), MAP_SYMMETRY.ordinal());
+            return refLoc;
+          } else if (here != RC.senseTerrainTile(refLoc)
+              || cowGrowthHere != COW_GROWTH[refLoc.x][refLoc.y]) {
+            // then check reflection
+            MAP_SYMMETRY = SymmetryType.ROTATION;
+            RC.broadcast(ReservedMessageType.MAP_SYMMETRY.channel(), MAP_SYMMETRY.ordinal());
+            return rotLoc;
+          } else {
+            // if both work, return rotationally symmetric guy
+            return rotLoc;
+          }
+        case ROTATION_OR_DIAGONAL_SW_NE:
+          rotLoc = new MapLocation(MAP_WIDTH - 1 - x, MAP_HEIGHT - 1 - y);
+          refLoc = new MapLocation(y, x);
+          here = RC.senseTerrainTile(loc);
+          cowGrowthHere = COW_GROWTH[x][y];
+          if (here != RC.senseTerrainTile(rotLoc)
+              || cowGrowthHere != COW_GROWTH[rotLoc.x][rotLoc.y]) {
+            // check rotation first
+            MAP_SYMMETRY = SymmetryType.DIAGONAL_REFLECTION_SW_NE;
+            RC.broadcast(ReservedMessageType.MAP_SYMMETRY.channel(), MAP_SYMMETRY.ordinal());
+            return refLoc;
+          } else if (here != RC.senseTerrainTile(refLoc)
+              || cowGrowthHere != COW_GROWTH[refLoc.x][refLoc.y]) {
+            // then check reflection
+            MAP_SYMMETRY = SymmetryType.ROTATION;
+            RC.broadcast(ReservedMessageType.MAP_SYMMETRY.channel(), MAP_SYMMETRY.ordinal());
+            return rotLoc;
+          } else {
+            // if both work, return rotationally symmetric guy
+            return rotLoc;
+          }
+        case ROTATION_OR_DIAGONAL_SE_NW:
+          rotLoc = new MapLocation(MAP_WIDTH - 1 - x, MAP_HEIGHT - 1 - y);
+          refLoc = new MapLocation(MAP_WIDTH - 1 - y, MAP_HEIGHT - 1 - x);
+          here = RC.senseTerrainTile(loc);
+          cowGrowthHere = COW_GROWTH[x][y];
+          if (here != RC.senseTerrainTile(rotLoc)
+              || cowGrowthHere != COW_GROWTH[rotLoc.x][rotLoc.y]) {
+            // check rotation first
+            MAP_SYMMETRY = SymmetryType.DIAGONAL_REFLECTION_SE_NW;
             RC.broadcast(ReservedMessageType.MAP_SYMMETRY.channel(), MAP_SYMMETRY.ordinal());
             return refLoc;
           } else if (here != RC.senseTerrainTile(refLoc)
@@ -319,6 +378,53 @@ public class Utils {
           default:
             return d;
         }
+      case DIAGONAL_REFLECTION_SW_NE:
+        switch (d) {
+          case NORTH:
+            return Direction.WEST;
+          case NORTH_EAST:
+            return Direction.SOUTH_WEST;
+          case EAST:
+            return Direction.SOUTH;
+          case SOUTH_EAST:
+            return Direction.SOUTH_EAST;
+          case SOUTH:
+            return Direction.EAST;
+          case SOUTH_WEST:
+            return Direction.NORTH_EAST;
+          case WEST:
+            return Direction.NORTH;
+          case NORTH_WEST:
+            return Direction.NORTH_WEST;
+          default:
+            return d;
+        }
+      case DIAGONAL_REFLECTION_SE_NW:
+        switch (d) {
+          case NORTH:
+            return Direction.EAST;
+          case NORTH_EAST:
+            return Direction.NORTH_EAST;
+          case EAST:
+            return Direction.NORTH;
+          case SOUTH_EAST:
+            return Direction.NORTH_WEST;
+          case SOUTH:
+            return Direction.WEST;
+          case SOUTH_WEST:
+            return Direction.SOUTH_WEST;
+          case WEST:
+            return Direction.SOUTH;
+          case NORTH_WEST:
+            return Direction.SOUTH_EAST;
+          default:
+            return d;
+        }
+      case ROTATION_OR_HORIZONTAL: // all fall through
+      case ROTATION_OR_VERTICAL:
+      case ROTATION_OR_DIAGONAL_SW_NE:
+      case ROTATION_OR_DIAGONAL_SE_NW:
+        return d.opposite(); // assume rotation for now
       default:
         return null;
     }
