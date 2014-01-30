@@ -22,6 +22,8 @@ public class HQBehavior extends RobotBehavior {
   private final AttackSystem attackSystem = new AttackSystem();
 
   public static final int[] yrangefornoise = { 17, 17, 17, 17, 16, 16, 16, 15, 15, 14, 14, 13, 12, 11, 10, 8, 6, 3 };
+  
+  //public static final int[]
 
   public static MapLocation[] PASTRLocs;
   public static boolean PASTRMessageSent = false, PASTRBuilt = false;
@@ -137,14 +139,22 @@ public class HQBehavior extends RobotBehavior {
 
   }
   public static float defendabilityScore(MapLocation loc, Direction toEnemy) {
+    //if (Clock.getRoundNum() != 400) return 0.4f;
     //this is pretty inefficient at the moment
     int ourSquaresFree = 0, ourSquaresTotal = 0, theirSquaresFree = 0, theirSquaresTotal = 0;
-    for (int i=-5; i<=5; ++i) {
-      for (int j=-5; j<=5; ++j) {
-        MapLocation l = new MapLocation(loc.x + i, loc.y + j);
+    System.out.println(Clock.getBytecodeNum() + "," + Clock.getRoundNum());
+    MapLocation l;
+    System.out.println(toEnemy.dx + "/" + toEnemy.dy);
+    //String s1 = "", s2 = "";
+    for (int i=-4; i<=4; ++i) {
+      for (int j=-4; j<=4; ++j) {
+        l = loc.add(i,j);
         if (l.x >= 0 && l.y >= 0 && l.x < MAP_WIDTH && l.y < MAP_HEIGHT) {
           Direction toL = loc.directionTo(l);
           if (toL == toEnemy || toL.rotateLeft() == toEnemy || toL.rotateRight() == toEnemy) {
+            /*if (!s1.equals("")) { s1 += ","; s2 += ","; }
+            s1 += "" + (l.x - loc.x);
+            s2 += "" + (l.y - loc.y);*/
             if ((i >= -2 && i <= 2) && (j >= -2 && j <= 2)) {
               ourSquaresFree += (RC.senseTerrainTile(l) != TerrainTile.VOID ? 1 : 0);
               ourSquaresTotal ++;
@@ -157,6 +167,8 @@ public class HQBehavior extends RobotBehavior {
         }
       }
     }
+    //System.out.println(s1); System.out.println(s2);
+    System.out.println(Clock.getBytecodeNum() + "," + Clock.getRoundNum() + "!");
     //System.out.println("defend (" + loc.x + "," + loc.y + ") -> (" + toEnemy.dx + "," + toEnemy.dy + "): " + ourSquaresFree + "/" + ourSquaresTotal + " vs " + theirSquaresFree + "/" + theirSquaresTotal + " | " + 
     //((float)ourSquaresFree / ourSquaresTotal - (float)theirSquaresFree / theirSquaresTotal) + " | turn " + Clock.getRoundNum());
     return (float)ourSquaresFree / ourSquaresTotal - (float)theirSquaresFree / theirSquaresTotal;
@@ -176,8 +188,16 @@ public class HQBehavior extends RobotBehavior {
     if(!PASTRMessageSent && RC.senseRobotCount() > PASTRThreshold) {
       messagingSystem.writeBuildPastureMessage(PASTRLocs[0]);
       //testing
-      //defendabilityScore(PASTRLocs[0], PASTRLocs[0].directionTo(ENEMY_HQ));
-      //defendabilityScore(PASTRLocs[0].add(Direction.NORTH), PASTRLocs[0].directionTo(ENEMY_HQ));
+      if (Clock.getRoundNum() == 400) {
+        defendabilityScore(PASTRLocs[0], Direction.NORTH);
+        defendabilityScore(PASTRLocs[0], Direction.NORTH_EAST);
+        defendabilityScore(PASTRLocs[0], Direction.EAST);
+        defendabilityScore(PASTRLocs[0], Direction.SOUTH_EAST);
+        defendabilityScore(PASTRLocs[0], Direction.SOUTH);
+        defendabilityScore(PASTRLocs[0], Direction.SOUTH_WEST);
+        defendabilityScore(PASTRLocs[0], Direction.WEST);
+        defendabilityScore(PASTRLocs[0], Direction.NORTH_WEST);
+      }
       //defendabilityScore(PASTRLocs[0].add(Direction.NORTH).add(Direction.NORTH), PASTRLocs[0].directionTo(ENEMY_HQ));
     }
 

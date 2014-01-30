@@ -37,7 +37,7 @@ public class NathanMicro {
 
     if (RC.isActive()) {
       Robot[] nearbyTeam = RC.senseNearbyGameObjects(Robot.class, 35, ALLY_TEAM);
-      float allyWeight = 0, enemyWeight = 0;
+      double allyWeight = 0, enemyWeight = 0;
 
       RobotInfo ri;
 
@@ -45,34 +45,7 @@ public class NathanMicro {
       int nearestPastrDistance = 1000000;
 
       // find ally weight
-      allyWeight += RC.getHealth();
-      for (int i = 0; i < nearbyTeam.length; ++i) {
-        ri = RC.senseRobotInfo(nearbyTeam[i]);
-
-        switch (ri.type){
-          case SOLDIER:
-        	if (ri.isConstructing) {
-        		break;
-        	}
-        	
-            Robot[] stuff = RC.senseNearbyGameObjects(Robot.class, ri.location, 17, ENEMY_TEAM);
-            boolean inCombat = false;
-            for (int j=0; j<stuff.length; ++j) {
-              if (ri.location.distanceSquaredTo(RC.senseRobotInfo(stuff[j]).location) <= 10) {
-                inCombat = true;
-              }
-            }
-            if (inCombat) {
-              allyWeight += ri.health;
-            }
-            else {
-              allyWeight += Math.max(0, ri.health - ALLY_WEIGHT_DECAY * lazySqrt(ri.location.distanceSquaredTo(currentLocation)));
-            }
-            break;
-          default:
-            break;
-        }
-      }
+      allyWeight = RC.getHealth() + allyWeightAboutPoint(currentLocation, nearbyTeam);
       // find enemy weight
       enemyWeight = enemyWeightAboutPoint(currentLocation, nearbyEnemies);
 
@@ -118,36 +91,38 @@ public class NathanMicro {
       }
       if (JON_SCHNEIDER && RC.getHealth() >= 50) JON_SCHNEIDER = false;
       
-      if (!JON_SCHNEIDER && (allyWeight >= enemyWeight || GREAT_LUGE)) {
+      if ((!JON_SCHNEIDER || (RC.getHealth() >= 30 && allyWeight >= enemyWeight + 100)) && (allyWeight >= enemyWeight || GREAT_LUGE)) {
         // choose an aggressive option
     	  
         if (RC.isActive()) { // willing to attack!
           MapLocation target = getHighestPriority(nearbyEnemies);
           MapLocation nextLoc = new MapLocation(-1, -1);
           String zyzzl = "";
-          float nextWeight = 0;
+          double nextAllyWeight = 0, nextEnemyWeight = 0;
           if (!isHelpingOut && target == null) {
             // if we don't have to do anything, consider moving towards a nearby enemy
         	  
             if (nearbyEnemies.length > 0) {
             	Direction nd = currentLocation.directionTo(nearbyEnemies[0].location);
             	nextLoc = currentLocation.add(nd);
-            	nextWeight = enemyWeightAboutPoint(nextLoc, nearbyEnemies);
+              nextAllyWeight = RC.getHealth() + allyWeightAboutPoint(currentLocation, nearbyTeam);
+            	nextEnemyWeight = enemyWeightAboutPoint(nextLoc, nearbyEnemies);
             	target = nearbyEnemies[0].location;
             }
           }
           else if (isHelpingOut && target == null) {
             nextLoc = currentLocation.add(currentLocation.directionTo(helpingLoc));
-            nextWeight = enemyWeightAboutPoint(nextLoc, nearbyEnemies);
+            nextAllyWeight = RC.getHealth() + allyWeightAboutPoint(currentLocation, nearbyTeam);
+            nextEnemyWeight = enemyWeightAboutPoint(nextLoc, nearbyEnemies);
             //target = getHighestPriority(nextLoc, nearbyEnemies);
           }
-          zyzzl += "///" + "nextWeight: " + nextWeight + " at (" + nextLoc.x + "," + nextLoc.y + "))";
+          zyzzl += "///" + "nextWeight: " + nextEnemyWeight + " at (" + nextLoc.x + "," + nextLoc.y + "))";
 
-          if (!isHelpingOut && (nearbyEnemies.length == 0 || (enemiesInRange.length == 0 && allyWeight >= POWER_ADVANTAGE * nextWeight))) {
+          if (!isHelpingOut && (nearbyEnemies.length == 0 || (enemiesInRange.length == 0 && nextAllyWeight >= POWER_ADVANTAGE * nextEnemyWeight))) {
             // willing to move forward and attack!
             String ss = "";
             for (int z=0; z<nearbyEnemies.length; ++z) ss += "," + nearbyEnemies[z].location.x + "," + nearbyEnemies[z].location.y;
-            String zzss = "moving forward (enemy weight: " + nextWeight + " at (" + nextLoc.x + "," + nextLoc.y + "))" + (target == null ? " -- ceding control" : locToString(target)) + " | " + zyzzl + " | turn " + Clock.getRoundNum();
+            String zzss = "moving forward (enemy weight: " + nextEnemyWeight + " at (" + nextLoc.x + "," + nextLoc.y + "))" + (target == null ? " -- ceding control" : locToString(target)) + " | " + zyzzl + " | turn " + Clock.getRoundNum();
             RC.setIndicatorString(2, zzss);
             if (target != null) {
         		setTarget(target);
@@ -168,14 +143,14 @@ public class NathanMicro {
               return false;
             }
           }
-          else if (isHelpingOut && allyWeight >= POWER_ADVANTAGE * nextWeight && target == null) {
+          else if (isHelpingOut && nextAllyWeight >= POWER_ADVANTAGE * nextEnemyWeight && target == null) {
             Direction newDir = currentLocation.directionTo(helpingLoc);
             if (RC.isActive() && newDir != Direction.NONE && newDir != Direction.OMNI) {
               // go straight towards the target point
               // the point of the helping out flag is to get manpower ASAP
             	String sz = "";
             	for (int z=0; z<nearbyEnemies.length; ++z) sz += "/" + locToString(nearbyEnemies[z].location);
-              RC.setIndicatorString(2, "/// helping out " + locToString(nextLoc) + "," + allyWeight + "," + nextWeight + "|" + sz);
+              RC.setIndicatorString(2, "/// helping out " + locToString(nextLoc) + "," + nextAllyWeight + "," + nextEnemyWeight + "|" + sz);
               if (RC.canMove(newDir)) {
                 mover.setTarget(currentLocation.add(newDir));
                 mover.move();
@@ -312,6 +287,39 @@ public class NathanMicro {
     if (k <= 4) return 2;
     if (k <= 9) return 3;
     return 4;
+  }
+  public static float allyWeightAboutPoint(MapLocation loc, Robot[] nearbyEnemies) throws GameActionException {
+    float allyWeight = 0;
+    Robot[] nearbyTeam = RC.senseNearbyGameObjects(Robot.class, 35, ALLY_TEAM);
+    
+    for (int i = 0; i < nearbyTeam.length; ++i) {
+      RobotInfo ri = RC.senseRobotInfo(nearbyTeam[i]);
+
+      switch (ri.type){
+        case SOLDIER:
+        if (ri.isConstructing) {
+          break;
+        }
+        
+          Robot[] stuff = RC.senseNearbyGameObjects(Robot.class, ri.location, 17, ENEMY_TEAM);
+          boolean inCombat = false;
+          for (int j=0; j<stuff.length; ++j) {
+            if (ri.location.distanceSquaredTo(RC.senseRobotInfo(stuff[j]).location) <= 10) {
+              inCombat = true;
+            }
+          }
+          if (inCombat) {
+            allyWeight += ri.health;
+          }
+          else {
+            allyWeight += Math.max(0, ri.health - ALLY_WEIGHT_DECAY * lazySqrt(ri.location.distanceSquaredTo(currentLocation)));
+          }
+          break;
+        default:
+          break;
+      }
+    }
+    return allyWeight;
   }
   public static float enemyWeightAboutPoint(MapLocation loc, RobotInfo[] nearbyEnemies) {
     float weight = 0;
