@@ -2,14 +2,13 @@ package mergebot.hq;
 
 import static mergebot.utils.Utils.*;
 
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.*;
 
-import mergebot.utils.Pair;
+import mergebot.utils.*;
 import battlecode.common.*;
 
 public class PastureFinder {
-  public static MapLocation[] cowMiningLocations() {
+  public static Pair<MapLocation, Double>[] cowMiningLocations() {
     // System.out.println(" > " + Clock.getBytecodeNum());
     int xparts = MAP_WIDTH < 50 ? 5 : 7;
     int yparts = MAP_HEIGHT < 50 ? 5 : 7;
@@ -17,15 +16,17 @@ public class PastureFinder {
     // ArraySet<Pair<MapLocation, Double>> pastrLocs = new ArraySet<Pair<MapLocation, Double>>(50);
     Pair<MapLocation, Double>[] pastrLocs = new Pair[(1 + xparts) * (1 + yparts)];
     int num = 0;
-    for (int x = xparts - 1; x >= 0; x--) {
-      for (int y = yparts - 1; y >= 0; y--) {
+    for (int x = xparts; --x >= 0;) {
+      for (int y = yparts; --y >= 0;) {
         MapLocation inittry =
             // new MapLocation(x * (MAP_WIDTH) / xparts, y * (MAP_HEIGHT) / yparts);
             new MapLocation((2 * x + 1) * (MAP_WIDTH) / (2 * xparts), (2 * y + 1) * (MAP_HEIGHT)
                 / (2 * yparts));
-        if (inittry.distanceSquaredTo(ALLY_HQ) < inittry.distanceSquaredTo(ENEMY_HQ)) {
+        int distDiff = inittry.distanceSquaredTo(ENEMY_HQ) - inittry.distanceSquaredTo(ALLY_HQ);
+        if (distDiff > 0) {
           Pair<MapLocation, Double> pastrLoc = gradientAscent(inittry);
           if (pastrLoc != null && pastrLoc.second > 0) {
+            pastrLoc.second += distDiff / 4;
             pastrLocs[num++] = pastrLoc;
           }
           // ret[i] = gradientDescentOnNegativeCowScalarField(inittry.x, inittry.y, 6);
@@ -43,15 +44,15 @@ public class PastureFinder {
       }
     });
 
-    MapLocation[] locs = new MapLocation[num];
-    while (num-- > 0) {
-      locs[num] = pastrLocs[num].first;
-    }
-
+    // MapLocation[] locs = new MapLocation[num];
+    // while (num-- > 0) {
+    // locs[num] = pastrLocs[num].first;
+    // }
+    //
     // System.out.println(Clock.getBytecodeNum());
     System.out.println("Finished finding cow mining locations.");
 
-    return locs;
+    return pastrLocs;
   }
 
   private static double effectiveCowGrowth(MapLocation loc) {
@@ -157,7 +158,8 @@ public class PastureFinder {
         MapLocation loc = current.add(dir);
         dir = dir.rotateRight();
         // remove utils function call for bytecode savings?
-        if (!isPathable(loc) || tried[loc.x][loc.y]) continue;
+        if (!RC.senseTerrainTile(loc).isTraversableAtHeight(RobotLevel.ON_GROUND)
+            || tried[loc.x][loc.y]) continue;
         tried[loc.x][loc.y] = true;
         double estimate = estimateCowGrowth(loc);
         if (estimate > best) {

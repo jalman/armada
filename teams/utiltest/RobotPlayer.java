@@ -28,6 +28,19 @@ public class RobotPlayer {
 
     if (rc.getType() == RobotType.SOLDIER) {
       System.out.println("born on round " + Clock.getRoundNum());
+
+      countBytecodes(false);
+      for (int i = 100; --i >= 0;) {
+        dx += 2;
+      }
+      countBytecodes(true);
+
+      countBytecodes(false);
+      for (int i = 100; i >= 0; --i) {
+        dx += 2;
+      }
+      countBytecodes(true);
+
       while (true)
         rc.yield();
     } else if (rc.getType() == RobotType.HQ) {

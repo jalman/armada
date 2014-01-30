@@ -1,6 +1,5 @@
 package mergebot;
 
-
 public class Strategy {
 
   public enum GamePhase {
@@ -9,36 +8,46 @@ public class Strategy {
     ENDGAME;
   }
 
-  public enum InitialStrategy {
-    DOUBLE_PASTR(0, 2, 2), // immediately build 2 pastrs
-    EARLY_SINGLE_PASTR(3, 100, 1), // build pastr after 3
-    SINGLE_PASTR(5, 100, 1), // build pastr after 5
-    LATE_SINGLE_PASTR(7, 100, 1), // build pastr after 7
-    RUSH(11, 100, 1), // build pastr after 11
-    ;
+  public int desiredPASTRNum; // desired # PASTRs
+  public int PASTRThreshold; // # bots required to build a PASTR
+  public int secondPASTRThreshold; // # bots required to build second PASTR
+  public boolean aggressive; // whether to be aggressive or not (maybe change to int and use in
+                             // deciding to defend/attack and/or in micro?)
 
-    public int PASTRThreshold, secondPASTRThreshold;
-    public int desiredPASTRNum;
-
-    private InitialStrategy(int firstThreshold, int secondThreshold, int PASTRNum) {
-      this.PASTRThreshold = firstThreshold;
-      this.secondPASTRThreshold = secondThreshold;
-      this.desiredPASTRNum = PASTRNum;
-    }
+  public Strategy(int desiredPASTRNum, int PASTRThreshold, int secondPASTRThreshold,
+      boolean aggressive) {
+    this.desiredPASTRNum = desiredPASTRNum;
+    this.PASTRThreshold = PASTRThreshold;
+    this.secondPASTRThreshold = secondPASTRThreshold;
+    this.aggressive = aggressive;
   }
 
-  public enum MidgameStrategy {
-    DOUBLE_PASTR_AGGRESSIVE(2, true),
-    // DOUBLE_PASTR_PASSIVE,
-    SINGLE_PASTR_AGGRESSIVE(1, true),
-    SINGLE_PASTR_PASSIVE(1, false), ;
+  public static final Strategy INIT_DOUBLE_PASTR = new Strategy(2, 0, 2, true);
+  public static final Strategy INIT_EARLY_SINGLE_PASTR = new Strategy(1, 3, 100, true);
+  public static final Strategy INIT_SINGLE_PASTR = new Strategy(1, 5, 100, true);
+  public static final Strategy INIT_LATE_SINGLE_PASTR = new Strategy(1, 7, 100, true);
+  public static final Strategy INIT_RUSH = new Strategy(1, 11, 100, true);
 
-    public int desiredPASTRNum;
-    public boolean aggressive;
+  public static final Strategy MID_DOUBLE_PASTR_AGGRESSIVE = new Strategy(2, 5, 12, true);
+  public static final Strategy MID_SINGLE_PASTR_AGGRESSIVE = new Strategy(1, 5, 100, true);
 
-    private MidgameStrategy(int desiredPASTRNum, boolean aggressive) {
-      this.desiredPASTRNum = desiredPASTRNum;
-      this.aggressive = aggressive;
+  /**
+   * Since we'll mostly be using the constants defined above, we can usually use == instead of .equals
+   */
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == null) return false;
+    if (obj instanceof Strategy) {
+      Strategy s = (Strategy) obj;
+      return (this.desiredPASTRNum == s.desiredPASTRNum && this.PASTRThreshold == s.PASTRThreshold
+          && this.secondPASTRThreshold == s.secondPASTRThreshold && this.aggressive == s.aggressive);
     }
+    return false;
+  }
+
+  @Override
+  public String toString() {
+    return "p: " + this.desiredPASTRNum + ", 1: " + this.PASTRThreshold + ", 2: "
+        + this.secondPASTRThreshold + ", a: " + this.aggressive;
   }
 }

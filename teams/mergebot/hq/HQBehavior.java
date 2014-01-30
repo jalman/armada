@@ -1,10 +1,11 @@
 package mergebot.hq;
 
 import static mergebot.utils.Utils.*;
+
+import java.util.*;
+
 import mergebot.*;
 import mergebot.Strategy.GamePhase;
-import mergebot.Strategy.InitialStrategy;
-import mergebot.Strategy.MidgameStrategy;
 import mergebot.messaging.*;
 import mergebot.messaging.MessagingSystem.MessageType;
 import mergebot.messaging.MessagingSystem.ReservedMessageType;
@@ -37,7 +38,7 @@ public class HQBehavior extends RobotBehavior {
   /**
    * Good locations for PASTRs that we've determined.
    */
-  public static MapLocation[] goodPASTRLocs;
+  public static Pair<MapLocation, Double>[] goodPASTRLocs, secondPASTRLocs = null;
 
   /**
    * Approximate locations of PASTRs we've actually taken.
@@ -72,8 +73,8 @@ public class HQBehavior extends RobotBehavior {
   private final Dijkstra dijkstra = new Dijkstra(HybridMover.DIJKSTRA_CENTER);
 
   public static Strategy.GamePhase gamePhase;
-  public static Strategy.InitialStrategy initialStrategy;
-  public static Strategy.MidgameStrategy midgameStrategy;
+  public static Strategy currentStrategy;
+  public static Strategy initialStrategy, midgameStrategy;
 
 
   public HQBehavior() {
@@ -88,47 +89,60 @@ public class HQBehavior extends RobotBehavior {
 
     initialGuessMapSymmetry();
     macro();
-    pickStrategy();
 
     goodPASTRLocs = PastureFinder.cowMiningLocations();
+
+    pickStrategy();
+
     // TODO: take into account the strategy
     if (goodPASTRLocs.length > 0) {
       try {
-        messagingSystem.writeRallyPoint(goodPASTRLocs[0]);
+        messagingSystem.writeRallyPoint(goodPASTRLocs[0].first);
       } catch (GameActionException e) {
         e.printStackTrace();
       }
     }
   }
 
+  /**
+   * Pick a strategy based on map properties
+   */
   private static void pickStrategy() {
     gamePhase = GamePhase.OPENING;
     int hqDist = ALLY_HQ.distanceSquaredTo(ENEMY_HQ);
     if (MAP_SIZE > 2500) {
       if (hqDist > 1200) {
-        initialStrategy = InitialStrategy.DOUBLE_PASTR;
-        midgameStrategy = MidgameStrategy.DOUBLE_PASTR_AGGRESSIVE;
+        initialStrategy = Strategy.INIT_DOUBLE_PASTR;
+        midgameStrategy = Strategy.MID_DOUBLE_PASTR_AGGRESSIVE;
       } else if (hqDist > 400) {
-        initialStrategy = InitialStrategy.EARLY_SINGLE_PASTR;
-        midgameStrategy = MidgameStrategy.SINGLE_PASTR_AGGRESSIVE;
+        initialStrategy = Strategy.INIT_EARLY_SINGLE_PASTR;
+        midgameStrategy = Strategy.MID_SINGLE_PASTR_AGGRESSIVE;
       } else {
-        initialStrategy = InitialStrategy.SINGLE_PASTR;
-        midgameStrategy = MidgameStrategy.SINGLE_PASTR_AGGRESSIVE;
+        initialStrategy = Strategy.INIT_SINGLE_PASTR;
+        midgameStrategy = Strategy.MID_SINGLE_PASTR_AGGRESSIVE;
       }
     } else if (MAP_SIZE > 1200) {
       if (hqDist > 1200) {
-        initialStrategy = InitialStrategy.SINGLE_PASTR;
-        midgameStrategy = MidgameStrategy.SINGLE_PASTR_AGGRESSIVE;
+        initialStrategy = Strategy.INIT_SINGLE_PASTR;
+        midgameStrategy = Strategy.MID_SINGLE_PASTR_AGGRESSIVE;
       } else {
-        initialStrategy = InitialStrategy.LATE_SINGLE_PASTR;
-        midgameStrategy = MidgameStrategy.SINGLE_PASTR_AGGRESSIVE;
+        initialStrategy = Strategy.INIT_LATE_SINGLE_PASTR;
+        midgameStrategy = Strategy.MID_SINGLE_PASTR_AGGRESSIVE;
       }
     } else {
-      initialStrategy = InitialStrategy.LATE_SINGLE_PASTR;
-      midgameStrategy = MidgameStrategy.SINGLE_PASTR_AGGRESSIVE;
+      initialStrategy = Strategy.INIT_LATE_SINGLE_PASTR;
+      midgameStrategy = Strategy.MID_SINGLE_PASTR_AGGRESSIVE;
     }
     RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy + ", phase "
         + gamePhase);
+    currentStrategy = initialStrategy;
+
+    try {
+      determineNewPASTRLocations();
+    } catch (GameActionException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
   }
 
 
@@ -149,66 +163,8 @@ public class HQBehavior extends RobotBehavior {
     };
   }
 
-  @Override
-  public void beginRound() throws GameActionException {
-    Utils.updateBuildingUtils();
-    // RC.setIndicatorString(0, generators.size + " generators. " + Double.toString(actualFlux) +
-    // " is pow");
-    alliedRobots = RC.senseNearbyGameObjects(Robot.class, currentLocation, 10000, ALLY_TEAM);
-    numBots = alliedRobots.length;
-
-    turnsSinceLastSpawn++;
-
-    switch (gamePhase) {
-      case OPENING:
-        if (ALLY_PASTR_COUNT > initialStrategy.desiredPASTRNum) {
-          gamePhase = GamePhase.MIDGAME;
-        }
-        RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy
-            + ", phase "
-            + gamePhase);
-        break;
-      case MIDGAME:
-        RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy
-            + ", phase "
-            + gamePhase);
-        break;
-      case ENDGAME:
-        RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy
-            + ", phase "
-            + gamePhase);
-        break;
-      default:
-        break;
-    }
-
-    messagingSystem.beginRound(handlers);
-  }
-
-  @Override
-  public void run() throws GameActionException {
-    attackSystem.tryAttack();
-    macro();
-    PASTRMessages();
-    considerTeamAttacking();
-  }
-
-  private boolean dijkstraFinished = false;
-
-  @Override
-  public void endRound() throws GameActionException {
-    messagingSystem.endRound();
-    if (!dijkstraFinished && currentRound <= 2000) {
-      dijkstra.compute(9000, true);
-      if (dijkstra.done()) {
-        System.out.println("Dijkstra finished on round " + currentRound);
-        dijkstraFinished = true;
-      }
-    }
-  }
-
   /**
-   * To be called only on turn 1
+   * To be called only on turn 0.
    */
   public static void initialGuessMapSymmetry() {
     int ax = ALLY_HQ.x, ay = ALLY_HQ.y;
@@ -250,6 +206,75 @@ public class HQBehavior extends RobotBehavior {
     } catch (GameActionException e) {
       e.printStackTrace();
     }
+  }
+
+
+  @Override
+  public void beginRound() throws GameActionException {
+    Utils.updateBuildingUtils();
+    // RC.setIndicatorString(0, generators.size + " generators. " + Double.toString(actualFlux) +
+    // " is pow");
+    alliedRobots = RC.senseNearbyGameObjects(Robot.class, currentLocation, 10000, ALLY_TEAM);
+    numBots = alliedRobots.length;
+
+    turnsSinceLastSpawn++;
+
+    messagingSystem.beginRound(handlers);
+  }
+
+  @Override
+  public void run() throws GameActionException {
+    attackSystem.tryAttack();
+    macro();
+    executeStrategy();
+    considerTeamAttacking();
+  }
+
+  private boolean dijkstraFinished = false;
+
+  @Override
+  public void endRound() throws GameActionException {
+    messagingSystem.endRound();
+    if (!dijkstraFinished && currentRound <= 2000) {
+      dijkstra.compute(9000, true);
+      if (dijkstra.done()) {
+        System.out.println("Dijkstra finished on round " + currentRound);
+        dijkstraFinished = true;
+      }
+    }
+  }
+
+  /**
+   * Do the strategic (read: PASTR-related) stuff.
+   * @throws GameActionException
+   */
+  private static void executeStrategy() throws GameActionException {
+    strategyloop: while (true) {
+      switch (gamePhase) {
+        case OPENING:
+          if (ALLY_PASTR_COUNT > initialStrategy.desiredPASTRNum) {
+            gamePhase = GamePhase.MIDGAME;
+            currentStrategy = midgameStrategy;
+            break;
+          }
+          RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy
+              + ", phase " + gamePhase);
+          break strategyloop;
+        case MIDGAME:
+          RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy
+              + ", phase " + gamePhase);
+          break strategyloop;
+        case ENDGAME:
+          RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy
+              + ", phase " + gamePhase);
+          break strategyloop;
+        default:
+          break strategyloop;
+      }
+    }
+
+    // determineNewPASTRLocations();
+    PASTRMessages();
   }
 
   private static void considerTeamAttacking() throws GameActionException {
@@ -303,6 +328,32 @@ public class HQBehavior extends RobotBehavior {
     return (float)ourSquaresFree / ourSquaresTotal - (float)theirSquaresFree / theirSquaresTotal;
   }
 
+  @SuppressWarnings("unchecked")
+  private static void determineNewPASTRLocations() throws GameActionException {
+    // TODO actually determine stuff
+    requestedPASTRLoc = goodPASTRLocs[0].first;
+    if (currentStrategy.desiredPASTRNum == 2) {
+      if (secondPASTRLocs == null) {
+        secondPASTRLocs = new Pair[goodPASTRLocs.length];
+
+        for (int i = goodPASTRLocs.length; --i >= 0;) {
+          Pair<MapLocation, Double> locPair = goodPASTRLocs[i];
+          secondPASTRLocs[i] =
+              new Pair<MapLocation, Double>(locPair.first, locPair.second
+                  + requestedPASTRLoc.distanceSquaredTo(locPair.first));
+        }
+
+        Arrays.sort(secondPASTRLocs, new Comparator<Pair<MapLocation, Double>>() {
+          @Override
+          public int compare(Pair<MapLocation, Double> a, Pair<MapLocation, Double> b) {
+            return Double.compare(b.second, a.second);
+          }
+        });
+      }
+      secondRequestedPASTRLoc = secondPASTRLocs[0].first; // TODO improve this choice
+    }
+  }
+
   private static void PASTRMessages() throws GameActionException {
     if (takenPASTRLocs.getSize() > ALLY_PASTR_COUNT) { // if PASTR dies
       PASTRMessageSent = false;
@@ -319,16 +370,14 @@ public class HQBehavior extends RobotBehavior {
     }
 
     if (!PASTRMessageSent && numBots > initialStrategy.PASTRThreshold
-        && ALLY_PASTR_COUNT < midgameStrategy.desiredPASTRNum) {
-      // TODO don't always use midgame strategy
-      requestedPASTRLoc = goodPASTRLocs[0];
+        && ALLY_PASTR_COUNT < currentStrategy.desiredPASTRNum) {
       messagingSystem.writeBuildPastureMessage(requestedPASTRLoc);
     }
 
     /**
      * Special-case code for the second PASTR in an early-game 2-PASTR strat
      */
-    if (gamePhase == GamePhase.OPENING && initialStrategy == InitialStrategy.DOUBLE_PASTR
+    if (gamePhase == GamePhase.OPENING && initialStrategy == Strategy.INIT_DOUBLE_PASTR
         && numSoldiersSpawned >= 3) {
 
       if (secondPASTRMessageSent && numberRequestedForSecondPASTR == 2 && ALLY_PASTR_COUNT > 0) {
@@ -343,8 +392,7 @@ public class HQBehavior extends RobotBehavior {
       }
 
       if (turnsSinceLastSpawn == 1 && numberRequestedForSecondPASTR < 2
-          && numBots > initialStrategy.secondPASTRThreshold) {
-        secondRequestedPASTRLoc = goodPASTRLocs[1]; // TODO improve this choice
+          && numBots > currentStrategy.secondPASTRThreshold) {
         // This depends on macro() happening before PASTRMessages()!!!!!!!
         messagingSystem.writeMessage(MessageType.BUILD_SECOND_SIMULTANEOUS_PASTURE,
             mostRecentlySpawnedSoldierID, secondRequestedPASTRLoc.x, secondRequestedPASTRLoc.y);
