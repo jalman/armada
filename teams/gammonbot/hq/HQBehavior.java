@@ -1,17 +1,17 @@
-package mergebot.hq;
+package gammonbot.hq;
 
-import static mergebot.utils.Utils.*;
+import static gammonbot.utils.Utils.*;
 
 import java.util.*;
 
-import mergebot.*;
-import mergebot.Strategy.GamePhase;
-import mergebot.messaging.*;
-import mergebot.messaging.MessagingSystem.MessageType;
-import mergebot.messaging.MessagingSystem.ReservedMessageType;
-import mergebot.nav.*;
-import mergebot.utils.*;
-import mergebot.utils.Utils.SymmetryType;
+import gammonbot.*;
+import gammonbot.Strategy.GamePhase;
+import gammonbot.messaging.*;
+import gammonbot.messaging.MessagingSystem.MessageType;
+import gammonbot.messaging.MessagingSystem.ReservedMessageType;
+import gammonbot.nav.*;
+import gammonbot.utils.*;
+import gammonbot.utils.Utils.SymmetryType;
 import battlecode.common.*;
 
 public class HQBehavior extends RobotBehavior {
@@ -371,48 +371,41 @@ public class HQBehavior extends RobotBehavior {
       // break;
       // }
       // }
-      numTakenPASTRs = ALLY_PASTR_COUNT;
+      numTakenPASTRs++;
       PASTRMessageSent = false;
     }
 
-    // we don't want to attempt to build a 2nd PASTR if our special-case 2nd PASTR
-    // is already building...
+    if (!PASTRMessageSent && numBots > currentStrategy.PASTRThresholds[ALLY_PASTR_COUNT]
+        && ALLY_PASTR_COUNT < currentStrategy.desiredPASTRNum) {
+      messagingSystem.writeBuildPastureMessage(requestedPASTRLoc);
+    }
 
-    int desiredPASTRNumAdjusted = currentStrategy.desiredPASTRNum;
     /**
      * Special-case code for the second PASTR in an early-game 2-PASTR strat
      */
-    if (gamePhase == GamePhase.OPENING && initialStrategy == Strategy.INIT_DOUBLE_PASTR) {
-      desiredPASTRNumAdjusted--;
-      if (numSoldiersSpawned >= 3) {
-        if (secondPASTRMessageSent && numberRequestedForSecondPASTR == 2
-            && ALLY_PASTR_COUNT > numTakenPASTRs) {
-          // here we should actually check that the correct PASTR has been built
-          // for (int i = ALLY_PASTR_COUNT - 1; i >= 0; --i) {
-          // if (ALLY_PASTR_LOCS[i].distanceSquaredTo(secondRequestedPASTRLoc) < 5) {
-          // // 5 is some arbitrary small number... 2 might even suffice
-          // takenPASTRLocs.add(secondRequestedPASTRLoc);
-          // break;
-          // }
-          // }
-          numTakenPASTRs++;
-        }
+    if (gamePhase == GamePhase.OPENING && initialStrategy == Strategy.INIT_DOUBLE_PASTR
+        && numSoldiersSpawned >= 3) {
 
-        if (turnsSinceLastSpawn == 1 && numberRequestedForSecondPASTR < 2
-            && numBots > currentStrategy.PASTRThresholds[1]) {
-          // This depends on macro() happening before PASTRMessages()!!!!!!!
-          messagingSystem.writeMessage(MessageType.BUILD_SECOND_SIMULTANEOUS_PASTURE,
-              mostRecentlySpawnedSoldierID, secondRequestedPASTRLoc.x, secondRequestedPASTRLoc.y);
-          numberRequestedForSecondPASTR++;
-        }
+      if (secondPASTRMessageSent && numberRequestedForSecondPASTR == 2
+          && ALLY_PASTR_COUNT > numTakenPASTRs) {
+        // here we should actually check that the correct PASTR has been built
+        // for (int i = ALLY_PASTR_COUNT - 1; i >= 0; --i) {
+        // if (ALLY_PASTR_LOCS[i].distanceSquaredTo(secondRequestedPASTRLoc) < 5) {
+        // // 5 is some arbitrary small number... 2 might even suffice
+        // takenPASTRLocs.add(secondRequestedPASTRLoc);
+        // break;
+        // }
+        // }
+        numTakenPASTRs++;
       }
-    }
 
-
-    if (!PASTRMessageSent
-        && numBots > currentStrategy.PASTRThresholds[ALLY_PASTR_COUNT]
-        && ALLY_PASTR_COUNT < desiredPASTRNumAdjusted) {
-      messagingSystem.writeBuildPastureMessage(requestedPASTRLoc);
+      if (turnsSinceLastSpawn == 1 && numberRequestedForSecondPASTR < 2
+          && numBots > currentStrategy.PASTRThresholds[1]) {
+        // This depends on macro() happening before PASTRMessages()!!!!!!!
+        messagingSystem.writeMessage(MessageType.BUILD_SECOND_SIMULTANEOUS_PASTURE,
+            mostRecentlySpawnedSoldierID, secondRequestedPASTRLoc.x, secondRequestedPASTRLoc.y);
+        numberRequestedForSecondPASTR++;
+      }
     }
   }
 

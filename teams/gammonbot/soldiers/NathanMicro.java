@@ -1,9 +1,9 @@
-package mergebot.soldiers;
+package gammonbot.soldiers;
 
-import static mergebot.soldiers.SoldierUtils.*;
-import static mergebot.utils.Utils.*;
-import mergebot.messaging.MessagingSystem.ReservedMessageType;
-import mergebot.nav.*;
+import static gammonbot.soldiers.SoldierUtils.*;
+import static gammonbot.utils.Utils.*;
+import gammonbot.messaging.MessagingSystem.ReservedMessageType;
+import gammonbot.nav.*;
 import battlecode.common.*;
 
 public class NathanMicro {
@@ -22,8 +22,7 @@ public class NathanMicro {
    * TODO give actual names and/or definitions for these constants so other people know what's going on
    */
   public static boolean GREAT_LUGE = false; // flag for if the bot is suiciding
-  public static boolean JON_SCHNEIDER = false; // flag for if the bot is running away (low health)
-  public static boolean AIRBENDER = false; // flag for if the bot is running away (imminent explosion)
+  public static boolean JON_SCHNEIDER = false; // flag for if the bot is running away
 
   public static boolean isHelpingOut = false;
   public static MapLocation helpingLoc = new MapLocation(0, 0);
@@ -98,31 +97,9 @@ public class NathanMicro {
       if (JON_SCHNEIDER && currentHealth >= 50) JON_SCHNEIDER = false;
 
       MapLocation target = getHighestPriority(nearbyEnemies);
-      
-      Robot[] threaten = new Robot[0];
-      if (target != null) threaten = RC.senseNearbyGameObjects(Robot.class, target, 2, ALLY_TEAM);
-      
-      AIRBENDER = false;
-      if (threaten.length > 0) {
-        
-        int count = 0;
-        for (int i=0; i<nearbyTeam.length; ++i) {
-          RobotInfo k = RC.senseRobotInfo(threaten[i]);
-          if (k.actionDelay < 1.) {
-            count++;
-          }
-        }
-        if (count * 10 > threaten.length) {
-          //blow it up!
-        }
-        else {
-          AIRBENDER = true;
-        }
-      }
-      
+
       if ((!JON_SCHNEIDER || (currentHealth >= 30 && allyWeight >= enemyWeight + 100))
-          && (allyWeight >= enemyWeight || GREAT_LUGE)
-          && !AIRBENDER) {
+          && (allyWeight >= enemyWeight || GREAT_LUGE)) {
         // choose an aggressive option
 
         if (RC.isActive()) { // willing to attack!
@@ -367,10 +344,8 @@ public class NathanMicro {
           }
 
           MapLocation soldierLoc = ri.location;
-          if (loc.distanceSquaredTo(ri.location) > 25) break;
 
           Robot[] stuff = RC.senseNearbyGameObjects(Robot.class, soldierLoc, 17, ENEMY_TEAM);
-          
           boolean inCombat = false;
           for (int j = stuff.length; --j >= 0;) {
             if (soldierLoc.distanceSquaredTo(RC.senseRobotInfo(stuff[j]).location) <= 10) {
@@ -405,7 +380,6 @@ public class NathanMicro {
           }
 
           int d = loc.distanceSquaredTo(ri.location);
-          if (d > 25) break;
           if (d <= FIRE_RANGE_SQUARED) weight += ri.health;
           else weight += ri.health - ALLY_WEIGHT_DECAY * lazySqrt(d - FIRE_RANGE_SQUARED);
           break;

@@ -1,8 +1,8 @@
-package team027.utils;
+package gammonbot.utils;
 
 import java.util.Arrays;
 
-public class OnePassQueue<T> {
+public class BucketQueue<T> {
 
   private final T[][] queue;
   private final int[] length;
@@ -10,7 +10,7 @@ public class OnePassQueue<T> {
   public int size = 0;
 
   @SuppressWarnings("unchecked")
-  public OnePassQueue(int max_key, int max_length) {
+  public BucketQueue(int max_key, int max_length) {
     queue = (T[][]) new Object[max_key][max_length];
     length = new int[max_key];
   }

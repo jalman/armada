@@ -1,11 +1,11 @@
-package mergebot.soldiers;
+package gammonbot.soldiers;
 
-import static mergebot.utils.Utils.*;
-import mergebot.*;
-import mergebot.messaging.*;
-import mergebot.messaging.MessagingSystem.MessageType;
-import mergebot.nav.*;
-import mergebot.utils.*;
+import static gammonbot.utils.Utils.*;
+import gammonbot.*;
+import gammonbot.messaging.*;
+import gammonbot.messaging.MessagingSystem.MessageType;
+import gammonbot.nav.*;
+import gammonbot.utils.*;
 import battlecode.common.*;
 
 public class SoldierBehavior extends RobotBehavior {

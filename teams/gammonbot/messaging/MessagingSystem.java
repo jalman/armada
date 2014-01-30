@@ -1,8 +1,8 @@
-package team027.messaging;
+package gammonbot.messaging;
 
-import static team027.utils.Utils.*;
-import team027.utils.*;
-import team027.utils.Utils.SymmetryType;
+import static gammonbot.utils.Utils.*;
+import gammonbot.utils.*;
+import gammonbot.utils.Utils.SymmetryType;
 import battlecode.common.*;
 
 /**

@@ -1,9 +1,9 @@
-package team027.noise;
+package gammonbot.noise;
 
-import team027.RobotBehavior;
-import team027.utils.Utils;
+import gammonbot.RobotBehavior;
+import gammonbot.utils.Utils;
 import battlecode.common.*;
-import static team027.utils.Utils.*;
+import static gammonbot.utils.Utils.*;
 
 public class OctantNoiseTowerBehavior extends BFSNoiseTower {
 	

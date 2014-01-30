@@ -1,4 +1,4 @@
-package mergebot.utils;
+package gammonbot.utils;
 
 import battlecode.common.*;
 

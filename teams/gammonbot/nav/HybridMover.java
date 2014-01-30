@@ -1,8 +1,8 @@
-package team027.nav;
+package gammonbot.nav;
 
-import static team027.utils.Utils.*;
-import team027.utils.LocSet;
-import team027.utils.Pair;
+import static gammonbot.utils.Utils.*;
+import gammonbot.utils.LocSet;
+import gammonbot.utils.Pair;
 import battlecode.common.*;
 
 

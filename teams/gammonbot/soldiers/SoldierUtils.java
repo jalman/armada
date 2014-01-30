@@ -1,6 +1,6 @@
-package team027.soldiers;
+package gammonbot.soldiers;
 
-import static team027.utils.Utils.*;
+import static gammonbot.utils.Utils.*;
 import battlecode.common.*;
 
 public class SoldierUtils {

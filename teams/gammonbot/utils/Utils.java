@@ -1,11 +1,11 @@
-package team027.utils;
+package gammonbot.utils;
 
 import static battlecode.common.Direction.*;
 
 import java.util.*;
 
-import team027.messaging.*;
-import team027.messaging.MessagingSystem.ReservedMessageType;
+import gammonbot.messaging.*;
+import gammonbot.messaging.MessagingSystem.ReservedMessageType;
 import battlecode.common.*;
 
 public class Utils {

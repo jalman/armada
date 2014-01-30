@@ -1,4 +1,4 @@
-package mergebot;
+package gammonbot;
 
 import java.util.*;
 

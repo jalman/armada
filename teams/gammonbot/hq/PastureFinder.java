@@ -1,10 +1,10 @@
-package team027.hq;
+package gammonbot.hq;
 
-import static team027.utils.Utils.*;
+import static gammonbot.utils.Utils.*;
 
 import java.util.*;
 
-import team027.utils.*;
+import gammonbot.utils.*;
 import battlecode.common.*;
 
 public class PastureFinder {

@@ -1,6 +1,6 @@
-package team027.hq;
+package gammonbot.hq;
 
-import static team027.utils.Utils.*;
+import static gammonbot.utils.Utils.*;
 import battlecode.common.*;
 
 public class AttackSystem {

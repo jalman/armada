@@ -1,8 +1,8 @@
-package team027.nav;
+package gammonbot.nav;
 
-import static team027.utils.Utils.*;
-import team027.utils.LocSet;
-import team027.utils.BucketQueue;
+import static gammonbot.utils.Utils.*;
+import gammonbot.utils.LocSet;
+import gammonbot.utils.BucketQueue;
 import battlecode.common.*;
 
 public class Dijkstra {
