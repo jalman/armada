@@ -210,6 +210,8 @@ public class SoldierUtils {
     int healthFactor = -(int)(healthPercent * 50);
     int distFactor = 50 / distance;
     int delayFactor = -5 * roundsUntilActive;
+    
+    if (r.health <= 10) healthFactor = 1000;
 
     return 5000 + priority + healthFactor + distFactor + delayFactor;
   }
