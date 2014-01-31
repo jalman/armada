@@ -47,6 +47,8 @@ public class Utils {
     }
   }
 
+  public static final int MAP_MAX_SIZE = GameConstants.MAP_MAX_WIDTH * GameConstants.MAP_MAX_HEIGHT;
+
   //these are set from the beginning of the game
   public static RobotController RC;
   public static Robot ROBOT;

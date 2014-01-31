@@ -19,6 +19,12 @@ public class Dijkstra {
    * Direction in which we traveled to get to this location.
    */
   public Direction[][] from = new Direction[MAP_WIDTH][MAP_HEIGHT];
+
+  public static final int PARENT_DIST = 50;
+  /**
+   * Used to speed up path lookup.
+   */
+  // public MapLocation[][] parent = new MapLocation[MAP_WIDTH][MAP_HEIGHT];
   /**
    * Distance (times 5) to this location.
    */
@@ -31,6 +37,7 @@ public class Dijkstra {
     for (MapLocation source : sources) {
       queue.insert(0, source);
       distance[source.x][source.y] = 0;
+      // parent[source.x][source.y] = source;
       // leave as null to cause exceptions if we accidentally try to use it
       // from[source.x][source.y] = Direction.NONE;
     }
@@ -68,11 +75,12 @@ public class Dijkstra {
     // cache variables
     int min, w, x, y;
     int[] weight;
-    MapLocation next, nbr;
+    MapLocation next, nbr, prev, p;
     Direction dir;
     final BucketQueue<MapLocation> queue = this.queue;
     final int[][] distance = this.distance;
     final Direction[][] from = this.from;
+    // final MapLocation[][] parent = this.parent;
 
     // int iters = 0;
     // int bc = Clock.getBytecodeNum();
@@ -96,9 +104,21 @@ public class Dijkstra {
 
         dir = from[x][y];
 
+        /*
+         * if (dir != null) {
+         * prev = next.subtract(dir);
+         * p = parent[prev.x][prev.y];
+         * if (min <= distance[p.x][p.y] + PARENT_DIST) {
+         * parent[x][y] = p;
+         * } else {
+         * parent[x][y] = prev;
+         * }
+         * }
+         */
+
         if (broadcast) {
           try {
-            messagingSystem.writePathingInfo(next, dir, min);
+            messagingSystem.writePathingInfo(next, dir, min, null /* parent[x][y] */);
           } catch (GameActionException e) {
             e.printStackTrace();
           }

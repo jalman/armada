@@ -1,7 +1,7 @@
 package mergebot.messaging;
 
 import static mergebot.utils.Utils.*;
-import mergebot.utils.*;
+import mergebot.utils.Pair;
 import mergebot.utils.Utils.SymmetryType;
 import battlecode.common.*;
 
@@ -66,7 +66,8 @@ public class MessagingSystem {
     RALLY_POINT(2),
     KILL_COUNT(1),
     DEATH_COUNT(1),
-    PATHING(GameConstants.MAP_MAX_HEIGHT * GameConstants.MAP_MAX_WIDTH);
+    PATHING1(MAP_MAX_SIZE),
+    PATHING2(MAP_MAX_SIZE), ;
 
     public final int type = this.ordinal();
     public final int length;
@@ -350,31 +351,39 @@ public class MessagingSystem {
   private static final int shift = 16;
   private static final int mask = (1 << shift) - 1;
 
-  public void writePathingInfo(MapLocation loc, Direction dir, int distance)
+  public void writePathingInfo(MapLocation loc, Direction dir, int distance, MapLocation parent)
       throws GameActionException {
-    RC.broadcast(ReservedMessageType.PATHING.channel() + loc.x * MAP_HEIGHT + loc.y,
+    int offset = loc.x * MAP_HEIGHT + loc.y;
+    RC.broadcast(ReservedMessageType.PATHING1.channel() + offset,
         (dir != null ? dir.ordinal() + 1 : 0) << shift | distance);
-    // System.out.println(before + "\t" + dir + "\t" + after);
-    // System.out.println(ReservedMessageType.PATHING.channel() + loc.x * MAP_HEIGHT + loc.y);
+    // RC.broadcast(ReservedMessageType.PATHING2.channel() + offset, parent.x << shift | parent.y);
   }
 
   public Pair<Direction, Integer> readPathingInfo(MapLocation loc) throws GameActionException {
     int broadcast =
-        RC.readBroadcast(ReservedMessageType.PATHING.channel() + loc.x * MAP_HEIGHT + loc.y);
+        RC.readBroadcast(ReservedMessageType.PATHING1.channel() + loc.x * MAP_HEIGHT + loc.y);
     return new Pair<Direction, Integer>(INT_TO_DIR[broadcast >> shift], broadcast & mask);
   }
+
+  public MapLocation readParent(MapLocation loc) throws GameActionException {
+    int broadcast =
+        RC.readBroadcast(ReservedMessageType.PATHING2.channel() + loc.x * MAP_HEIGHT + loc.y);
+    return new MapLocation(broadcast >> shift, broadcast & mask);
+  }
+
   public void writeKill() throws GameActionException {
     //PENTAKILL
     writeReservedMessage(ReservedMessageType.KILL_COUNT, readKills() + 1);
-  } 
+  }
   public int readKills() throws GameActionException {
     int channel = ReservedMessageType.KILL_COUNT.channel();
     return RC.readBroadcast(channel);
   }
+
   public void writeDeath(int deaths) throws GameActionException {
     //should be called through HQBehavior
     writeReservedMessage(ReservedMessageType.DEATH_COUNT, deaths);
-  } 
+  }
   public int readDeaths() throws GameActionException {
     int channel = ReservedMessageType.DEATH_COUNT.channel();
     return RC.readBroadcast(channel);

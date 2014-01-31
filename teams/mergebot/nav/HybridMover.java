@@ -18,9 +18,9 @@ public class HybridMover {
   private int[] distances;
 
   /**
-   * Used to move to path.
+   * Caches dstar computations.
    */
-  private DStar dstar;
+  private final DStar[][] cache = new DStar[MAP_WIDTH][MAP_HEIGHT];
 
   private MovementType movementType;
 
@@ -28,7 +28,6 @@ public class HybridMover {
     if (!dest.equals(this.dest)) {
       this.dest = dest;
       computeOutPath();
-      dstar = null;
     }
   }
 
@@ -103,6 +102,7 @@ public class HybridMover {
       distances[outPath.size] = d - pathingInfo.second;
       outPath.insert(loc);
       loc = loc.subtract(pathingInfo.first);
+      // loc = messagingSystem.readParent(loc);
     }
 
     int[] diffs = new int[outPath.size - 1];
@@ -117,8 +117,14 @@ public class HybridMover {
   }
 
   private boolean moveToPath() throws GameActionException {
+    DStar dstar = cache[dest.x][dest.y];
     if (dstar == null) {
       dstar = new DStar(outPath, distances, currentLocation);
+      for (MapLocation loc : MapLocation.getAllMapLocationsWithinRadiusSq(dest, 2)) {
+        if (isPathable(loc)) {
+          cache[dest.x][dest.y] = dstar;
+        }
+      }
     }
 
     if (!dstar.arrived(currentLocation)) {
