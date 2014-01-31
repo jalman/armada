@@ -96,7 +96,7 @@ public class SoldierBehavior extends RobotBehavior {
         MapLocation loc = new MapLocation(message[0], message[1]);
         if (!buildingSecondPastr) {
           if (mode == Mode.BUILD_PASTURE && !loc.equals(currentLocation)) {
-            System.out.println("received BUILDING_PASTR at " + loc);
+            // System.out.println("received BUILDING_PASTR at " + loc);
             target = loc;
             setMode(Mode.DEFEND_PASTURE, target);
           }
@@ -175,9 +175,9 @@ public class SoldierBehavior extends RobotBehavior {
       // build a pasture! Overwrites previous pasture target.
       target = buildPastureLoc;
       setMode(Mode.BUILD_PASTURE, target);
-      if (currentRound > 400 && currentRound < 420) {
-        System.out.println("I've been told to build pastr at " + target);
-      }
+      // if (currentRound > 400 && currentRound < 420) {
+      // System.out.println("I've been told to build pastr at " + target);
+      // }
       return;
       // } else {
       // // already building a pasture

@@ -324,7 +324,8 @@ public class HQBehavior extends RobotBehavior {
   }
 
   private static void considerTeamAttacking() throws GameActionException {
-    if(ALLY_PASTR_COUNT <= ENEMY_PASTR_COUNT && ENEMY_PASTR_COUNT > 0) {
+    if (ALLY_PASTR_COUNT <= ENEMY_PASTR_COUNT && ENEMY_PASTR_COUNT > 0) {
+      if (ALLY_PASTR_COUNT > 0 && ALLY_MILK >= ENEMY_MILK + ENEMY_PASTR_COUNT * 3000000) return;
       MapLocation closestEnemyPASTR = ENEMY_PASTR_LOCS[0];
       int dist = closestEnemyPASTR.distanceSquaredTo(ALLY_HQ);
       for (int i = ENEMY_PASTR_COUNT - 1; i > 0; i--) {
@@ -382,7 +383,8 @@ public class HQBehavior extends RobotBehavior {
         firstPASTRLocs = new Pair[goodPASTRLocs.length];
         for(int i = goodPASTRLocs.length; --i >= 0; ) {
           MapLocation loc = goodPASTRLocs[i].first;
-          double weight = goodPASTRLocs[i].second + (loc.distanceSquaredTo(ENEMY_HQ) / (10 * loc.distanceSquaredTo(ALLY_HQ)));
+          double weight = goodPASTRLocs[i].second
+                  + (loc.distanceSquaredTo(ENEMY_HQ) / (5 * loc.distanceSquaredTo(ALLY_HQ)));
           // + (int) (Math.sqrt(loc.distanceSquaredTo(ENEMY_HQ) - loc.distanceSquaredTo(ALLY_HQ)) /
           // 4);
           firstPASTRLocs[i] = new Pair<MapLocation, Double>(loc, weight);

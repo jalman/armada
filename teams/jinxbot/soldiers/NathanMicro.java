@@ -98,15 +98,15 @@ public class NathanMicro {
       if (JON_SCHNEIDER && currentHealth >= 50) JON_SCHNEIDER = false;
 
       MapLocation target = getHighestPriority(nearbyEnemies);
-      
+
       Robot[] threaten = new Robot[0];
       if (target != null) threaten = RC.senseNearbyGameObjects(Robot.class, target, 2, ALLY_TEAM);
-      
+
       AIRBENDER = false;
       if (threaten.length > 0) {
-        
+
         int count = 0;
-        for (int i=0; i<nearbyTeam.length; ++i) {
+        for (int i = 0; i < threaten.length; ++i) {
           RobotInfo k = RC.senseRobotInfo(threaten[i]);
           if (k.actionDelay < 1.) {
             count++;
@@ -119,7 +119,7 @@ public class NathanMicro {
           AIRBENDER = true;
         }
       }
-      
+
       if ((!JON_SCHNEIDER || (currentHealth >= 30 && allyWeight >= enemyWeight + 100))
           && (allyWeight >= enemyWeight || GREAT_LUGE)
           && !AIRBENDER) {
@@ -136,7 +136,7 @@ public class NathanMicro {
               target = nearbyEnemies[0].location;
               setTarget(target);
               Direction nd = navAlg.getNextDir();
-              
+
               nextLoc = currentLocation.add(nd);
               nextAllyWeight = currentHealth + allyWeightAboutPoint(nextLoc, nearbyTeam);
               nextEnemyWeight = enemyWeightAboutPoint(nextLoc, nearbyEnemies);
@@ -383,7 +383,7 @@ public class NathanMicro {
           if (loc.distanceSquaredTo(ri.location) > 25) break;
 
           Robot[] stuff = RC.senseNearbyGameObjects(Robot.class, soldierLoc, 17, ENEMY_TEAM);
-          
+
           boolean inCombat = false;
           for (int j = stuff.length; --j >= 0;) {
             if (soldierLoc.distanceSquaredTo(RC.senseRobotInfo(stuff[j]).location) <= 10) {
