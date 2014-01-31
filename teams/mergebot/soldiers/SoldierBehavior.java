@@ -308,7 +308,7 @@ public class SoldierBehavior extends RobotBehavior {
           // if noise tower has been built build a pasture
           if (!RC.canMove(currentLocation.directionTo(target))) {
             RobotInfo targetInfo = RC.senseRobotInfo((Robot) RC.senseObjectAtLocation(target));
-            if ((targetInfo.type == RobotType.SOLDIER && targetInfo.constructingRounds < 50 && targetInfo.constructingType == RobotType.NOISETOWER)
+            if ((targetInfo.type == RobotType.SOLDIER && targetInfo.constructingRounds < 10 && targetInfo.constructingType == RobotType.NOISETOWER)
                 || targetInfo.type == RobotType.NOISETOWER) {
               System.out.println("now building pastr at " + currentLocation);
               if (buildingSecondPastr) {
