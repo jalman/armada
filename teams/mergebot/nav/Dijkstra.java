@@ -1,8 +1,8 @@
 package mergebot.nav;
 
 import static mergebot.utils.Utils.*;
-import mergebot.utils.LocSet;
 import mergebot.utils.BucketQueue;
+import mergebot.utils.LocSet;
 import battlecode.common.*;
 
 public class Dijkstra {
@@ -94,22 +94,23 @@ public class Dijkstra {
       // check if we have already visited this node
       if (min == distance[x][y]) {
 
+        dir = from[x][y];
+
         if (broadcast) {
           try {
-            messagingSystem.writePathingInfo(next, from[x][y], distance[x][y]);
+            messagingSystem.writePathingInfo(next, dir, min);
           } catch (GameActionException e) {
             e.printStackTrace();
           }
         }
 
-        if (end[x][y]) {
-          reached = next;
-          break;
-        }
+        // if (end[x][y]) {
+        // reached = next;
+        // break;
+        // }
 
         weight = WEIGHT[RC.senseTerrainTile(next).ordinal()];
 
-        dir = from[x][y];
         int i;
         if (dir == null) {
           dir = Direction.NORTH;
@@ -171,4 +172,7 @@ public class Dijkstra {
     return path;
   }
 
+  public boolean visited(MapLocation loc) {
+    return from[loc.x][loc.y] != null;
+  }
 }

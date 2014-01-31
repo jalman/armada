@@ -79,6 +79,7 @@ public class HQBehavior extends RobotBehavior {
   // public static boolean PASTRBuilt = false, secondPASTRBuilt = false;
 
   private final Dijkstra dijkstra = new Dijkstra(HybridMover.DIJKSTRA_CENTER);
+  private MapLocation rally = ALLY_HQ.add(HQ_DX / 2, HQ_DY / 2);
 
   public static Strategy.GamePhase gamePhase;
   public static Strategy currentStrategy;
@@ -87,7 +88,8 @@ public class HQBehavior extends RobotBehavior {
 
   public HQBehavior() {
     try {
-      messagingSystem.writeRallyPoint(ALLY_HQ.add(HQ_DX / 2, HQ_DX / 2));
+      messagingSystem.writeRallyPoint(rally);
+      RC.setIndicatorString(1, "Rally " + rally);
     } catch (GameActionException e) {
       e.printStackTrace();
     }
@@ -236,6 +238,15 @@ public class HQBehavior extends RobotBehavior {
     considerTeamAttacking();
   }
 
+  private void setRallyPoint() throws GameActionException {
+    while (!dijkstra.visited(rally)) {
+      rally = rally.add(rally.directionTo(ALLY_HQ));
+      // System.out.println(rally);
+    }
+    messagingSystem.writeRallyPoint(rally);
+    RC.setIndicatorString(1, "Rally " + rally);
+  }
+
   @Override
   public void endRound() throws GameActionException {
     messagingSystem.endRound();
@@ -243,6 +254,9 @@ public class HQBehavior extends RobotBehavior {
       dijkstra.compute(9000, true);
       if (dijkstra.done()) {
         System.out.println("Dijkstra finished on round " + currentRound);
+        if (!dijkstra.visited(rally)) {
+          setRallyPoint();
+        }
       }
     }
   }
