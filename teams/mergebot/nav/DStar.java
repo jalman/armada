@@ -1,8 +1,8 @@
 package mergebot.nav;
 
 import static mergebot.utils.Utils.*;
-import mergebot.utils.LocSet;
 import mergebot.utils.BucketQueue;
+import mergebot.utils.LocSet;
 import battlecode.common.*;
 
 public class DStar {
@@ -45,6 +45,10 @@ public class DStar {
       // leave as null to cause exceptions if we accidentally try to use it?
       from[source.x][source.y] = Direction.NONE;
     }
+
+    // hack to go around the hq
+    visited[ALLY_HQ.x][ALLY_HQ.y] = true;
+    visited[ENEMY_HQ.x][ENEMY_HQ.y] = true;
   }
 
   /**
