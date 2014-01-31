@@ -468,17 +468,18 @@ public class NathanMicro {
           Robot[] stuff = RC.senseNearbyGameObjects(Robot.class, soldierLoc, 17, ENEMY_TEAM);
 
           boolean inCombat = false;
+          int bestDist = 100000;
+          
           for (int j = stuff.length; --j >= 0;) {
-            if (soldierLoc.distanceSquaredTo(RC.senseRobotInfo(stuff[j]).location) <= 10) {
-              inCombat = true;
-            }
+            int dd = soldierLoc.distanceSquaredTo(RC.senseRobotInfo(stuff[j]).location);
+            bestDist = (dd < bestDist ? dd : bestDist);
           }
-          if (inCombat) {
+          if (bestDist <= 10) {
             // allyWeight += (ri.health > 10.0) ? ri.health : 0;
             allyWeight += ri.health;
           } else {
             allyWeight += Math.max(0,
-                ri.health - ALLY_WEIGHT_DECAY * lazySqrt(ri.location.distanceSquaredTo(loc)));
+                ri.health - ALLY_WEIGHT_DECAY * lazySqrt(bestDist - 10));
           }
           break;
         default:
