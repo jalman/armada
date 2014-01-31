@@ -29,6 +29,21 @@ public class RobotPlayer {
     if (rc.getType() == RobotType.SOLDIER) {
       System.out.println("born on round " + Clock.getRoundNum());
 
+      try {
+        Direction dir = Direction.NORTH;
+        if (RC.isActive()) {
+          for (int i = 0; i < 8; i++) {
+            if (RC.canMove(dir)) {
+              RC.move(dir);
+              break;
+            }
+          }
+        }
+        rc.yield();
+        rc.selfDestruct();
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
       countBytecodes(false);
       for (int i = 100; --i >= 0;) {
         dx += 2;
