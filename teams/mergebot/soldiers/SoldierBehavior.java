@@ -358,4 +358,6 @@ public class SoldierBehavior extends RobotBehavior {
 
     
   }
+  
+  return false;
 }
