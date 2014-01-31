@@ -1,8 +1,7 @@
 package mergebot.nav;
 
 import static mergebot.utils.Utils.*;
-import mergebot.utils.BucketQueue;
-import mergebot.utils.LocSet;
+import mergebot.utils.*;
 import battlecode.common.*;
 
 public class DStar {
@@ -46,9 +45,16 @@ public class DStar {
       from[source.x][source.y] = Direction.NONE;
     }
 
-    // hack to go around the hq
+    // hack to go around the hqs
+    distance[ALLY_HQ.x][ALLY_HQ.y] = Integer.MAX_VALUE;
     visited[ALLY_HQ.x][ALLY_HQ.y] = true;
-    visited[ENEMY_HQ.x][ENEMY_HQ.y] = true;
+
+    ArraySet<MapLocation> unsafeLocs = getUnsafeLocs();
+    for (int i = unsafeLocs.size; --i >= 0;) {
+      MapLocation loc = unsafeLocs.get(i);
+      distance[loc.x][loc.y] = Integer.MAX_VALUE;
+      visited[loc.x][loc.y] = true;
+    }
   }
 
   /**
