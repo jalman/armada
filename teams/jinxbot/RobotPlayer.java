@@ -1,14 +1,14 @@
-package mergebot;
+package jinxbot;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
-import mergebot.hq.HQBehavior;
-import mergebot.noise.NewNoiseTowerBehavior;
-import mergebot.noise.OctantNoiseTowerBehavior;
-import mergebot.noise.SmartNoiseTowerBehavior;
-import mergebot.noise.SpiralNoiseTowerBehavior;
-import mergebot.soldiers.SoldierBehavior;
-import mergebot.utils.Utils;
+import jinxbot.hq.HQBehavior;
+import jinxbot.noise.NewNoiseTowerBehavior;
+import jinxbot.noise.OctantNoiseTowerBehavior;
+import jinxbot.noise.SmartNoiseTowerBehavior;
+import jinxbot.noise.SpiralNoiseTowerBehavior;
+import jinxbot.soldiers.SoldierBehavior;
+import jinxbot.utils.Utils;
 
 public class RobotPlayer {
   public static void run(RobotController rc) {

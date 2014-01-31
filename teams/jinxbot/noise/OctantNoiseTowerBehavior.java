@@ -1,9 +1,9 @@
-package mergebot.noise;
+package jinxbot.noise;
 
-import mergebot.RobotBehavior;
-import mergebot.utils.Utils;
+import jinxbot.RobotBehavior;
+import jinxbot.utils.Utils;
 import battlecode.common.*;
-import static mergebot.utils.Utils.*;
+import static jinxbot.utils.Utils.*;
 
 public class OctantNoiseTowerBehavior extends BFSNoiseTower {
 	
