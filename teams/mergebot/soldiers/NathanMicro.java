@@ -16,6 +16,7 @@ public class NathanMicro {
   public static final int HELP_DURATION = 8;
   public static final double ALLY_WEIGHT_DECAY = 12;
   public static final double POWER_ADVANTAGE = 1.2f;
+  public static final int LIFE_VALUE = 20;
 
   /**
    * TODO give actual names and/or definitions for these constants so other people know what's going on
@@ -427,6 +428,24 @@ public class NathanMicro {
 
   public static int lazySqrt(int k) {
     return (k <= 15) ? sqrtArray[k] : 4;
+  }
+  public static double getSquareSuicideValue(MapLocation loc) throws GameActionException {
+    Robot[] around = RC.senseNearbyGameObjects(Robot.class, 2);
+    double allyDamage = RC.getHealth() + LIFE_VALUE, enemyDamage = 0;
+    double predictDamage = GameConstants.SELF_DESTRUCT_BASE_DAMAGE + GameConstants.SELF_DESTRUCT_DAMAGE_FACTOR * RC.getHealth();
+       
+    for (int i=0; i<around.length; ++i) {
+    RobotInfo ri = RC.senseRobotInfo(around[i]);
+         
+      double damage = (predictDamage >= ri.health ? ri.health : predictDamage);
+      if (ri.team == ALLY_TEAM) {
+        allyDamage += (damage + (predictDamage >= ri.health ? LIFE_VALUE : 0));
+      }
+      else {
+        enemyDamage += (damage + (predictDamage >= ri.health ? LIFE_VALUE : 0));
+      }
+    }
+    return enemyDamage - allyDamage;
   }
 
   public static double allyWeightAboutPoint(MapLocation loc, Robot[] nearbyEnemies)
