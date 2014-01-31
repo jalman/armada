@@ -17,6 +17,7 @@ public class NathanMicro {
   public static final double ALLY_WEIGHT_DECAY = 12;
   public static final double POWER_ADVANTAGE = 1.2f;
   public static final int LIFE_VALUE = 20;
+  public static final int DEFEND_PASTR_INITIATIVE = 50;
 
   /**
    * TODO give actual names and/or definitions for these constants so other people know what's going on
@@ -154,6 +155,17 @@ public class NathanMicro {
             nextLoc = currentLocation.add(nd);
             nextAllyWeight = currentHealth + allyWeightAboutPoint(nextLoc, nearbyTeam);
             nextEnemyWeight = enemyWeightAboutPoint(nextLoc, nearbyEnemies, true);
+            
+
+            for (int i=0; i<ALLY_PASTR_COUNT; ++i) {
+              MapLocation loc = ALLY_PASTR_LOCS[i];
+              Direction towardsPastr = currentLocation.directionTo(loc);
+              
+              if (currentLocation.distanceSquaredTo(loc) <= 20
+                  && (currentLocation.distanceSquaredTo(loc) >= currentLocation.distanceSquaredTo(nextLoc))) {
+                nextAllyWeight += DEFEND_PASTR_INITIATIVE;
+              }
+            }
           }
         }
         zyzzl +=
