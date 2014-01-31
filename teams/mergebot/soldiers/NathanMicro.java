@@ -276,6 +276,11 @@ public class NathanMicro {
               }
               return true;
             } else {
+              RobotInfo r = RC.senseRobotInfo((Robot)RC.senseObjectAtLocation(target));
+              if (r.health <= 10.1) {
+                messagingSystem.writeKill();
+                sf += "| kill count: " + messagingSystem.readKills();
+              }
               RC.attackSquare(target);
               if (m.x != target.x || m.y != target.y) {
                 messagingSystem.writeMicroMessage(target, 1);
@@ -322,6 +327,11 @@ public class NathanMicro {
             else {
               if (target != null && RC.canAttackSquare(target)) {
                 RC.attackSquare(target);
+                RobotInfo r = RC.senseRobotInfo((Robot)RC.senseObjectAtLocation(target));
+                if (r.health <= 10.1) {
+                  messagingSystem.writeKill();
+                  RC.setIndicatorString(2, "desperation kill " + messagingSystem.readKills());
+                }
                 if (m.x != target.x || m.y != target.y) {
                   messagingSystem.writeMicroMessage(target, 1);
                 }

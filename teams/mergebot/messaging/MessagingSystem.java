@@ -367,7 +367,7 @@ public class MessagingSystem {
     writeReservedMessage(ReservedMessageType.KILL_COUNT, readKills() + 1);
   } 
   public int readKills() throws GameActionException {
-    int channel = ReservedMessageType.RALLY_POINT.channel();
+    int channel = ReservedMessageType.KILL_COUNT.channel();
     return RC.readBroadcast(channel);
   }
 }
