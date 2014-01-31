@@ -1,4 +1,4 @@
-package team027;
+package anagrambot;
 
 import java.util.*;
 

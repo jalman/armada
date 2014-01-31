@@ -1,10 +1,10 @@
-package team027.hq;
+package anagrambot.hq;
 
-import static team027.utils.Utils.*;
+import static anagrambot.utils.Utils.*;
 
 import java.util.*;
 
-import team027.utils.*;
+import anagrambot.utils.*;
 import battlecode.common.*;
 
 public class PastureFinder {

@@ -1,4 +1,4 @@
-package mergebot.nav;
+package anagrambot.nav;
 
 import battlecode.common.Direction;
 import battlecode.common.MapLocation;

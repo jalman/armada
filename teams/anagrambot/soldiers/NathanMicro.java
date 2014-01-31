@@ -1,8 +1,8 @@
-package team027.soldiers;
+package anagrambot.soldiers;
 
-import static team027.soldiers.SoldierUtils.*;
-import static team027.utils.Utils.*;
-import team027.nav.*;
+import static anagrambot.soldiers.SoldierUtils.*;
+import static anagrambot.utils.Utils.*;
+import anagrambot.nav.*;
 import battlecode.common.*;
 
 public class NathanMicro {

@@ -1,4 +1,4 @@
-package team027.nav;
+package anagrambot.nav;
 
 public enum NavType {
 

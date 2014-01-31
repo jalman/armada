@@ -1,17 +1,17 @@
-package team027.hq;
+package anagrambot.hq;
 
-import static team027.utils.Utils.*;
+import static anagrambot.utils.Utils.*;
 
 import java.util.*;
 
-import team027.*;
-import team027.Strategy.GamePhase;
-import team027.messaging.*;
-import team027.messaging.MessagingSystem.MessageType;
-import team027.messaging.MessagingSystem.ReservedMessageType;
-import team027.nav.*;
-import team027.utils.*;
-import team027.utils.Utils.SymmetryType;
+import anagrambot.*;
+import anagrambot.Strategy.GamePhase;
+import anagrambot.messaging.*;
+import anagrambot.messaging.MessagingSystem.MessageType;
+import anagrambot.messaging.MessagingSystem.ReservedMessageType;
+import anagrambot.nav.*;
+import anagrambot.utils.*;
+import anagrambot.utils.Utils.SymmetryType;
 import battlecode.common.*;
 
 public class HQBehavior extends RobotBehavior {

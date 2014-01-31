@@ -1,16 +1,16 @@
-package mergebot.noise;
+package anagrambot.noise;
 
-import mergebot.RobotBehavior;
-import mergebot.utils.Utils;
+import anagrambot.RobotBehavior;
+import anagrambot.utils.Utils;
 import battlecode.common.*;
-import static mergebot.utils.Utils.*;
+import static anagrambot.utils.Utils.*;
 
-public class SmartNoiseTowerBehavior extends BFSNoiseTower {
+public class OctantNoiseTowerBehavior extends BFSNoiseTower {
 	
   int[] places = new int[8];
-  boolean[] skip = new boolean[8];
+  boolean hasbeenPASTR = false;
   
-	 public SmartNoiseTowerBehavior() throws GameActionException {
+	 public OctantNoiseTowerBehavior() throws GameActionException {
 	   super();
 	   
 	   for(int i = at-1; i > 0; i--) {
@@ -21,30 +21,7 @@ public class SmartNoiseTowerBehavior extends BFSNoiseTower {
 	     }
 	   }
 	   
-	   
-	   //System.out.println("SKIP" + Clock.getBytecodeNum());
-	   for(int i = 7; i >= 0; i--) for(int j = i-1; j >= 0; j--) {
-	     if(skip[i] || skip[j]) continue;
-	     MapLocation ml = queue[places[i]];
-	     MapLocation comp = queue[places[j]];
-	     while(ml.distanceSquaredTo(currentLocation) > 5) {
-	       if(ml.distanceSquaredTo(comp) <= 4) {
-	         skip[j] = true;
-	         break;
-	       }
-	       ml = ml.add(dir[ml.x - currentLocation.x + 17][ml.y - currentLocation.y + 17]);
-	     }
-	   }
-     //System.out.println("SKIP" + Clock.getBytecodeNum());
-	   
-	   for(int i = 7; i >= 0; i--) {
-	     //System.out.println(i + " " + queue[places[i]] + " " + skip[i]);
-	     if(!skip[i]) {
-	       target = queue[places[i]];
-	       //break;
-	     }
-	   }
-	   
+	   target = queue[places[0]];
 	 }
 	
 	/**
@@ -59,6 +36,14 @@ public class SmartNoiseTowerBehavior extends BFSNoiseTower {
   
   int a = 0;
   MapLocation target;
+  
+  public boolean isNearbyPASTR() {
+    for (MapLocation m : ALLY_PASTR_LOCS) {
+      if(m.distanceSquaredTo(currentLocation) <= 2) return true;
+    }
+    return false;
+  }
+  
 	/**
 	 * Called every round.
 	 */
@@ -66,28 +51,28 @@ public class SmartNoiseTowerBehavior extends BFSNoiseTower {
   public void run() throws GameActionException {
     if(!RC.isActive()) return;
     
-    inner: {
-      if(target.distanceSquaredTo(currentLocation) < 3) {
-        a++;
-        if(a%2 == 1) {
-          if(!nearbyCows()) {
-            a++;
-          } else {
-            break inner;
-          }
+    if(isNearbyPASTR()) {
+      hasbeenPASTR = true;
+    } else if(hasbeenPASTR) {
+      for(MapLocation m : ENEMY_PASTR_LOCS) {
+        if(RC.canAttackSquare(m)) {
+          RC.attackSquare(m);
+          return;
         }
-        while(a < 16 && skip[a/2]) a+=2;
-        
-        if(a>=16) {
-          if(!nearbyCows()) {
-            a = 0;
-            target = queue[places[a/2]];
-          }
-        } else {
-          target = queue[places[a/2]];
-        }
-        
       }
+    }
+    
+    if(target.distanceSquaredTo(currentLocation) < 3) {
+      a++;
+      if(a>=8) {
+        if(!nearbyCows()) {
+          a = 0;
+          target = queue[places[a]];
+        }
+      } else {
+        target = queue[places[a]];
+      }
+      
     }
 
     int x = target.x - currentLocation.x + 17;
@@ -123,7 +108,7 @@ public class SmartNoiseTowerBehavior extends BFSNoiseTower {
   
   
   public boolean nearbyCows() throws GameActionException {
-    if(a > 24) return false;
+    if(a > 16) return false;
     
     MapLocation best = null;
     double numCows = -1.0;
@@ -139,8 +124,7 @@ public class SmartNoiseTowerBehavior extends BFSNoiseTower {
       }
     }
     
-    if(numCows > (a<16 ? 1500 : 600)) {
-      RC.setIndicatorString(2, "nearby at " + target + " on turn "+ Clock.getRoundNum());
+    if(numCows > 300) {
       target = best;
       //System.out.println(target + " " + numCows);
       return true;

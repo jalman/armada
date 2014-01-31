@@ -1,7 +1,8 @@
-package mergebot.nav;
+package anagrambot.nav;
 
-import static mergebot.utils.Utils.*;
-import mergebot.utils.*;
+import static anagrambot.utils.Utils.*;
+import anagrambot.utils.LocSet;
+import anagrambot.utils.BucketQueue;
 import battlecode.common.*;
 
 public class DStar {
@@ -43,17 +44,6 @@ public class DStar {
       // estimate[source.x][source.y] = e;
       // leave as null to cause exceptions if we accidentally try to use it?
       from[source.x][source.y] = Direction.NONE;
-    }
-
-    // hack to go around the hqs
-    distance[ALLY_HQ.x][ALLY_HQ.y] = Integer.MAX_VALUE;
-    visited[ALLY_HQ.x][ALLY_HQ.y] = true;
-
-    ArraySet<MapLocation> unsafeLocs = getUnsafeLocs();
-    for (int i = unsafeLocs.size; --i >= 0;) {
-      MapLocation loc = unsafeLocs.get(i);
-      distance[loc.x][loc.y] = Integer.MAX_VALUE;
-      visited[loc.x][loc.y] = true;
     }
   }
 

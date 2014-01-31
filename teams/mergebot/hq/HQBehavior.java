@@ -176,7 +176,12 @@ public class HQBehavior extends RobotBehavior {
       if (requestedPASTRLoc != null) {
         int cowWeightOffset =
             (int) ((AVERAGE_COW_WEIGHT - mapCowWeightHash[requestedPASTRLoc.x][requestedPASTRLoc.y]) / 5);
-        if (cowWeightOffset < -4) {
+
+        int pastrHQDist = requestedPASTRLoc.distanceSquaredTo(ALLY_HQ);
+        if (pastrHQDist <= 10) {
+          initialStrategy.PASTRThresholds[0] -= (10 - pastrHQDist) / 3;
+          midgameStrategy.PASTRThresholds[0] -= (10 - pastrHQDist) / 3;
+        } else if (cowWeightOffset < -4) {
           waitUntilVictory = true;
         }
         initialStrategy.PASTRThresholds[0] += cowWeightOffset;
@@ -480,7 +485,8 @@ public class HQBehavior extends RobotBehavior {
       }
     }
 
-    if (waitUntilVictory && numBots < 15
+    if (waitUntilVictory
+        && numBots < Math.max(12, currentStrategy.PASTRThresholds[ALLY_PASTR_COUNT] + 5)
         && (messagingSystem.readKills() <= messagingSystem.readDeaths() + 4 + currentRound / 600)) {
       return;
     }

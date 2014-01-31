@@ -1,6 +1,6 @@
-package team027.soldiers;
+package anagrambot.soldiers;
 
-import static team027.utils.Utils.*;
+import static anagrambot.utils.Utils.*;
 import battlecode.common.*;
 
 public class SoldierUtils {

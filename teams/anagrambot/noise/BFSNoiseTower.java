@@ -1,9 +1,9 @@
-package mergebot.noise;
+package anagrambot.noise;
 
-import mergebot.RobotBehavior;
-import mergebot.utils.Utils;
+import anagrambot.RobotBehavior;
+import anagrambot.utils.Utils;
 import battlecode.common.*;
-import static mergebot.utils.Utils.*;
+import static anagrambot.utils.Utils.*;
 
 abstract public class BFSNoiseTower extends RobotBehavior {
 	
@@ -36,7 +36,7 @@ abstract public class BFSNoiseTower extends RobotBehavior {
         at++;
       }
 	  
-	  for(int s = 0; ++s < at; ) {
+	  for(int s = 1; s < at; s++) {
 	    if(s%30 == 0 && RC.isActive()) {
 	      if(target == null || target.distanceSquaredTo(ALLY_PASTR_COUNT > 0 ? ALLY_PASTR_LOCS[0] : currentLocation) <= 5 ) {
 	        earlyNearbyCows();
