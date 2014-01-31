@@ -409,9 +409,7 @@ public class HQBehavior extends RobotBehavior {
     }
 
 
-    if (!PASTRMessageSent
-        && numBots > currentStrategy.PASTRThresholds[ALLY_PASTR_COUNT]
-        && ALLY_PASTR_COUNT < desiredPASTRNumAdjusted) {
+    if (!PASTRMessageSent && numBots > currentStrategy.PASTRThresholds[ALLY_PASTR_COUNT] && ALLY_PASTR_COUNT < desiredPASTRNumAdjusted && messagingSystem.readKills() > messagingSystem.readDeaths() + 4 + Clock.getRoundNum()/600) {
       messagingSystem.writeBuildPastureMessage(requestedPASTRLoc);
     }
   }
