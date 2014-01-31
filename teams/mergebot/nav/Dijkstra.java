@@ -41,6 +41,7 @@ public class Dijkstra {
       // leave as null to cause exceptions if we accidentally try to use it
       // from[source.x][source.y] = Direction.NONE;
     }
+
   }
 
   public boolean done() {
@@ -81,6 +82,7 @@ public class Dijkstra {
     final int[][] distance = this.distance;
     final Direction[][] from = this.from;
     // final MapLocation[][] parent = this.parent;
+    final boolean[][] unsafe = getUnsafe();
 
     // int iters = 0;
     // int bc = Clock.getBytecodeNum();
@@ -101,6 +103,7 @@ public class Dijkstra {
 
       // check if we have already visited this node
       if (min == distance[x][y]) {
+        if (unsafe[x][y]) min += 100;
 
         dir = from[x][y];
 

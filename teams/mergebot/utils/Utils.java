@@ -557,6 +557,7 @@ public class Utils {
   }
 
   private static ArraySet<MapLocation> unsafeLocs;
+  private static boolean[][] unsafe;
 
   public static ArraySet<MapLocation> getUnsafeLocs() {
     if (unsafeLocs == null) {
@@ -569,5 +570,17 @@ public class Utils {
       }
     }
     return unsafeLocs;
+  }
+
+  public static boolean[][] getUnsafe() {
+    if (unsafe == null) {
+      unsafe = new boolean[GameConstants.MAP_MAX_WIDTH][GameConstants.MAP_MAX_HEIGHT];
+      getUnsafeLocs();
+      for (int i = unsafeLocs.size; --i >= 0;) {
+        MapLocation loc = unsafeLocs.get(i);
+        unsafe[loc.x][loc.y] = true;
+      }
+    }
+    return unsafe;
   }
 }
