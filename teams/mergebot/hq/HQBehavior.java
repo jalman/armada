@@ -468,6 +468,8 @@ public class HQBehavior extends RobotBehavior {
           RC.spawn(dir);
           soldierSpawnDirection = dir;
           numSoldiersSpawned++;
+          
+          messagingSystem.writeDeath(numSoldiersSpawned - RC.senseRobotCount());
           turnsSinceLastSpawn = 0;
           return true;
         }

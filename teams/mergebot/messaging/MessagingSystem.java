@@ -65,6 +65,7 @@ public class MessagingSystem {
     HELP_CHANNEL(1),
     RALLY_POINT(2),
     KILL_COUNT(1),
+    DEATH_COUNT(1),
     PATHING(GameConstants.MAP_MAX_HEIGHT * GameConstants.MAP_MAX_WIDTH);
 
     public final int type = this.ordinal();
@@ -368,6 +369,14 @@ public class MessagingSystem {
   } 
   public int readKills() throws GameActionException {
     int channel = ReservedMessageType.KILL_COUNT.channel();
+    return RC.readBroadcast(channel);
+  }
+  public void writeDeath(int deaths) throws GameActionException {
+    //should be called through HQBehavior
+    writeReservedMessage(ReservedMessageType.DEATH_COUNT, deaths);
+  } 
+  public int readDeaths() throws GameActionException {
+    int channel = ReservedMessageType.DEATH_COUNT.channel();
     return RC.readBroadcast(channel);
   }
 }
