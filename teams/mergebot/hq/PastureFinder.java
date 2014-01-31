@@ -26,7 +26,6 @@ public class PastureFinder {
         if (distDiff > 0) {
           Pair<MapLocation, Double> pastrLoc = gradientAscent(inittry);
           if (pastrLoc != null && pastrLoc.second > 0) {
-            pastrLoc.second += distDiff / 4;
             pastrLocs[num++] = pastrLoc;
           }
           // ret[i] = gradientDescentOnNegativeCowScalarField(inittry.x, inittry.y, 6);
@@ -172,7 +171,7 @@ public class PastureFinder {
     }
 
     //System.out.println("...gradient ascent finished");
-
+    // System.out.println("gradasc: cur " + current + ", best cows " + best);
     return new Pair<MapLocation, Double>(current, best);
   }
 

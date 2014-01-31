@@ -2,16 +2,14 @@ package mergebot.hq;
 
 import static mergebot.utils.Utils.*;
 
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.*;
 
 import mergebot.*;
 import mergebot.Strategy.GamePhase;
 import mergebot.messaging.*;
 import mergebot.messaging.MessagingSystem.MessageType;
 import mergebot.messaging.MessagingSystem.ReservedMessageType;
-import mergebot.nav.Dijkstra;
-import mergebot.nav.HybridMover;
+import mergebot.nav.*;
 import mergebot.utils.*;
 import mergebot.utils.Utils.SymmetryType;
 import battlecode.common.*;
@@ -40,7 +38,18 @@ public class HQBehavior extends RobotBehavior {
   /**
    * Good locations for PASTRs that we've determined.
    */
-  public static Pair<MapLocation, Double>[] goodPASTRLocs, secondPASTRLocs = null;
+  public static Pair<MapLocation, Double>[] goodPASTRLocs, firstPASTRLocs = null,
+      secondPASTRLocs = null;
+
+  public static double[][] mapCowWeightHash;
+
+  static final Comparator<Pair<MapLocation, Double>> pairMapLocDoubleComp =
+      new Comparator<Pair<MapLocation, Double>>() {
+        @Override
+        public int compare(Pair<MapLocation, Double> a, Pair<MapLocation, Double> b) {
+          return Double.compare(b.second, a.second);
+        }
+      };
 
   /**
    * Approximate locations of PASTRs we've actually taken.
@@ -60,7 +69,7 @@ public class HQBehavior extends RobotBehavior {
    * Location where HQ requests a PASTR be built. Here we assume that
    * we don't change our mind about this requested location too quickly.
    */
-  public static MapLocation requestedPASTRLoc, secondRequestedPASTRLoc;
+  public static MapLocation requestedPASTRLoc = null, secondRequestedPASTRLoc = null;
 
   /**
    * Whether the building bot has informed us that he has indeed built the PASTR
@@ -99,9 +108,6 @@ public class HQBehavior extends RobotBehavior {
 
     initialGuessMapSymmetry();
     macro();
-
-    goodPASTRLocs = PastureFinder.cowMiningLocations();
-
     pickStrategy();
 
     // TODO: take into account the strategy
@@ -116,45 +122,68 @@ public class HQBehavior extends RobotBehavior {
      */
   }
 
+  static final double AVERAGE_COW_WEIGHT = 40.0;
   /**
-   * Pick a strategy based on map properties
+   * Pick a strategy based on map properties.
    */
   private static void pickStrategy() {
+    goodPASTRLocs = PastureFinder.cowMiningLocations();
+
+    mapCowWeightHash = new double[MAP_WIDTH][MAP_HEIGHT];
+    for(int i=goodPASTRLocs.length; --i>=0; ) {
+      MapLocation loc = goodPASTRLocs[i].first;
+      mapCowWeightHash[loc.x][loc.y] = goodPASTRLocs[i].second;
+    }
+
     gamePhase = GamePhase.OPENING;
-    int hqDist = ALLY_HQ.distanceSquaredTo(ENEMY_HQ);
-    if (MAP_SIZE > 2500) {
-      if (hqDist > 1200) {
+    // int hqDist = ALLY_HQ.distanceSquaredTo(ENEMY_HQ);
+    int hqDist = naiveDistance(ALLY_HQ, ENEMY_HQ);
+    if (MAP_SIZE > 5000) {
+      if (hqDist > 60) {
         initialStrategy = Strategy.INIT_DOUBLE_PASTR;
-        midgameStrategy = Strategy.MID_DOUBLE_PASTR_AGGRESSIVE;
-      } else if (hqDist > 400) {
-        initialStrategy = Strategy.INIT_EARLY_SINGLE_PASTR;
+        midgameStrategy = Strategy.MID_SINGLE_PASTR_AGGRESSIVE;
+      } else if (hqDist > 50) {
+        initialStrategy = Strategy.INIT_SINGLE_PASTR;
+        midgameStrategy = Strategy.MID_SINGLE_PASTR_AGGRESSIVE;
+      } else if (hqDist > 30) {
+        initialStrategy = Strategy.INIT_LATE_SINGLE_PASTR;
         midgameStrategy = Strategy.MID_SINGLE_PASTR_AGGRESSIVE;
       } else {
-        initialStrategy = Strategy.INIT_SINGLE_PASTR;
+        initialStrategy = Strategy.INIT_VERY_LATE_SINGLE_PASTR;
         midgameStrategy = Strategy.MID_SINGLE_PASTR_AGGRESSIVE;
       }
-    } else if (MAP_SIZE > 1200) {
-      if (hqDist > 1200) {
-        initialStrategy = Strategy.INIT_SINGLE_PASTR;
+    } else if (MAP_SIZE > 2500) {
+      if (hqDist > 30) {
+        initialStrategy = Strategy.INIT_LATE_SINGLE_PASTR;
         midgameStrategy = Strategy.MID_SINGLE_PASTR_AGGRESSIVE;
       } else {
-        initialStrategy = Strategy.INIT_LATE_SINGLE_PASTR;
+        initialStrategy = Strategy.INIT_VERY_LATE_SINGLE_PASTR;
         midgameStrategy = Strategy.MID_SINGLE_PASTR_AGGRESSIVE;
       }
     } else {
-      initialStrategy = Strategy.INIT_LATE_SINGLE_PASTR;
+      initialStrategy = Strategy.INIT_VERY_LATE_SINGLE_PASTR;
       midgameStrategy = Strategy.MID_SINGLE_PASTR_AGGRESSIVE;
     }
     currentStrategy = initialStrategy;
-    RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy
-        + ", phase " + gamePhase + ", cur: " + currentStrategy);
 
     try {
       determineNewPASTRLocations();
+
+      if (requestedPASTRLoc != null) {
+        currentStrategy.PASTRThresholds[0] +=
+            (int) ((AVERAGE_COW_WEIGHT - mapCowWeightHash[requestedPASTRLoc.x][requestedPASTRLoc.y]) / 5);
+      }
+      if (secondRequestedPASTRLoc != null) {
+        currentStrategy.PASTRThresholds[1] +=
+            (int) ((AVERAGE_COW_WEIGHT - mapCowWeightHash[secondRequestedPASTRLoc.x][requestedPASTRLoc.y]) / 5);
+      }
     } catch (GameActionException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
+
+    RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy
+        + ", phase " + gamePhase + ", cur: " + currentStrategy);
   }
 
 
@@ -348,24 +377,33 @@ public class HQBehavior extends RobotBehavior {
   @SuppressWarnings("unchecked")
   private static void determineNewPASTRLocations() throws GameActionException {
     // TODO actually determine stuff
-    requestedPASTRLoc = goodPASTRLocs[0].first;
-    if (currentStrategy.desiredPASTRNum == 2) {
-      if (secondPASTRLocs == null) {
-        secondPASTRLocs = new Pair[goodPASTRLocs.length];
+    if(currentStrategy.desiredPASTRNum >= 1) {
+      if(firstPASTRLocs == null) {
+        firstPASTRLocs = new Pair[goodPASTRLocs.length];
+        for(int i = goodPASTRLocs.length; --i >= 0; ) {
+          MapLocation loc = goodPASTRLocs[i].first;
+          double weight = goodPASTRLocs[i].second + (loc.distanceSquaredTo(ENEMY_HQ) / (10 * loc.distanceSquaredTo(ALLY_HQ)));
+          // + (int) (Math.sqrt(loc.distanceSquaredTo(ENEMY_HQ) - loc.distanceSquaredTo(ALLY_HQ)) /
+          // 4);
+          firstPASTRLocs[i] = new Pair<MapLocation, Double>(loc, weight);
+        }
+        Arrays.sort(firstPASTRLocs, pairMapLocDoubleComp);
+      }
+      requestedPASTRLoc = firstPASTRLocs[0].first;
+    }
 
-        for (int i = goodPASTRLocs.length; --i >= 0;) {
-          Pair<MapLocation, Double> locPair = goodPASTRLocs[i];
+    if (currentStrategy.desiredPASTRNum >= 2) {
+      if (secondPASTRLocs == null) {
+        secondPASTRLocs = new Pair[firstPASTRLocs.length];
+
+        for (int i = firstPASTRLocs.length; --i >= 0;) {
+          Pair<MapLocation, Double> locPair = firstPASTRLocs[i];
           secondPASTRLocs[i] =
               new Pair<MapLocation, Double>(locPair.first, locPair.second
                   + requestedPASTRLoc.distanceSquaredTo(locPair.first));
         }
 
-        Arrays.sort(secondPASTRLocs, new Comparator<Pair<MapLocation, Double>>() {
-          @Override
-          public int compare(Pair<MapLocation, Double> a, Pair<MapLocation, Double> b) {
-            return Double.compare(b.second, a.second);
-          }
-        });
+        Arrays.sort(secondPASTRLocs, pairMapLocDoubleComp);
       }
       secondRequestedPASTRLoc = secondPASTRLocs[0].first; // TODO improve this choice
     }
@@ -424,7 +462,10 @@ public class HQBehavior extends RobotBehavior {
     }
 
 
-    if (!PASTRMessageSent && numBots > currentStrategy.PASTRThresholds[ALLY_PASTR_COUNT] && ALLY_PASTR_COUNT < desiredPASTRNumAdjusted && messagingSystem.readKills() > messagingSystem.readDeaths() + 4 + Clock.getRoundNum()/600) {
+    if (!PASTRMessageSent && numBots > currentStrategy.PASTRThresholds[ALLY_PASTR_COUNT]
+        && ALLY_PASTR_COUNT < desiredPASTRNumAdjusted
+        && (messagingSystem.readKills() > messagingSystem.readDeaths() + 4 + currentRound / 600
+        || numBots >= 15)) {
       messagingSystem.writeBuildPastureMessage(requestedPASTRLoc);
     }
   }
@@ -482,7 +523,7 @@ public class HQBehavior extends RobotBehavior {
           soldierSpawnDirection = dir;
           numSoldiersSpawned++;
 
-          messagingSystem.writeDeath(numSoldiersSpawned - RC.senseRobotCount());
+          messagingSystem.writeDeath(numSoldiersSpawned - numBots);
           turnsSinceLastSpawn = 0;
           return true;
         }
