@@ -339,4 +339,23 @@ public class SoldierBehavior extends RobotBehavior {
         break;
     }
   }
+  
+  
+  private boolean isAdjacentNoiseTowerBeingMade(MapLocation m) throws GameActionException {
+    Direction d = Direction.NORTH;
+    MapLocation loc = m.add(d);
+    
+    for(int i = 0; i < 8; i++) {
+      GameObject sensed = RC.senseObjectAtLocation(loc);
+      if (sensed != null) {
+        RobotInfo targetInfo = RC.senseRobotInfo((Robot) sensed);
+        if((targetInfo.type == RobotType.SOLDIER && targetInfo.constructingRounds < 10 && targetInfo.constructingType == RobotType.NOISETOWER)
+            || targetInfo.type == RobotType.NOISETOWER) return true;
+      }
+      d.rotateLeft();
+      loc = m.add(d);
+    }            
+
+    
+  }
 }
