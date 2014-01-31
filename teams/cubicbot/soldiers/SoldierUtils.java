@@ -1,6 +1,6 @@
-package team027.soldiers;
+package cubicbot.soldiers;
 
-import static team027.utils.Utils.*;
+import static cubicbot.utils.Utils.*;
 import battlecode.common.*;
 
 public class SoldierUtils {

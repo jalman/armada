@@ -1,8 +1,8 @@
-package team027.messaging;
+package cubicbot.messaging;
 
-import static team027.utils.Utils.*;
-import team027.utils.Pair;
-import team027.utils.Utils.SymmetryType;
+import static cubicbot.utils.Utils.*;
+import cubicbot.utils.Pair;
+import cubicbot.utils.Utils.SymmetryType;
 import battlecode.common.*;
 
 /**

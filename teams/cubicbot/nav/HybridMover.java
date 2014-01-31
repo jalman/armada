@@ -1,8 +1,8 @@
-package team027.nav;
+package cubicbot.nav;
 
-import static team027.utils.Utils.*;
-import team027.utils.LocSet;
-import team027.utils.Pair;
+import static cubicbot.utils.Utils.*;
+import cubicbot.utils.LocSet;
+import cubicbot.utils.Pair;
 import battlecode.common.*;
 
 public class HybridMover {

@@ -1,8 +1,9 @@
-package team027;
+package cubicbot.noise;
 
-import team027.utils.Utils;
+import cubicbot.RobotBehavior;
+import cubicbot.utils.Utils;
 import battlecode.common.*;
-import static team027.utils.Utils.*;
+import static cubicbot.utils.Utils.*;
 
 public class NoiseTowerBehavior extends RobotBehavior {
 	

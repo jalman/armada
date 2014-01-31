@@ -1,9 +1,9 @@
-package team027.soldiers;
+package cubicbot.soldiers;
 
-import static team027.soldiers.SoldierUtils.*;
-import static team027.utils.Utils.*;
-import team027.messaging.MessagingSystem.ReservedMessageType;
-import team027.nav.*;
+import static cubicbot.soldiers.SoldierUtils.*;
+import static cubicbot.utils.Utils.*;
+import cubicbot.messaging.MessagingSystem.ReservedMessageType;
+import cubicbot.nav.*;
 import battlecode.common.*;
 
 public class NathanMicro {

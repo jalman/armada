@@ -1,12 +1,12 @@
-package team027.utils;
+package cubicbot.utils;
 
 import static battlecode.common.Direction.*;
 
 import java.util.Arrays;
 import java.util.Random;
 
-import team027.messaging.MessagingSystem;
-import team027.messaging.MessagingSystem.ReservedMessageType;
+import cubicbot.messaging.MessagingSystem;
+import cubicbot.messaging.MessagingSystem.ReservedMessageType;
 import battlecode.common.*;
 
 public class Utils {

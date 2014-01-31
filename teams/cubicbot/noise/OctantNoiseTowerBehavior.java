@@ -1,9 +1,9 @@
-package team027.noise;
+package cubicbot.noise;
 
-import team027.RobotBehavior;
-import team027.utils.Utils;
+import cubicbot.RobotBehavior;
+import cubicbot.utils.Utils;
 import battlecode.common.*;
-import static team027.utils.Utils.*;
+import static cubicbot.utils.Utils.*;
 
 public class OctantNoiseTowerBehavior extends BFSNoiseTower {
 	

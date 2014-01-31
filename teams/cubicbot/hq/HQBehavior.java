@@ -1,17 +1,17 @@
-package team027.hq;
+package cubicbot.hq;
 
-import static team027.utils.Utils.*;
+import static cubicbot.utils.Utils.*;
 
 import java.util.*;
 
-import team027.*;
-import team027.Strategy.GamePhase;
-import team027.messaging.*;
-import team027.messaging.MessagingSystem.MessageType;
-import team027.messaging.MessagingSystem.ReservedMessageType;
-import team027.nav.*;
-import team027.utils.*;
-import team027.utils.Utils.SymmetryType;
+import cubicbot.*;
+import cubicbot.Strategy.GamePhase;
+import cubicbot.messaging.*;
+import cubicbot.messaging.MessagingSystem.MessageType;
+import cubicbot.messaging.MessagingSystem.ReservedMessageType;
+import cubicbot.nav.*;
+import cubicbot.utils.*;
+import cubicbot.utils.Utils.SymmetryType;
 import battlecode.common.*;
 
 public class HQBehavior extends RobotBehavior {

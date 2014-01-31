@@ -1,10 +1,10 @@
-package team027.hq;
+package cubicbot.hq;
 
-import static team027.utils.Utils.*;
+import static cubicbot.utils.Utils.*;
 
 import java.util.*;
 
-import team027.utils.*;
+import cubicbot.utils.*;
 import battlecode.common.*;
 
 public class PastureFinder {

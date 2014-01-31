@@ -38,9 +38,10 @@ public class SmartNoiseTowerBehavior extends BFSNoiseTower {
      System.out.println("SKIP" + Clock.getBytecodeNum());
 	   
 	   for(int i = 7; i >= 0; i--) {
+	     System.out.println(i + " " + queue[places[i]] + " " + skip[i]);
 	     if(!skip[i]) {
 	       target = queue[places[i]];
-	       break;
+	       //break;
 	     }
 	   }
 	   
@@ -65,30 +66,39 @@ public class SmartNoiseTowerBehavior extends BFSNoiseTower {
   public void run() throws GameActionException {
     if(!RC.isActive()) return;
     
-    if(target.distanceSquaredTo(currentLocation) < 3) {
-      a++;
-      while(a < 8 && skip[a]) a++;
-      
-      if(a>=8) {
-        if(!nearbyCows()) {
-          a = 0;
-          target = queue[places[a]];
+    inner: {
+      if(target.distanceSquaredTo(currentLocation) < 3) {
+        a++;
+        if(a%2 == 1) {
+          if(!nearbyCows()) {
+            a++;
+          } else {
+            break inner;
+          }
         }
-      } else {
-        target = queue[places[a]];
+        while(a < 16 && skip[a/2]) a+=2;
+        
+        if(a>=16) {
+          if(!nearbyCows()) {
+            a = 0;
+            target = queue[places[a/2]];
+          }
+        } else {
+          target = queue[places[a/2]];
+        }
+        
       }
-      
     }
 
     int x = target.x - currentLocation.x + 17;
     int y = target.y - currentLocation.y + 17;
     
     
-    MapLocation realTarget = target.add(dir[x][y].opposite(), 3);
+    MapLocation realTarget = dir[x][y] != null ? target.add(dir[x][y].opposite(), 3) : target;
     
     
     
-    target = target.add(dir[x][y]);
+    target = dir[x][y] != null ? target.add(dir[x][y]) : currentLocation;
     
     if(RC.canAttackSquare(realTarget)) RC.attackSquare(realTarget);
     else run();
@@ -113,7 +123,7 @@ public class SmartNoiseTowerBehavior extends BFSNoiseTower {
   
   
   public boolean nearbyCows() throws GameActionException {
-    if(a > 16) return false;
+    if(a > 24) return false;
     
     MapLocation best = null;
     double numCows = -1.0;
@@ -129,9 +139,10 @@ public class SmartNoiseTowerBehavior extends BFSNoiseTower {
       }
     }
     
-    if(numCows > 300) {
+    if(numCows > (a<16 ? 1500 : 600)) {
+      RC.setIndicatorString(2, "nearby at " + target + " on turn "+ Clock.getRoundNum());
       target = best;
-      System.out.println(target + " " + numCows);
+      //System.out.println(target + " " + numCows);
       return true;
     }
     return false;

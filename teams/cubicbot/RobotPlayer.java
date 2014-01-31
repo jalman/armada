@@ -1,14 +1,14 @@
-package team027;
+package cubicbot;
 
 import battlecode.common.GameActionException;
 import battlecode.common.RobotController;
-import team027.hq.HQBehavior;
-import team027.noise.NewNoiseTowerBehavior;
-import team027.noise.OctantNoiseTowerBehavior;
-import team027.noise.SmartNoiseTowerBehavior;
-import team027.noise.SpiralNoiseTowerBehavior;
-import team027.soldiers.SoldierBehavior;
-import team027.utils.Utils;
+import cubicbot.hq.HQBehavior;
+import cubicbot.noise.NewNoiseTowerBehavior;
+import cubicbot.noise.OctantNoiseTowerBehavior;
+import cubicbot.noise.SmartNoiseTowerBehavior;
+import cubicbot.noise.SpiralNoiseTowerBehavior;
+import cubicbot.soldiers.SoldierBehavior;
+import cubicbot.utils.Utils;
 
 public class RobotPlayer {
   public static void run(RobotController rc) {

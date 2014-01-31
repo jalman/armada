@@ -1,11 +1,11 @@
-package team027.soldiers;
+package cubicbot.soldiers;
 
-import static team027.utils.Utils.*;
-import team027.*;
-import team027.messaging.*;
-import team027.messaging.MessagingSystem.MessageType;
-import team027.nav.*;
-import team027.utils.*;
+import static cubicbot.utils.Utils.*;
+import cubicbot.*;
+import cubicbot.messaging.*;
+import cubicbot.messaging.MessagingSystem.MessageType;
+import cubicbot.nav.*;
+import cubicbot.utils.*;
 import battlecode.common.*;
 
 public class SoldierBehavior extends RobotBehavior {

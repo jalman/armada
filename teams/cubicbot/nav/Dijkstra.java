@@ -1,8 +1,8 @@
-package team027.nav;
+package cubicbot.nav;
 
-import static team027.utils.Utils.*;
-import team027.utils.BucketQueue;
-import team027.utils.LocSet;
+import static cubicbot.utils.Utils.*;
+import cubicbot.utils.BucketQueue;
+import cubicbot.utils.LocSet;
 import battlecode.common.*;
 
 public class Dijkstra {
