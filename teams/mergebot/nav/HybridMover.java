@@ -5,7 +5,6 @@ import mergebot.utils.LocSet;
 import mergebot.utils.Pair;
 import battlecode.common.*;
 
-
 public class HybridMover {
   public static MapLocation DIJKSTRA_CENTER = ALLY_HQ;
 
@@ -79,11 +78,11 @@ public class HybridMover {
     if (outPath != null) {
       if (!moveToPath()) {
         simpleMove(dest);
-        // RC.setIndicatorString(1, "dstar failed, simpleMove to dest");
+        RC.setIndicatorString(1, "outPath not found, simpleMove to dest");
       }
     } else {
       simpleMove(dest);
-      // RC.setIndicatorString(1, "no outPath, simpleMove to dest");
+      RC.setIndicatorString(1, "no outPath, simpleMove to dest");
     }
   }
 
@@ -132,8 +131,8 @@ public class HybridMover {
     int min = Integer.MAX_VALUE;
     // StringBuilder str = new StringBuilder();
     for (int i = 0; i < 8; i++) {
-
-      int d = RC.canMove(dir) ? dstar.getDistance(currentLocation.add(dir)) : Integer.MAX_VALUE;
+      MapLocation next = currentLocation.add(dir);
+      int d = RC.canMove(dir) && isSafe(next) ? dstar.getDistance(next) : Integer.MAX_VALUE;
       // str.append(dir + "(" + d + "), ");
 
       if (d < min) {
@@ -146,7 +145,7 @@ public class HybridMover {
     // RC.setIndicatorString(2, str.toString());
 
     if (best != null && move(best)) {
-      // RC.setIndicatorString(1, "Moving to outPath");
+      RC.setIndicatorString(1, "Moving to outPath " + min);
       return true;
     } else {
       return false;
