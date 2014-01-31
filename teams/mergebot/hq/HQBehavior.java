@@ -94,6 +94,8 @@ public class HQBehavior extends RobotBehavior {
   public static Strategy currentStrategy;
   public static Strategy initialStrategy, midgameStrategy;
 
+  public static boolean waitUntilVictory = false;
+
 
   public HQBehavior() {
     try {
@@ -164,23 +166,34 @@ public class HQBehavior extends RobotBehavior {
       initialStrategy = Strategy.INIT_VERY_LATE_SINGLE_PASTR;
       midgameStrategy = Strategy.MID_SINGLE_PASTR_AGGRESSIVE;
     }
+
+    // need to set this here and at the end
     currentStrategy = initialStrategy;
 
     try {
       determineNewPASTRLocations();
 
       if (requestedPASTRLoc != null) {
-        currentStrategy.PASTRThresholds[0] +=
+        int cowWeightOffset =
             (int) ((AVERAGE_COW_WEIGHT - mapCowWeightHash[requestedPASTRLoc.x][requestedPASTRLoc.y]) / 5);
+        if (cowWeightOffset < -4) {
+          waitUntilVictory = true;
+        }
+        initialStrategy.PASTRThresholds[0] += cowWeightOffset;
+        midgameStrategy.PASTRThresholds[0] += cowWeightOffset;
       }
       if (secondRequestedPASTRLoc != null) {
-        currentStrategy.PASTRThresholds[1] +=
-            (int) ((AVERAGE_COW_WEIGHT - mapCowWeightHash[secondRequestedPASTRLoc.x][requestedPASTRLoc.y]) / 5);
+        int secondCowWeightOffset =
+            (int) ((AVERAGE_COW_WEIGHT - mapCowWeightHash[secondRequestedPASTRLoc.x][secondRequestedPASTRLoc.y]) / 5);
+        initialStrategy.PASTRThresholds[1] += secondCowWeightOffset;
+        midgameStrategy.PASTRThresholds[1] += secondCowWeightOffset;
       }
     } catch (GameActionException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
+
+    currentStrategy = initialStrategy;
 
     RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy
         + ", phase " + gamePhase + ", cur: " + currentStrategy);
@@ -270,6 +283,10 @@ public class HQBehavior extends RobotBehavior {
   private void setRallyPoint() throws GameActionException {
     while (!dijkstra.visited(rally)) {
       rally = rally.add(rally.directionTo(ALLY_HQ));
+      if (rally.distanceSquaredTo(ALLY_HQ) < 15) {
+        rally = requestedPASTRLoc;
+        break;
+      }
       // System.out.println(rally);
     }
     messagingSystem.writeRallyPoint(rally);
@@ -463,11 +480,13 @@ public class HQBehavior extends RobotBehavior {
       }
     }
 
+    if (waitUntilVictory && numBots < 15
+        && (messagingSystem.readKills() <= messagingSystem.readDeaths() + 4 + currentRound / 600)) {
+      return;
+    }
 
     if (!PASTRMessageSent && numBots > currentStrategy.PASTRThresholds[ALLY_PASTR_COUNT]
-        && ALLY_PASTR_COUNT < desiredPASTRNumAdjusted
-        && (messagingSystem.readKills() > messagingSystem.readDeaths() + 4 + currentRound / 600
-        || numBots >= 15)) {
+        && ALLY_PASTR_COUNT < desiredPASTRNumAdjusted) {
       messagingSystem.writeBuildPastureMessage(requestedPASTRLoc);
     }
   }

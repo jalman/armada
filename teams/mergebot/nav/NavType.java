@@ -4,6 +4,7 @@ public enum NavType {
 
   BUG(new BugMoveFun()),
   BUG_2(new BugMoveFun2()),
+  DUMB(new DumbMove()),
   HQ_DIJKSTRA(null);
 
   public final NavAlg navAlg;
