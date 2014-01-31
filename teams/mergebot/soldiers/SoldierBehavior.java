@@ -354,10 +354,10 @@ public class SoldierBehavior extends RobotBehavior {
       }
       d.rotateLeft();
       loc = m.add(d);
-    }            
+    }          
+    return false;  
 
     
   }
   
-  return false;
 }
