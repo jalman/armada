@@ -2,14 +2,16 @@ package mergebot.hq;
 
 import static mergebot.utils.Utils.*;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
 
 import mergebot.*;
 import mergebot.Strategy.GamePhase;
 import mergebot.messaging.*;
 import mergebot.messaging.MessagingSystem.MessageType;
 import mergebot.messaging.MessagingSystem.ReservedMessageType;
-import mergebot.nav.*;
+import mergebot.nav.Dijkstra;
+import mergebot.nav.HybridMover;
 import mergebot.utils.*;
 import mergebot.utils.Utils.SymmetryType;
 import battlecode.common.*;
@@ -85,7 +87,7 @@ public class HQBehavior extends RobotBehavior {
 
   public HQBehavior() {
     try {
-      messagingSystem.writeRallyPoint(ALLY_HQ.add(HQ_DX / 3, HQ_DX / 3));
+      messagingSystem.writeRallyPoint(ALLY_HQ.add(HQ_DX / 2, HQ_DX / 2));
     } catch (GameActionException e) {
       e.printStackTrace();
     }
@@ -101,13 +103,15 @@ public class HQBehavior extends RobotBehavior {
     pickStrategy();
 
     // TODO: take into account the strategy
-    if (goodPASTRLocs.length > 0) {
-      try {
-        messagingSystem.writeRallyPoint(goodPASTRLocs[0].first);
-      } catch (GameActionException e) {
-        e.printStackTrace();
-      }
-    }
+    /*
+     * if (goodPASTRLocs.length > 0) {
+     * try {
+     * //messagingSystem.writeRallyPoint(goodPASTRLocs[0].first);
+     * } catch (GameActionException e) {
+     * e.printStackTrace();
+     * }
+     * }
+     */
   }
 
   /**
@@ -232,16 +236,13 @@ public class HQBehavior extends RobotBehavior {
     considerTeamAttacking();
   }
 
-  private boolean dijkstraFinished = false;
-
   @Override
   public void endRound() throws GameActionException {
     messagingSystem.endRound();
-    if (!dijkstraFinished && currentRound <= 2000) {
+    if (!dijkstra.done() && currentRound <= 2000) {
       dijkstra.compute(9000, true);
       if (dijkstra.done()) {
         System.out.println("Dijkstra finished on round " + currentRound);
-        dijkstraFinished = true;
       }
     }
   }
@@ -275,8 +276,8 @@ public class HQBehavior extends RobotBehavior {
       }
     }
 
-    // determineNewPASTRLocations();
-    PASTRMessages();
+  // determineNewPASTRLocations();
+  PASTRMessages();
   }
 
   private static void considerTeamAttacking() throws GameActionException {
@@ -466,7 +467,7 @@ public class HQBehavior extends RobotBehavior {
           RC.spawn(dir);
           soldierSpawnDirection = dir;
           numSoldiersSpawned++;
-          
+
           messagingSystem.writeDeath(numSoldiersSpawned - RC.senseRobotCount());
           turnsSinceLastSpawn = 0;
           return true;
