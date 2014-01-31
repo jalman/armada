@@ -126,7 +126,7 @@ public class OctantNoiseTowerBehavior extends BFSNoiseTower {
     
     if(numCows > 300) {
       target = best;
-      System.out.println(target + " " + numCows);
+      //System.out.println(target + " " + numCows);
       return true;
     }
     return false;

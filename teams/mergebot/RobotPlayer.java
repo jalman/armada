@@ -27,7 +27,7 @@ public class RobotPlayer {
         break;
       case NOISETOWER:
       try {
-        robot = new OctantNoiseTowerBehavior();
+        robot = new SmartNoiseTowerBehavior();
       } catch (GameActionException e1) {
         e1.printStackTrace();
       }
