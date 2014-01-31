@@ -22,7 +22,7 @@ public class SmartNoiseTowerBehavior extends BFSNoiseTower {
 	   }
 	   
 	   
-	   System.out.println("SKIP" + Clock.getBytecodeNum());
+	   //System.out.println("SKIP" + Clock.getBytecodeNum());
 	   for(int i = 7; i >= 0; i--) for(int j = i-1; j >= 0; j--) {
 	     if(skip[i] || skip[j]) continue;
 	     MapLocation ml = queue[places[i]];
@@ -35,10 +35,10 @@ public class SmartNoiseTowerBehavior extends BFSNoiseTower {
 	       ml = ml.add(dir[ml.x - currentLocation.x + 17][ml.y - currentLocation.y + 17]);
 	     }
 	   }
-     System.out.println("SKIP" + Clock.getBytecodeNum());
+     //System.out.println("SKIP" + Clock.getBytecodeNum());
 	   
 	   for(int i = 7; i >= 0; i--) {
-	     System.out.println(i + " " + queue[places[i]] + " " + skip[i]);
+	     //System.out.println(i + " " + queue[places[i]] + " " + skip[i]);
 	     if(!skip[i]) {
 	       target = queue[places[i]];
 	       //break;

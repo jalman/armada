@@ -36,7 +36,7 @@ abstract public class BFSNoiseTower extends RobotBehavior {
         at++;
       }
 	  
-	  for(int s = 1; s < at; s++) {
+	  for(int s = 0; ++s < at; ) {
 	    if(s%30 == 0 && RC.isActive()) {
 	      if(target == null || target.distanceSquaredTo(ALLY_PASTR_COUNT > 0 ? ALLY_PASTR_LOCS[0] : currentLocation) <= 5 ) {
 	        earlyNearbyCows();
