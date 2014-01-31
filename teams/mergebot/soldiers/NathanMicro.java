@@ -133,11 +133,13 @@ public class NathanMicro {
             // if we don't have to do anything, consider moving towards a nearby enemy
 
             if (nearbyEnemies.length > 0) {
-              Direction nd = currentLocation.directionTo(nearbyEnemies[0].location);
+              target = nearbyEnemies[0].location;
+              setTarget(target);
+              Direction nd = navAlg.getNextDir();
+              
               nextLoc = currentLocation.add(nd);
               nextAllyWeight = currentHealth + allyWeightAboutPoint(nextLoc, nearbyTeam);
               nextEnemyWeight = enemyWeightAboutPoint(nextLoc, nearbyEnemies);
-              target = nearbyEnemies[0].location;
             }
           }
           else if (isHelpingOut && target == null) {
@@ -292,6 +294,7 @@ public class NathanMicro {
         }
         dx /= nearbyEnemies.length;
         dy /= nearbyEnemies.length;
+        RC.setIndicatorString(2, "flee!");
 
         Direction newDir =
             currentLocation.directionTo(new MapLocation(2 * curX - dx, 2 * curY - dy));

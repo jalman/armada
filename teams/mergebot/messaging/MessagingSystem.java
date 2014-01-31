@@ -64,6 +64,7 @@ public class MessagingSystem {
     MAP_SYMMETRY(1),
     HELP_CHANNEL(1),
     RALLY_POINT(2),
+    KILL_COUNT(1),
     PATHING(GameConstants.MAP_MAX_HEIGHT * GameConstants.MAP_MAX_WIDTH);
 
     public final int type = this.ordinal();
@@ -361,5 +362,12 @@ public class MessagingSystem {
         RC.readBroadcast(ReservedMessageType.PATHING.channel() + loc.x * MAP_HEIGHT + loc.y);
     return new Pair<Direction, Integer>(INT_TO_DIR[broadcast >> shift], broadcast & mask);
   }
-
+  public void writeKill() throws GameActionException {
+    //PENTAKILL
+    writeReservedMessage(ReservedMessageType.KILL_COUNT, readKills() + 1);
+  } 
+  public int readKills() throws GameActionException {
+    int channel = ReservedMessageType.RALLY_POINT.channel();
+    return RC.readBroadcast(channel);
+  }
 }
