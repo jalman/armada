@@ -14,15 +14,35 @@ public class PastureFinder {
     int yparts = MAP_HEIGHT < 50 ? 5 : 7;
     @SuppressWarnings("unchecked")
     // ArraySet<Pair<MapLocation, Double>> pastrLocs = new ArraySet<Pair<MapLocation, Double>>(50);
-    Pair<MapLocation, Double>[] pastrLocs = new Pair[(1 + xparts) * (1 + yparts)];
-    int num = 0;
+    Pair<MapLocation, Double>[] pastrLocs = new Pair[(1 + xparts) * (1 + yparts) + 1];
+
+    int num = 1;
+    MapLocation inittry;
+    int distDiff;
+    
+    {
+      inittry =
+          // new MapLocation(x * (MAP_WIDTH) / xparts, y * (MAP_HEIGHT) / yparts);
+          ALLY_HQ.add(ENEMY_DIR);
+      distDiff = inittry.distanceSquaredTo(ENEMY_HQ) - inittry.distanceSquaredTo(ALLY_HQ);
+      if (distDiff > 0) {
+        Pair<MapLocation, Double> pastrLoc = gradientAscent(inittry);
+        if (pastrLoc != null && pastrLoc.second > 0) {
+          pastrLocs[0] = pastrLoc;
+        } else {
+          num = 0;
+        }
+      }
+    }
+    
+    
     for (int x = xparts; --x >= 0;) {
       for (int y = yparts; --y >= 0;) {
-        MapLocation inittry =
+        inittry =
             // new MapLocation(x * (MAP_WIDTH) / xparts, y * (MAP_HEIGHT) / yparts);
             new MapLocation((2 * x + 1) * (MAP_WIDTH) / (2 * xparts), (2 * y + 1) * (MAP_HEIGHT)
                 / (2 * yparts));
-        int distDiff = inittry.distanceSquaredTo(ENEMY_HQ) - inittry.distanceSquaredTo(ALLY_HQ);
+        distDiff = inittry.distanceSquaredTo(ENEMY_HQ) - inittry.distanceSquaredTo(ALLY_HQ);
         if (distDiff > 0) {
           Pair<MapLocation, Double> pastrLoc = gradientAscent(inittry);
           if (pastrLoc != null && pastrLoc.second > 0) {

@@ -275,11 +275,12 @@ public class SoldierBehavior extends RobotBehavior {
 
     switch (mode) {
       case COMBAT:
-        if (!RC.isActive()) return;
+        // if (!RC.isActive()) return;
         //micro.micro();
-        if (!NathanMicro.luge(mover)) {
+        // if (!NathanMicro.luge(mover)) {
           //micro.micro();
-        }
+        // }
+        NathanMicro.luge(mover);
         break;
       case MOVE:
         hybrid.setTarget(target);

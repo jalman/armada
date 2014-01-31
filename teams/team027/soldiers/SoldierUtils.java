@@ -116,7 +116,8 @@ public class SoldierUtils {
             return false; // jurgz should take a look at this ...
           }
 
-          MapLocation target = getHighestPriority(nearbyEnemyInfo);
+          RobotInfo targetInfo = getHighestPriority(nearbyEnemyInfo);
+          MapLocation target = targetInfo == null ? null : targetInfo.location;
           if (target == null) {
             if (nearestPastrLoc != null) {
               // PASTR_RANGE = 5
@@ -186,13 +187,13 @@ public class SoldierUtils {
    * @return
    * @throws GameActionException
    */
-  public static int getPriority(RobotInfo r) throws GameActionException
-  {
-    return getPriority(currentLocation, r);
-  }
+  // public static int getPriority(RobotInfo r) throws GameActionException
+  // {
+  // return getPriority(currentLocation, r);
+  // }
   public static int getPriority(MapLocation loc, RobotInfo r) throws GameActionException
   {
-    if (!inRange(loc, r.location)) {
+    if (loc.distanceSquaredTo(r.location) > RobotType.SOLDIER.attackRadiusMaxSquared) {
       return -100;
     } else if (r.type == RobotType.HQ) {
       return -10000;
@@ -206,14 +207,14 @@ public class SoldierUtils {
     if (r.type == RobotType.SOLDIER) {
       roundsUntilActive = (int) r.actionDelay;
     }
-    
-    int healthFactor = -(int)(healthPercent * 50);
-    int distFactor = 0; /* 50 / distance; */
+
+    int healthFactor = -(int) (healthPercent * 100);
+    int distFactor = 200 / distance;
     int delayFactor = 0; /* -5 * roundsUntilActive; */
-    
+
     // might want to improve efficiency
-    Robot[] bystanders = RC.senseNearbyGameObjects(Robot.class, loc, 2, ALLY_TEAM);
-    if (bystanders.length > 0) distFactor += 2000;
+    // Robot[] bystanders = RC.senseNearbyGameObjects(Robot.class, loc, 2, ALLY_TEAM);
+    // if (bystanders.length > 0) distFactor += 2000;
 
     return 5000 + priority + healthFactor + distFactor + delayFactor;
   }
@@ -238,11 +239,11 @@ public class SoldierUtils {
   private static int robotTypePriority(RobotInfo r) {
     switch (r.type) {
       case SOLDIER:
-        return 20;
+        return 500;
       case PASTR:
         return 0;
       case NOISETOWER:
-        return 0;
+        return -50;
       default:
         return -1000000;
     }
@@ -259,13 +260,6 @@ public class SoldierUtils {
       default:
         return 1;
     }
-  }
-
-  public static boolean inRange(MapLocation loc) {
-    return inRange(currentLocation, loc);
-  }
-  public static boolean inRange(MapLocation myLoc, MapLocation otherLoc) {
-    return myLoc.distanceSquaredTo(otherLoc) <= RobotType.SOLDIER.attackRadiusMaxSquared;
   }
 
   /**
@@ -303,11 +297,13 @@ public class SoldierUtils {
    * @return robot info with highest priority
    * @throws GameActionException
    */
-  public static MapLocation getHighestPriority(RobotInfo[] arr) throws GameActionException
-  {
-    return getHighestPriority(currentLocation, arr);
-  }
-  public static MapLocation getHighestPriority(MapLocation loc, RobotInfo[] arr) throws GameActionException
+  // public static MapLocation getHighestPriority(RobotInfo[] arr) throws GameActionException
+  // {
+  // return getHighestPriority(currentLocation, arr);
+  // }
+  // public static MapLocation getHighestPriority(MapLocation loc, RobotInfo[] arr) throws
+  // GameActionException
+  public static RobotInfo getHighestPriority(RobotInfo[] arr) throws GameActionException
   {
     if (arr.length == 0) return null;
 
@@ -315,7 +311,7 @@ public class SoldierUtils {
     int maxPriority = -100, priority;
 
     for (int i = arr.length - 1; i >= 0; i--) {
-      priority = getPriority(loc, arr[i]);
+      priority = getPriority(currentLocation, arr[i]);
       if (priority < 0) {
         continue;
       } else if (priority > maxPriority) {
@@ -327,6 +323,6 @@ public class SoldierUtils {
     if (targetInfoIndex < 0) {
       return null;
     }
-    return arr[targetInfoIndex].location;
+    return arr[targetInfoIndex];
   }
 }
