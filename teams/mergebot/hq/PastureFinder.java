@@ -28,6 +28,7 @@ public class PastureFinder {
       if (distDiff > 0) {
         Pair<MapLocation, Double> pastrLoc = gradientAscent(inittry);
         if (pastrLoc != null && pastrLoc.second > 0) {
+          System.out.println("checked " + pastrLoc);
           pastrLocs[0] = pastrLoc;
         } else {
           num = 0;
@@ -43,8 +44,9 @@ public class PastureFinder {
             new MapLocation((2 * x + 1) * (MAP_WIDTH) / (2 * xparts), (2 * y + 1) * (MAP_HEIGHT)
                 / (2 * yparts));
         distDiff = inittry.distanceSquaredTo(ENEMY_HQ) - inittry.distanceSquaredTo(ALLY_HQ);
-        if (distDiff > 0) {
+        if (distDiff >= 0) {
           Pair<MapLocation, Double> pastrLoc = gradientAscent(inittry);
+          System.out.println("checked " + pastrLoc + ", inittry = " + inittry);
           if (pastrLoc != null && pastrLoc.second > 0) {
             pastrLocs[num++] = pastrLoc;
           }
@@ -129,13 +131,15 @@ public class PastureFinder {
   static final int COW_GROWTH_RAND_ITERS = 2;
   static final int COW_GROWTH_RAND_DIST = 80;
 
-  public static double estimateCowGrowth(MapLocation loc, int cowRadius, int skip) {
+  public static double estimateCowGrowth(MapLocation centerLoc, int cowRadius, int skip) {
     double estimate = 0;
 
     MapLocation[] locs =
-        MapLocation.getAllMapLocationsWithinRadiusSq(loc, cowRadius);
+        MapLocation.getAllMapLocationsWithinRadiusSq(centerLoc, cowRadius);
     for (int i = locs.length - 1; i >= 0; i -= skip) {
-      estimate += effectiveCowGrowth(locs[i]);
+      MapLocation loc = locs[i];
+      estimate += (RC.senseTerrainTile(loc).isTraversableAtHeight(RobotLevel.ON_GROUND))
+          ? COW_GROWTH[loc.x][loc.y] : 0.0;
     }
 
     return estimate;

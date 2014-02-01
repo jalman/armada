@@ -184,7 +184,7 @@ public class SoldierBehavior extends RobotBehavior {
       return;
     }
 
-    if (buildPastureLoc != null && buildPrecisePastureLoc == null) {
+    if (buildPastureLoc != null) {
       // build a pasture! Overwrites previous pasture target.
       target = buildPastureLoc;
       setMode(Mode.BUILD_PASTURE, target);
@@ -313,12 +313,15 @@ public class SoldierBehavior extends RobotBehavior {
             RobotInfo targetInfo = RC.senseRobotInfo((Robot) RC.senseObjectAtLocation(target));
             if ((targetInfo.type == RobotType.SOLDIER && targetInfo.constructingRounds < 10 && targetInfo.constructingType == RobotType.NOISETOWER)
                 || targetInfo.type == RobotType.NOISETOWER) {
+
+              // System.out.println("I should build a pasture near " + target);
               if (buildPrecisePastureLoc == null) {
+                System.out.println("precise pasture loc = " + buildPrecisePastureLoc);
                 buildPrecisePastureLoc = getBestPastrLocAdjacentTo(target);
               }
 
               if (currentLocation.equals(buildPrecisePastureLoc)) {
-                // System.out.println("now building pastr at " + currentLocation);
+                System.out.println("now building pastr at " + currentLocation);
                 if (buildingSecondPastr) {
                   messagingSystem.writeMessage(MessageType.BUILDING_SECOND_SIMULTANEOUS_PASTURE,
                       target.x, target.y);
@@ -373,12 +376,15 @@ public class SoldierBehavior extends RobotBehavior {
     MapLocation best = null;
     double bestCowEstimate = 0;
     for (int i = adjLocs.length; --i >= 1;) {
-      if (adjLocs[i].equals(loc)
-          || !RC.senseTerrainTile(loc).isTraversableAtHeight(RobotLevel.ON_GROUND)) continue;
-      double cowEstimate = PastureFinder.estimateCowGrowth(adjLocs[i], 8, 1);
+      MapLocation loc2 = adjLocs[i];
+      if (loc2.equals(loc)
+          || !RC.senseTerrainTile(loc2).isTraversableAtHeight(RobotLevel.ON_GROUND)
+          || loc2 == ALLY_HQ)
+        continue;
+      double cowEstimate = PastureFinder.estimateCowGrowth(loc2, 8, 1);
       // System.out.println("cowEstimate at " + adjLocs[i] + " is " + cowEstimate);
       if (cowEstimate > bestCowEstimate) {
-        best = adjLocs[i];
+        best = loc2;
         bestCowEstimate= cowEstimate;
       }
     }

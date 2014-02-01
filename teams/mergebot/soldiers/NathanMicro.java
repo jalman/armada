@@ -64,7 +64,7 @@ public class NathanMicro {
 
       Robot[] nearbyTeam = RC.senseNearbyGameObjects(Robot.class, 35, ALLY_TEAM);
       double allyWeight = 0, enemyWeight = 0;
-      String bytect = "" + Clock.getBytecodeNum();
+      // String bytect = "" + Clock.getBytecodeNum();
 
       if (SoldierBehavior.pastrDenyRequestLoc != null) {
         MapLocation denyLoc = SoldierBehavior.pastrDenyRequestLoc;
@@ -84,7 +84,7 @@ public class NathanMicro {
 
       // find ally weight
       allyWeight = currentHealth + allyWeightAboutPoint(currentLocation, nearbyTeam);
-      bytect += " " + Clock.getBytecodeNum();
+      // bytect += " " + Clock.getBytecodeNum();
       // find enemy weight
       enemyWeight = enemyWeightAboutPoint(currentLocation, nearbyEnemies, false);
 
@@ -97,9 +97,11 @@ public class NathanMicro {
           isHelpingOut = false;
         }
       }
-      bytect += " " + Clock.getBytecodeNum();
-      String zzz = (isHelpingOut ? "HELPING " + helpingLoc : "") + "last help: "
-          + lastHelpRequest + " | round: " + Clock.getRoundNum();
+      // bytect += " " + Clock.getBytecodeNum();
+      /*
+       * String zzz = (isHelpingOut ? "HELPING " + helpingLoc : "") + "last help: "
+       * + lastHelpRequest + " | round: " + Clock.getRoundNum();
+       */
 
       RobotInfo targetInfo = getHighestPriority(nearbyEnemies);
       MapLocation target = targetInfo == null ? null : targetInfo.location;
@@ -120,7 +122,7 @@ public class NathanMicro {
       }
       if (JON_SCHNEIDER && currentHealth >= 50) JON_SCHNEIDER = false;
 
-      bytect += " " + Clock.getBytecodeNum();
+      // bytect += " " + Clock.getBytecodeNum();
 
       AIRBENDER = false;
 
@@ -152,11 +154,11 @@ public class NathanMicro {
           }
         }
       }
-      bytect += " " + Clock.getBytecodeNum();
+      // bytect += " " + Clock.getBytecodeNum();
 
-      RC.setIndicatorString(1, "in range " + enemiesInRange.length + " | " + "ally " + allyWeight
-          + " / enemy " + enemyWeight + " (turn " + Clock.getRoundNum() + ") | " + zzz
-          + (JON_SCHNEIDER ? " RUNAWAY" : "") + " | " + bytect);
+      // RC.setIndicatorString(1, "in range " + enemiesInRange.length + " | " + "ally " + allyWeight
+      // + " / enemy " + enemyWeight + " (turn " + Clock.getRoundNum() + ") | " + zzz
+      // + (JON_SCHNEIDER ? " RUNAWAY" : "") + " | " + bytect);
 
       /**
        * Choose an aggressive option
@@ -166,7 +168,7 @@ public class NathanMicro {
           && !AIRBENDER) {
         // if (RC.isActive()) { // willing to attack!
         MapLocation nextLoc = null;
-        String zyzzl = "" + Clock.getBytecodeNum();
+        // String zyzzl = "" + Clock.getBytecodeNum();
         double nextAllyWeight = 0, nextEnemyWeight = 0;
         Direction nextDir = Direction.NONE;
 
@@ -228,9 +230,9 @@ public class NathanMicro {
             }
           }
         }
-        bytect += "-" + Clock.getBytecodeNum();
-        zyzzl +=
-            "/// nextWeight: " + nextEnemyWeight + " at " + nextLoc + ")";
+        // bytect += "-" + Clock.getBytecodeNum();
+        // zyzzl +=
+        // "/// nextWeight: " + nextEnemyWeight + " at " + nextLoc + ")";
 
         // if nextLoc is set, we know where we're gonna move
         if (!isHelpingOut
@@ -240,30 +242,33 @@ public class NathanMicro {
             // nearbyEnemies.length == 0 ||
           // willing to move forward and attack!
 
-          String zzss =
-              "moving forward (ally weight: " + nextAllyWeight + ", enemy weight: "
-                  + nextEnemyWeight + " at " + nextLoc + ")"
-                  + (target == null ? " -- ceding control" : target) + " | " + zyzzl
-                  + " | turn " + Clock.getRoundNum();
+          /*
+           * String zzss =
+           * "moving forward (ally weight: " + nextAllyWeight + ", enemy weight: "
+           * + nextEnemyWeight + " at " + nextLoc + ")"
+           * + (target == null ? " -- ceding control" : target) + " | " + zyzzl
+           * + " | turn " + Clock.getRoundNum();
+           */
 
           if (nonAttackTarget != null) {
-            zzss += " going " + nextDir;
-            RC.setIndicatorString(2, zzss);
+            // zzss += " going " + nextDir;
+            // RC.setIndicatorString(2, zzss);
 
             for (int i = nearbyEnemies.length; --i >= 0;) {
               MapLocation nearbyEnemyLoc = nearbyEnemies[i].location;
               if (nearbyEnemyLoc.distanceSquaredTo(nextLoc) <= FIRE_RANGE_SQUARED) {
                 messagingSystem.writeMicroMessage(nearbyEnemyLoc, 1);
-                RC.setIndicatorString(2, zzss + "//" + nearbyEnemyLoc);
+                // RC.setIndicatorString(2, zzss + "//" + nearbyEnemyLoc);
                 break;
               }
             }
             // if (nextDir != null && nextDir != Direction.NONE && nextDir != Direction.OMNI)
             // already checked for ^
             RC.move(nextDir);
-          } else {
-            RC.setIndicatorString(2, zzss);
           }
+          // else {
+          // RC.setIndicatorString(2, zzss);
+          // }
         }
         /**
          * Logic about advancing when helping out
@@ -271,11 +276,13 @@ public class NathanMicro {
         else if (isHelpingOut && nextLoc != null
             && nextAllyWeight >= POWER_ADVANTAGE * nextEnemyWeight
             && target == null) {
-          String sz = "";
-          for (int z = nearbyEnemies.length; --z >= 0;)
-            sz += "/" + nearbyEnemies[z].location;
-          RC.setIndicatorString(2, "/// helping out " + nextLoc + ","
-              + nextAllyWeight + "," + nextEnemyWeight + "|" + sz);
+          // String sz = "";
+          /*
+           * for (int z = nearbyEnemies.length; --z >= 0;)
+           * sz += "/" + nearbyEnemies[z].location;
+           * RC.setIndicatorString(2, "/// helping out " + nextLoc + ","
+           * + nextAllyWeight + "," + nextEnemyWeight + "|" + sz);
+           */
 
           RC.move(nextDir);
 //          Direction newDir = currentLocation.directionTo(helpingLoc);
@@ -315,10 +322,12 @@ public class NathanMicro {
           int d = lazySqrt(currentLocation.distanceSquaredTo(target));
 
           int maxDmg = (int) (enemiesInRange.length * (d - 1) * RobotType.SOLDIER.attackPower);
-          String sf =
-              maxDmg + "," + currentHealth + "," + allyWeight + "," + enemyWeight + " | "
-                  + (GREAT_LUGE ? "suicide" : "") + "," + target + " - round "
-                  + currentRound;
+          /*
+           * String sf =
+           * maxDmg + "," + currentHealth + "," + allyWeight + "," + enemyWeight + " | "
+           * + (GREAT_LUGE ? "suicide" : "") + "," + target + " - round "
+           * + currentRound;
+           */
           if (currentHealth > maxDmg + 5 && allyWeight < enemyWeight - GREAT_LUGE_ASSIST) {
             // TEMPORARY CHANGE ME LATER
             // GREAT_LUGE = true;
@@ -333,16 +342,16 @@ public class NathanMicro {
           } else {
             if (targetInfo.health <= 10.01) {
               messagingSystem.writeKill();
-              sf += "| kill count: " + messagingSystem.readKills();
+              // sf += "| kill count: " + messagingSystem.readKills();
             }
             RC.attackSquare(target);
             if (microLoc.x != target.x || microLoc.y != target.y) {
               messagingSystem.writeMicroMessage(target, 1);
             }
-            sf += " | requesting aid " + target;
+            // sf += " | requesting aid " + target;
           }
 
-          RC.setIndicatorString(2, sf);
+          // RC.setIndicatorString(2, sf);
         }
         /**
          * Logic about maybe attacking cows

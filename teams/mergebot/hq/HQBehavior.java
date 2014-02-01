@@ -32,7 +32,7 @@ public class HQBehavior extends RobotBehavior {
   private final AttackSystem attackSystem = new AttackSystem();
 
   public static final int[] yrangefornoise = { 17, 17, 17, 17, 16, 16, 16, 15, 15, 14, 14, 13, 12, 11, 10, 8, 6, 3 };
-  
+
   public static boolean PASTRReachabilityConfirmed = true;
   //public static final int[]
 
@@ -141,10 +141,10 @@ public class HQBehavior extends RobotBehavior {
     gamePhase = GamePhase.OPENING;
     // int hqDist = ALLY_HQ.distanceSquaredTo(ENEMY_HQ);
     int hqDist = naiveDistance(ALLY_HQ, ENEMY_HQ);
-    if (MAP_SIZE > 5000) {
+    if (MAP_SIZE > 6000) {
       if (hqDist > 60) {
         initialStrategy = Strategy.INIT_DOUBLE_PASTR;
-        midgameStrategy = Strategy.MID_SINGLE_PASTR_AGGRESSIVE;
+        midgameStrategy = Strategy.MID_DOUBLE_PASTR_AGGRESSIVE;
       } else if (hqDist > 50) {
         initialStrategy = Strategy.INIT_SINGLE_PASTR;
         midgameStrategy = Strategy.MID_SINGLE_PASTR_AGGRESSIVE;
@@ -181,21 +181,26 @@ public class HQBehavior extends RobotBehavior {
             (int) ((AVERAGE_COW_WEIGHT - mapCowWeightHash[requestedPASTRLoc.x][requestedPASTRLoc.y]) / 5);
 
         int pastrHQDist = requestedPASTRLoc.distanceSquaredTo(ALLY_HQ);
-        if (pastrHQDist <= 10) {
-          initialStrategy.PASTRThresholds[0] -= (10 - pastrHQDist) / 3;
-          midgameStrategy.PASTRThresholds[0] -= (10 - pastrHQDist) / 3;
-        } else if (cowWeightOffset < -4) {
-          waitUntilVictory = true;
+        if (currentStrategy.desiredPASTRNum == 1) {
+          if (pastrHQDist <= 10) {
+            initialStrategy.PASTRThresholds[0] -= (10 - pastrHQDist) / 3;
+            midgameStrategy.PASTRThresholds[0] -= (10 - pastrHQDist) / 3;
+          } else if (cowWeightOffset < -4) {
+            waitUntilVictory = true;
+          }
+          initialStrategy.PASTRThresholds[0] += cowWeightOffset;
+          midgameStrategy.PASTRThresholds[0] += cowWeightOffset;
         }
-        initialStrategy.PASTRThresholds[0] += cowWeightOffset;
-        midgameStrategy.PASTRThresholds[0] += cowWeightOffset;
       }
-      if (secondRequestedPASTRLoc != null) {
-        int secondCowWeightOffset =
-            (int) ((AVERAGE_COW_WEIGHT - mapCowWeightHash[secondRequestedPASTRLoc.x][secondRequestedPASTRLoc.y]) / 5);
-        initialStrategy.PASTRThresholds[1] += secondCowWeightOffset;
-        midgameStrategy.PASTRThresholds[1] += secondCowWeightOffset;
-      }
+      // if (secondRequestedPASTRLoc != null) {
+      // int secondCowWeightOffset =
+      // (int) ((AVERAGE_COW_WEIGHT -
+      // mapCowWeightHash[secondRequestedPASTRLoc.x][secondRequestedPASTRLoc.y]) / 5);
+      // if (initialStrategy.PASTRThresholds[1] + secondCowWeightOffset >= 2) {
+      // initialStrategy.PASTRThresholds[1] += secondCowWeightOffset;
+      // }
+      // midgameStrategy.PASTRThresholds[1] += secondCowWeightOffset;
+      // }
     } catch (GameActionException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
@@ -206,7 +211,7 @@ public class HQBehavior extends RobotBehavior {
     RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy
         + ", phase " + gamePhase + ", cur: " + currentStrategy);
   }
-  
+
   private void rallyToFirstPASTR() {
     rally = firstPASTRLocs == null || firstPASTRLocs.length == 0 ?  goodPASTRLocs[0].first : firstPASTRLocs[0].first;
     rally = rally.add(wayToEnemy(rally),2);
@@ -298,15 +303,15 @@ public class HQBehavior extends RobotBehavior {
     executeStrategy();
     considerTeamAttacking();
   }
-  
+
   private void doublecheckPASTRs() throws GameActionException {
     if(PASTRReachabilityConfirmed) return;
-    
+
     boolean changes = false;
-    
+
     int num = 0;
     Pair<MapLocation, Double>[] reachablePASTRs = new Pair[goodPASTRLocs.length];
-    
+
     for(int i = 0; i < goodPASTRLocs.length; i++) {
       if(dijkstra.visited(goodPASTRLocs[i].first)) {
         reachablePASTRs[num++] = goodPASTRLocs[i];
@@ -314,15 +319,15 @@ public class HQBehavior extends RobotBehavior {
         changes = true;
       }
     }
-    
+
     if(num>0) goodPASTRLocs = Arrays.copyOf(reachablePASTRs, num); //if statement to avoid blowing up, maybe should do something better?
-    
+
     if(changes && num != 0) {
       firstPASTRLocs = null;
       secondPASTRLocs = null;
       determineNewPASTRLocations();
     }
-    
+
     PASTRReachabilityConfirmed = true;
   }
 
@@ -343,7 +348,7 @@ public class HQBehavior extends RobotBehavior {
   public void endRound() throws GameActionException {
     messagingSystem.endRound();
     if (!dijkstra.done() && currentRound <= 2000) {
-      dijkstra.compute(9000, true);
+      dijkstra.compute(9900, true);
       if (dijkstra.done()) {
         PASTRReachabilityConfirmed = false;
         System.out.println("Dijkstra finished on round " + currentRound);
@@ -448,7 +453,7 @@ public class HQBehavior extends RobotBehavior {
         for(int i = goodPASTRLocs.length; --i >= 0; ) {
           MapLocation loc = goodPASTRLocs[i].first;
           double weight = goodPASTRLocs[i].second
-                  + (loc.distanceSquaredTo(ENEMY_HQ) / (5 * loc.distanceSquaredTo(ALLY_HQ)));
+              + (loc.distanceSquaredTo(ENEMY_HQ) / (3 * loc.distanceSquaredTo(ALLY_HQ)));
           // + (int) (Math.sqrt(loc.distanceSquaredTo(ENEMY_HQ) - loc.distanceSquaredTo(ALLY_HQ)) /
           // 4);
           firstPASTRLocs[i] = new Pair<MapLocation, Double>(loc, weight);
@@ -473,7 +478,7 @@ public class HQBehavior extends RobotBehavior {
       }
       secondRequestedPASTRLoc = secondPASTRLocs[0].first; // TODO improve this choice
     }
-    
+
     rallyToFirstPASTR();
   }
 
