@@ -32,8 +32,13 @@ public class SoldierBehavior extends RobotBehavior {
 
   static MapLocation buildPastureLoc = null;
 
+  /**
+   * Whether we're waiting to build a pasture.
+   */
+  private boolean waitingPasture = false;
+  private int buildPastureRound;
+
   static boolean buildingSecondPastr;
-  // private int buildPastureRound;
 
   // private final Micro micro = new Micro(this);
 
@@ -75,7 +80,7 @@ public class SoldierBehavior extends RobotBehavior {
         if (!buildingSecondPastr) {
           buildPastureLoc = new MapLocation(message[0], message[1]);
         }
-        // buildPastureRound = currentRound;
+        buildPastureRound = currentRound;
       }
     };
 
@@ -101,7 +106,9 @@ public class SoldierBehavior extends RobotBehavior {
             target = loc;
             setMode(Mode.DEFEND_PASTURE, target);
           }
-          buildPastureLoc = null;
+          if (!loc.equals(currentLocation)) {
+            buildPastureLoc = null;
+          }
         }
       }
     };
@@ -175,6 +182,7 @@ public class SoldierBehavior extends RobotBehavior {
     if (buildPastureLoc != null) {
       // build a pasture! Overwrites previous pasture target.
       target = buildPastureLoc;
+      waitingPasture = false;
       setMode(Mode.BUILD_PASTURE, target);
       // if (currentRound > 400 && currentRound < 420) {
       // System.out.println("I've been told to build pastr at " + target);
@@ -295,30 +303,23 @@ public class SoldierBehavior extends RobotBehavior {
       case BUILD_PASTURE:
         int d = currentLocation.distanceSquaredTo(target);
 
-        // if we're there build a noise tower
+        // if we're there wait to build a pasture
         if (d == 0) {
+          // RC.setIndicatorString(1, "Waiting to build pasture.");
+          waitingPasture = true;
           if (!RC.isActive()) break;
-          RC.construct(RobotType.NOISETOWER);
-          RC.setIndicatorString(1, "Building Noise Tower");
+          if (buildPasture()) {
+            RC.construct(RobotType.PASTR);
+            RC.setIndicatorString(1, "Building Pasture");
+          }
           break;
         } else if (d <= 2) {
           if (!RC.isActive()) break;
-          // if noise tower has been built build a pasture
           if (!RC.canMove(currentLocation.directionTo(target))) {
-            RobotInfo targetInfo = RC.senseRobotInfo((Robot) RC.senseObjectAtLocation(target));
-            if ((targetInfo.type == RobotType.SOLDIER && targetInfo.constructingRounds < 10 && targetInfo.constructingType == RobotType.NOISETOWER)
-                || targetInfo.type == RobotType.NOISETOWER) {
-              System.out.println("now building pastr at " + currentLocation);
-              if (buildingSecondPastr) {
-                messagingSystem.writeMessage(MessageType.BUILDING_SECOND_SIMULTANEOUS_PASTURE,
-                    target.x, target.y);
-              } else {
-                messagingSystem.writeBuildingPastureMessage(target);
-              }
-              RC.setIndicatorString(1, "Building Pasture");
-              RC.construct(RobotType.PASTR);
-              break;
-            }
+            messagingSystem.writeBuildingPastureMessage(target);
+            RC.setIndicatorString(1, "Building Noise Tower");
+            RC.construct(RobotType.NOISETOWER);
+            break;
           }
         }
         hybrid.move(target);
@@ -336,24 +337,22 @@ public class SoldierBehavior extends RobotBehavior {
     }
   }
 
+  private static final int threshold = RobotType.PASTR.captureTurns - 20;
 
-  private boolean isAdjacentNoiseTowerBeingMade(MapLocation m) throws GameActionException {
+  private boolean buildPasture() throws GameActionException {
     Direction d = Direction.NORTH;
-    MapLocation loc = m.add(d);
 
     for(int i = 0; i < 8; i++) {
-      GameObject sensed = RC.senseObjectAtLocation(loc);
-      if (sensed != null) {
-        RobotInfo targetInfo = RC.senseRobotInfo((Robot) sensed);
-        if((targetInfo.type == RobotType.SOLDIER && targetInfo.constructingRounds < 10 && targetInfo.constructingType == RobotType.NOISETOWER)
-            || targetInfo.type == RobotType.NOISETOWER) return true;
+      d = d.rotateLeft();
+      GameObject sensed = RC.senseObjectAtLocation(currentLocation.add(d));
+      if (sensed == null) continue;
+      RobotInfo targetInfo = RC.senseRobotInfo((Robot) sensed);
+      if (targetInfo.constructingType == RobotType.NOISETOWER
+          && targetInfo.constructingRounds <= threshold) {
+        return true;
       }
-      d.rotateLeft();
-      loc = m.add(d);
     }
     return false;
-
-
   }
 
 }
