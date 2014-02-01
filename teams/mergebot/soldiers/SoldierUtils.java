@@ -201,14 +201,14 @@ public class SoldierUtils {
 
     int distance = naiveDistance(loc, r.location);
     // int cows = (int) RC.senseCowsAtLocation(r.location);
-    double healthPercent = robotHealthPercent(r);
+    // double healthPercent = robotHealthPercent(r);
     int priority = robotTypePriority(r);
-    int roundsUntilActive = 0;
-    if (r.type == RobotType.SOLDIER) {
-      roundsUntilActive = (int) r.actionDelay;
-    }
+    // int roundsUntilActive = 0;
+    // if (r.type == RobotType.SOLDIER) {
+    // roundsUntilActive = (int) r.actionDelay;
+    // }
 
-    int healthFactor = -(int) (healthPercent * 100);
+    int healthFactor = 500 / ((int) (r.health / 10 + 1)); // -(int) (healthPercent * 100);
     int distFactor = 200 / distance;
     int delayFactor = 0; /* -5 * roundsUntilActive; */
 
@@ -243,7 +243,7 @@ public class SoldierUtils {
       case PASTR:
         return 0;
       case NOISETOWER:
-        return -50;
+        return -250;
       default:
         return -1000000;
     }
