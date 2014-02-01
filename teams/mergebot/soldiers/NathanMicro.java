@@ -490,7 +490,7 @@ public class NathanMicro {
     for (int i = nearbyTeam.length; --i >= 0;) {
       RobotInfo ri = getRobotInfo(nearbyTeam[i]);
 
-      if (ri.type == RobotType.SOLDIER)
+      if (ri.type == RobotType.SOLDIER) {
           if (ri.isConstructing) {
             break;
           }
@@ -523,6 +523,7 @@ public class NathanMicro {
            * }
            * break;
            */
+      }
     }
     return allyWeight;
   }
