@@ -17,7 +17,7 @@ abstract public class BFSNoiseTower extends RobotBehavior {
 	MapLocation target = null;
 	
 	public BFSNoiseTower() throws GameActionException {
-    System.out.println("start " + Clock.getBytecodeNum());
+    //System.out.println("start " + Clock.getBytecodeNum());
 	  
 		
 	  queue[0] = currentLocation;
@@ -75,8 +75,8 @@ abstract public class BFSNoiseTower extends RobotBehavior {
 	    }
 	  }
 
-    System.out.println("end " + Clock.getBytecodeNum());
-    System.out.println("at " + at);
+    //System.out.println("end " + Clock.getBytecodeNum());
+    //System.out.println("at " + at);
 	  
 	}
 	
@@ -95,7 +95,7 @@ abstract public class BFSNoiseTower extends RobotBehavior {
         }
       }
     }
-    System.out.println("target" + target + "  numcows " + numCows);
+    //System.out.println("target" + target + "  numcows " + numCows);
   }
 
 }
