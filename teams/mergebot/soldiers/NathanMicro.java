@@ -35,16 +35,17 @@ public class NathanMicro {
   public static NavAlg dumbMove = new DumbMove();
   public static MapLocation dest = null;
 
-  public static MapLocation m = new MapLocation(0, 0);
+  public static MapLocation microLoc = new MapLocation(0, 0);
 
   public static boolean luge(Mover mover) throws GameActionException {
 
     for (int i = 0; i < SoldierBehavior.microLocations.size; ++i) {
-      m = SoldierBehavior.microLocations.get(i);
-      if ((!isHelpingOut && currentLocation.distanceSquaredTo(m) <= 100)
-          || currentLocation.distanceSquaredTo(m) <= currentLocation.distanceSquaredTo(helpingLoc)) {
+      microLoc = SoldierBehavior.microLocations.get(i);
+      if ((!isHelpingOut && currentLocation.distanceSquaredTo(microLoc) <= 100)
+          || currentLocation.distanceSquaredTo(microLoc) <= currentLocation
+              .distanceSquaredTo(helpingLoc)) {
         isHelpingOut = true;
-        helpingLoc = m;
+        helpingLoc = microLoc;
         lastHelpRequest = Clock.getRoundNum();
         break;
       }
@@ -65,6 +66,23 @@ public class NathanMicro {
       String bytect = "" + Clock.getBytecodeNum();
 
       RobotInfo ri;
+
+
+      if (SoldierBehavior.pastrDenyRequestLoc != null) {
+        MapLocation denyLoc = SoldierBehavior.pastrDenyRequestLoc;
+        if (RC.canAttackSquare(denyLoc)) { // can attack means can sense
+          Robot denyPastr = (Robot) RC.senseObjectAtLocation(denyLoc);
+          System.out.println("wanting to deny ...");
+          if (denyPastr != null) {
+            RobotInfo denyPastrInfo = getRobotInfo(denyPastr);
+            if (denyPastrInfo.health <= 10) {
+              System.out.println("DENIED");
+              RC.attackSquare(denyLoc);
+              return true;
+            }
+          }
+        }
+      }
 
       MapLocation nearestPastrLoc = null;
       int nearestPastrDistance = 1000000;
@@ -177,7 +195,7 @@ public class NathanMicro {
 
             for (int i=0; i<ALLY_PASTR_COUNT; ++i) {
               MapLocation loc = ALLY_PASTR_LOCS[i];
-              Direction towardsPastr = currentLocation.directionTo(loc);
+              // Direction towardsPastr = currentLocation.directionTo(loc);
 
               if (currentLocation.distanceSquaredTo(loc) <= 20
                   && (currentLocation.distanceSquaredTo(loc) >= currentLocation.distanceSquaredTo(nextLoc))) {
@@ -199,9 +217,9 @@ public class NathanMicro {
             && (nearbyEnemies.length == 0 || (enemiesInRange.length == 0 && nextAllyWeight >= POWER_ADVANTAGE
                 * nextEnemyWeight + 100))) {
           // willing to move forward and attack!
-          String ss = "";
-          for (int z = 0; z < nearbyEnemies.length; ++z)
-            ss += "," + nearbyEnemies[z].location.x + "," + nearbyEnemies[z].location.y;
+          // String ss = "";
+          // for (int z = 0; z < nearbyEnemies.length; ++z)
+          // ss += "," + nearbyEnemies[z].location.x + "," + nearbyEnemies[z].location.y;
           String zzss =
               "moving forward (ally weight: " + nextAllyWeight + ", enemy weight: "
                   + nextEnemyWeight + " at (" + nextLoc.x + "," + nextLoc.y + "))"
@@ -253,6 +271,7 @@ public class NathanMicro {
               newDir = dumbMove.getNextDir(); // variable reuse, sorry
               if (newDir != Direction.NONE) {
                 RC.move(newDir);
+                return true;
               }
               // if (RC.canMove(newDir)) {
               // // mover.setTarget(currentLocation.add(newDir));
@@ -367,7 +386,7 @@ public class NathanMicro {
               sf += "| kill count: " + messagingSystem.readKills();
             }
             RC.attackSquare(target);
-            if (m.x != target.x || m.y != target.y) {
+            if (microLoc.x != target.x || microLoc.y != target.y) {
               messagingSystem.writeMicroMessage(target, 1);
             }
             sf += " | requesting aid " + target.x + "," + target.y;
@@ -378,18 +397,24 @@ public class NathanMicro {
       } else if (nearbyEnemies.length > 0) {
         int dx = 0, dy = 0;
 
+        int nearestEnemyDist = 100000, enemyDist;
+
         for (int i = nearbyEnemies.length - 1; i >= 0; --i) {
-          dx += nearbyEnemies[i].location.x;
-          dy += nearbyEnemies[i].location.y;
+          MapLocation nearbyEnemyLoc = nearbyEnemies[i].location;
+          dx += nearbyEnemyLoc.x;
+          dy += nearbyEnemyLoc.y;
+          enemyDist = nearbyEnemyLoc.distanceSquaredTo(currentLocation);
+          if (enemyDist < nearestEnemyDist) {
+            nearestEnemyDist = enemyDist;
+          }
         }
         dx /= nearbyEnemies.length;
         dy /= nearbyEnemies.length;
-        RC.setIndicatorString(2, "flee!");
 
         Direction newDir =
             currentLocation.directionTo(new MapLocation(2 * curX - dx, 2 * curY - dy));
 
-        if (newDir != Direction.NONE && newDir != Direction.OMNI) {
+        if (nearestEnemyDist <= 20 && newDir != Direction.NONE && newDir != Direction.OMNI) {
           Direction wayBack = messagingSystem.readPathingInfo(currentLocation).first.opposite();
 
           if (RC.canMove(wayBack)
@@ -397,14 +422,15 @@ public class NathanMicro {
                   .rotateRight())) {
             // mover.setTarget(currentLocation.add(wayBack));
             // mover.move();
+            RC.setIndicatorString(2, "flee!");
             RC.move(wayBack);
             return true;
-          }
-          else {
+          } else {
             dumbMove.recompute(currentLocation.add(newDir));
             newDir = dumbMove.getNextDir(); // variable reuse, sorry
             if (newDir != Direction.NONE) {
               RC.move(newDir);
+              RC.setIndicatorString(2, "flee!");
             }
             // if (RC.canMove(newDir)) {
             // // mover.setTarget(currentLocation.add(newDir));
@@ -430,7 +456,7 @@ public class NathanMicro {
                   messagingSystem.writeKill();
                   RC.setIndicatorString(2, "desperation kill " + messagingSystem.readKills());
                 }
-                if (m.x != target.x || m.y != target.y) {
+                if (microLoc.x != target.x || microLoc.y != target.y) {
                   messagingSystem.writeMicroMessage(target, 1);
                 }
               }
@@ -560,10 +586,11 @@ public class NathanMicro {
 
           if (evaluateNewSquare && d <= 8 && ri.actionDelay < 2) {
             weight += (41 + ri.health / 2);
-          } else if (d <= FIRE_RANGE_SQUARED)
+          } else if (d <= FIRE_RANGE_SQUARED) {
             weight += ri.health;
-          else
-            weight += ri.health - ALLY_WEIGHT_DECAY * lazySqrt(d - FIRE_RANGE_SQUARED);
+          } else {
+            weight += Math.max(0, ri.health - ALLY_WEIGHT_DECAY * lazySqrt(d - FIRE_RANGE_SQUARED));
+          }
           break;
         case PASTR:
         case NOISETOWER:
