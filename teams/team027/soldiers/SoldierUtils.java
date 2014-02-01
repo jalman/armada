@@ -50,7 +50,7 @@ public class SoldierUtils {
       }
       return false;
     } else if (RC.isActive()) {
-      RC.setIndicatorString(2, "luging!");
+      // RC.setIndicatorString(2, "luging!");
       Robot[] nearbyTeam = RC.senseNearbyGameObjects(Robot.class, 35, ALLY_TEAM);
       int enemyWeight = 0;
 
@@ -87,7 +87,7 @@ public class SoldierUtils {
         }
         nearbyEnemyInfo[i] = ri;
       }
-      RC.setIndicatorString(1, "" + Clock.getRoundNum() + "," + enemyWeight);
+      // RC.setIndicatorString(1, "" + Clock.getRoundNum() + "," + enemyWeight);
 
       int help_message = RC.readBroadcast(HELP_CHANNEL);
       int callX = help_message / 256, callY = help_message % 256;
@@ -107,7 +107,7 @@ public class SoldierUtils {
 
       if (nearbyTeam.length + 1 >= enemyWeight || isHelpingOut) {
         if (isHelpingOut) {
-          RC.setIndicatorString(2, "helping out to kill guy at " + callX + "," + callY);
+          // RC.setIndicatorString(2, "helping out to kill guy at " + callX + "," + callY);
         }
         if (RC.isActive()) { // willing to attack!
           if ((nearbyEnemies.length == 0 || nearbyTeam.length - 1 >= enemyWeight || isHelpingOut)
@@ -201,14 +201,14 @@ public class SoldierUtils {
 
     int distance = naiveDistance(loc, r.location);
     // int cows = (int) RC.senseCowsAtLocation(r.location);
-    double healthPercent = robotHealthPercent(r);
+    // double healthPercent = robotHealthPercent(r);
     int priority = robotTypePriority(r);
-    int roundsUntilActive = 0;
-    if (r.type == RobotType.SOLDIER) {
-      roundsUntilActive = (int) r.actionDelay;
-    }
+    // int roundsUntilActive = 0;
+    // if (r.type == RobotType.SOLDIER) {
+    // roundsUntilActive = (int) r.actionDelay;
+    // }
 
-    int healthFactor = -(int) (healthPercent * 100);
+    int healthFactor = (int) (500 / (r.health / 10 + 1)); // -(int) (healthPercent * 100);
     int distFactor = 200 / distance;
     int delayFactor = 0; /* -5 * roundsUntilActive; */
 
@@ -243,7 +243,7 @@ public class SoldierUtils {
       case PASTR:
         return 0;
       case NOISETOWER:
-        return -50;
+        return -500;
       default:
         return -1000000;
     }

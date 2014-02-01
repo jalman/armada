@@ -2,10 +2,9 @@ package team027.utils;
 
 import static battlecode.common.Direction.*;
 
-import java.util.Arrays;
-import java.util.Random;
+import java.util.*;
 
-import team027.messaging.MessagingSystem;
+import team027.messaging.*;
 import team027.messaging.MessagingSystem.ReservedMessageType;
 import battlecode.common.*;
 
@@ -22,6 +21,23 @@ public class Utils {
   public static final int NORMAL_DIAGONAL = 14;
   public static final int NORMAL_ORTHOGONAL = 10;
 
+  /**
+   * Distance assuming normal terrain and no obstacles.
+   */
+  public static int naiveDistance(MapLocation loc1, MapLocation loc2) {
+    int dx = Math.abs(loc1.x - loc2.x);
+    int dy = Math.abs(loc1.y - loc2.y);
+    int min, diff;
+    if (dx > dy) {
+      min = dy;
+      diff = dx - dy;
+    } else {
+      min = dx;
+      diff = dy - dx;
+    }
+    return (min * NORMAL_DIAGONAL + diff * NORMAL_ORTHOGONAL);
+  }
+
   public static final int WEIGHT[][] = new int[TERRAIN_TILES.length][8];
 
   static {
@@ -33,6 +49,10 @@ public class Utils {
       WEIGHT[TerrainTile.NORMAL.ordinal()][i] = NORMAL_DIAGONAL;
       WEIGHT[TerrainTile.ROAD.ordinal()][i] = ROAD_DIAGONAL;
     }
+  }
+
+  public static int getActionDelay(MapLocation loc, Direction dir) {
+    return WEIGHT[RC.senseTerrainTile(loc).ordinal()][dir.ordinal()];
   }
 
   public static final Direction[] REGULAR_DIRECTIONS = new Direction[] {
@@ -79,6 +99,9 @@ public class Utils {
   // public static double forward;
   public static int SENSOR_RADIUS2;
   public static Robot[] enemyRobots = new Robot[0];
+
+  // cache all RobotInfos sensed this turn; hash by ID
+  public static RobotInfo[] robotInfoCache;
 
 
   /**
@@ -160,6 +183,8 @@ public class Utils {
    * Called at the beginning of each round by buildings.
    */
   public static void updateBuildingUtils() {
+    robotInfoCache = new RobotInfo[100000];
+
     enemyRobots =
         RC.senseNearbyGameObjects(Robot.class, currentLocation, SENSOR_RADIUS2, ENEMY_TEAM);
     currentRound = Clock.getRoundNum();
@@ -178,6 +203,8 @@ public class Utils {
    * Called at the beginning of each round by moving units.
    */
   public static void updateUnitUtils() {
+    robotInfoCache = new RobotInfo[100000];
+
     currentLocation = RC.getLocation();
     curX = currentLocation.x;
     curY = currentLocation.y;
@@ -185,7 +212,7 @@ public class Utils {
     try {
       currentCowsHere = RC.senseCowsAtLocation(currentLocation);
     } catch (GameActionException e) {
-      e.printStackTrace();
+      // e.printStackTrace();
     }
 
     enemyRobots =
@@ -197,6 +224,17 @@ public class Utils {
   private static RobotInfo[] enemyRobotInfo = new RobotInfo[0];
   private static int roundInfoUpdated = -1;
 
+  public static RobotInfo getRobotInfo(Robot r) throws GameActionException {
+    int id = r.getID();
+    if (robotInfoCache[id] == null) {
+      RobotInfo ri = RC.senseRobotInfo(r);
+      robotInfoCache[id] = ri;
+      return ri;
+    } else {
+      return robotInfoCache[id];
+    }
+  }
+
   /**
    * Get RobotInfos of each enemy in @enemyRobots.
    * @return RobotInfos of each enemy in @enemyRobots
@@ -206,7 +244,7 @@ public class Utils {
     if (roundInfoUpdated < currentRound) {
       enemyRobotInfo = new RobotInfo[enemyRobots.length];
       for (int i = enemyRobots.length - 1; i >= 0; i--) {
-        enemyRobotInfo[i] = RC.senseRobotInfo(enemyRobots[i]);
+        enemyRobotInfo[i] = getRobotInfo(enemyRobots[i]);
       }
       roundInfoUpdated = currentRound;
     }
@@ -336,6 +374,7 @@ public class Utils {
   }
 
   public static Direction getSymmetricDirection(Direction d) {
+    if(d == null) return d;
     switch (MAP_SYMMETRY) {
       case ROTATION:
         return d.opposite();
@@ -433,54 +472,6 @@ public class Utils {
     }
   }
 
-
-
-  private static int dx, dy;
-
-  /**
-   * Returns naiveDistance between locations loc0 and loc1,
-   *  defined as max(|loc0.x - loc1.x|, |loc0.y - loc1.y|)
-   * @param loc0
-   * @param loc1
-   * @return naiveDistance between loc0 and loc1
-   */
-  public static int naiveDistance(MapLocation loc0, MapLocation loc1) {
-    // call takes 33 bytecodes
-    // dx = loc0.x > loc1.x ? loc0.x - loc1.x : loc1.x - loc0.x;
-    // dy = loc0.y > loc1.y ? loc0.y - loc1.y : loc1.y - loc0.y;
-    // int c = dx > dy ? dx : dy;
-    //    int bc = Clock.getBytecodeNum();
-    dx = loc0.x - loc1.x; // call takes 31 bytecodes
-    dy = loc0.y - loc1.y;
-    dx = dx * dx > dy * dy ? dx : dy;
-    return dx > 0 ? dx : -dx;
-    // int c = dx > 0 ? dx : -dx;
-    // int c = Math.max(Math.max(dx, dy), Math.max(-dx, -dy));
-    //return naiveDistance(loc0.x, loc0.y, loc1.x, loc1.y);
-    //    System.out.println("bc used by naiveDistance: " + (Clock.getBytecodeNum()-bc));
-    //    return c;
-  }
-
-  /**
-   * Returns naiveDistance between locations (x1, y1) and (x2, y2),
-   *  defined as max(|x1-x2|, |y1-y2|)
-   * @param x1
-   * @param y1
-   * @param x2
-   * @param y2
-   * @return naiveDistance between (x1, y1) and (x2, y2)
-   */
-  public static int naiveDistance(int x1, int y1, int x2, int y2) {
-    dx = x1 > x2 ? x1 - x2 : x2 - x1;
-    dy = y1 > y2 ? y1 - y2 : y2 - y1;
-    return dx > dy ? dx : dy;
-    // dx = x1 - x2;
-    // dy = y1 - y2;
-    // dx = dx*dx > dy*dy ? dx : dy;
-    // return dx > 0 ? dx : -dx;
-    //return Math.max(Math.abs(x1-x2), Math.abs(y1-y2));
-  }
-
   /**
    * @return whether it's my first round executing or not
    */
@@ -534,7 +525,7 @@ public class Utils {
     int bc = Clock.getBytecodeNum();
     int d = bc - bytecodes;
 
-    RC.setIndicatorString(2, Integer.toString(d));
+    // RC.setIndicatorString(2, Integer.toString(d));
 
     bytecodes = bc;
     return d;

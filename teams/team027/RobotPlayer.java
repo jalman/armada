@@ -1,14 +1,10 @@
 package team027;
 
-import battlecode.common.GameActionException;
-import battlecode.common.RobotController;
-import team027.hq.HQBehavior;
-import team027.noise.NewNoiseTowerBehavior;
-import team027.noise.OctantNoiseTowerBehavior;
-import team027.noise.SmartNoiseTowerBehavior;
-import team027.noise.SpiralNoiseTowerBehavior;
-import team027.soldiers.SoldierBehavior;
-import team027.utils.Utils;
+import team027.hq.*;
+import team027.noise.*;
+import team027.soldiers.*;
+import team027.utils.*;
+import battlecode.common.*;
 
 public class RobotPlayer {
   public static void run(RobotController rc) {
@@ -29,7 +25,7 @@ public class RobotPlayer {
       try {
         robot = new SmartNoiseTowerBehavior();
       } catch (GameActionException e1) {
-        e1.printStackTrace();
+          // e1.printStackTrace();
       }
         break;
       default: // autokill
@@ -43,7 +39,7 @@ public class RobotPlayer {
         robot.endRound();
         rc.yield();
       } catch (GameActionException e) {
-        e.printStackTrace();
+        // e.printStackTrace();
       }
     }
   }

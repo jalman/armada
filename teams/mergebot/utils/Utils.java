@@ -212,7 +212,7 @@ public class Utils {
     try {
       currentCowsHere = RC.senseCowsAtLocation(currentLocation);
     } catch (GameActionException e) {
-      e.printStackTrace();
+      // e.printStackTrace();
     }
 
     enemyRobots =
@@ -525,7 +525,7 @@ public class Utils {
     int bc = Clock.getBytecodeNum();
     int d = bc - bytecodes;
 
-    RC.setIndicatorString(2, Integer.toString(d));
+    // RC.setIndicatorString(2, Integer.toString(d));
 
     bytecodes = bc;
     return d;

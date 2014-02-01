@@ -107,7 +107,7 @@ public class Mover {
                 break;
             }
           } catch (GameActionException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
           }
         } else if (currentLocation.distanceSquaredTo(dest) <= 2) {
           setTarget(currentLocation);

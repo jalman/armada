@@ -28,7 +28,7 @@ public class PastureFinder {
       if (distDiff > 0) {
         Pair<MapLocation, Double> pastrLoc = gradientAscent(inittry);
         if (pastrLoc != null && pastrLoc.second > 0) {
-          System.out.println("checked " + pastrLoc);
+          // System.out.println("checked " + pastrLoc);
           pastrLocs[0] = pastrLoc;
         } else {
           num = 0;
@@ -46,7 +46,7 @@ public class PastureFinder {
         distDiff = inittry.distanceSquaredTo(ENEMY_HQ) - inittry.distanceSquaredTo(ALLY_HQ);
         if (distDiff >= 0) {
           Pair<MapLocation, Double> pastrLoc = gradientAscent(inittry);
-          System.out.println("checked " + pastrLoc + ", inittry = " + inittry);
+          // System.out.println("checked " + pastrLoc + ", inittry = " + inittry);
           if (pastrLoc != null && pastrLoc.second > 0) {
             pastrLocs[num++] = pastrLoc;
           }
@@ -71,7 +71,7 @@ public class PastureFinder {
     // }
     //
     // System.out.println(Clock.getBytecodeNum());
-    System.out.println("Finished finding cow mining locations.");
+    // System.out.println("Finished finding cow mining locations.");
 
     return pastrLocs;
   }

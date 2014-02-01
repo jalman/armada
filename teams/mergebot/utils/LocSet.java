@@ -2,9 +2,9 @@ package mergebot.utils;
 
 import static mergebot.utils.Utils.*;
 
-import java.util.Arrays;
+import java.util.*;
 
-import battlecode.common.MapLocation;
+import battlecode.common.*;
 
 /**
  * An (ordered) set of map locations.
@@ -28,9 +28,9 @@ public class LocSet {
     index[loc.x][loc.y] = size;
     locs[size++] = loc;
 
-    if (!get(getIndex(loc)).equals(loc)) {
-      System.out.println("BUG in LocSet!");
-    }
+    // if (!get(getIndex(loc)).equals(loc)) {
+    // System.out.println("BUG in LocSet!");
+    // }
   }
 
   public boolean contains(MapLocation loc) {

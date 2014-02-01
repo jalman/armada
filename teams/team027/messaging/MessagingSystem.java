@@ -1,7 +1,7 @@
 package team027.messaging;
 
 import static team027.utils.Utils.*;
-import team027.utils.Pair;
+import team027.utils.*;
 import team027.utils.Utils.SymmetryType;
 import battlecode.common.*;
 
@@ -28,6 +28,7 @@ public class MessagingSystem {
     BUILD_SECOND_SIMULTANEOUS_PASTURE(3), // target soldier ID, (x, y)
     BUILDING_PASTURE(2),
     BUILDING_SECOND_SIMULTANEOUS_PASTURE(3), // (x, y)
+    PASTURE_DENY_REQUEST(2)
     ;
 
     public final int type = this.ordinal();
@@ -334,6 +335,10 @@ public class MessagingSystem {
   public MapLocation readRallyPoint() throws GameActionException {
     int channel = ReservedMessageType.RALLY_POINT.channel();
     return new MapLocation(RC.readBroadcast(channel), RC.readBroadcast(channel + 1));
+  }
+
+  public void writePastureDenyRequest(MapLocation loc) throws GameActionException {
+    writeMessage(MessageType.PASTURE_DENY_REQUEST, loc.x, loc.y);
   }
 
   /**

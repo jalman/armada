@@ -70,11 +70,11 @@ public class NathanMicro {
         MapLocation denyLoc = SoldierBehavior.pastrDenyRequestLoc;
         if (RC.canAttackSquare(denyLoc)) { // can attack means can sense
           Robot denyPastr = (Robot) RC.senseObjectAtLocation(denyLoc);
-          System.out.println("wanting to deny ...");
+          // System.out.println("wanting to deny ...");
           if (denyPastr != null) {
             RobotInfo denyPastrInfo = getRobotInfo(denyPastr);
             if (denyPastrInfo.health <= 10) {
-              System.out.println("DENIED");
+              // System.out.println("DENIED");
               RC.attackSquare(denyLoc);
               return true;
             }
@@ -388,22 +388,22 @@ public class NathanMicro {
                   .rotateRight())) {
             // mover.setTarget(currentLocation.add(wayBack));
             // mover.move();
-            RC.setIndicatorString(2, "flee!");
+            // RC.setIndicatorString(2, "flee!");
             RC.move(wayBack);
           } else {
             dumbMove.recompute(currentLocation.add(newDir));
             newDir = dumbMove.getNextDir(); // variable reuse, sorry
             if (newDir != Direction.NONE) {
               RC.move(newDir);
-              RC.setIndicatorString(2, "flee!");
+              // RC.setIndicatorString(2, "flee!");
             }
             else {
-              RC.setIndicatorString(2, "want to flee but...");
+              // RC.setIndicatorString(2, "want to flee but...");
               if (target != null && RC.canAttackSquare(target)) {
                 RC.attackSquare(target);
                 if (targetInfo.health <= 10.) {
                   messagingSystem.writeKill();
-                  RC.setIndicatorString(2, "desperation kill " + messagingSystem.readKills());
+                  // RC.setIndicatorString(2, "desperation kill " + messagingSystem.readKills());
                 }
                 if (microLoc.x != target.x || microLoc.y != target.y) {
                   messagingSystem.writeMicroMessage(target, 1);

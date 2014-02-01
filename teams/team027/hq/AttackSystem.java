@@ -65,7 +65,7 @@ public class AttackSystem {
         }
 
       } catch (GameActionException e) {
-        e.printStackTrace();
+        // e.printStackTrace();
       }
 
     }
@@ -147,7 +147,7 @@ public class AttackSystem {
         MapLocation target = new MapLocation(curX + attackX - IN_RANGE_OFFSET, curY + attackY
             - IN_RANGE_OFFSET);
         RC.attackSquare(target);
-        RC.setIndicatorString(1, "target: " + target);
+        // RC.setIndicatorString(1, "target: " + target);
         // RC.setIndicatorString(0, weight[attackX - 1][attackY - 1] + " " +
         // weight[attackX][attackY - 1] + " " + weight[attackX + 1][attackY - 1]);
         // RC.setIndicatorString(1, weight[attackX - 1][attackY] + " " + weight[attackX][attackY]
@@ -155,7 +155,7 @@ public class AttackSystem {
         // RC.setIndicatorString(2, weight[attackX - 1][attackY + 1] + " " +
         // weight[attackX][attackY + 1] + " " + weight[attackX + 1][attackY + 1]);
       } catch (GameActionException e) {
-        e.printStackTrace();
+        // e.printStackTrace();
       }
     }
   }

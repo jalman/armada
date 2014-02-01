@@ -1,6 +1,6 @@
 package team027.utils;
 
-import battlecode.common.GameActionException;
+import battlecode.common.*;
 
 public class ClothingManager extends Utils {
 
@@ -11,7 +11,7 @@ public class ClothingManager extends Utils {
 		try {
 			RC.wearHat();
 		} catch (GameActionException e) {
-			e.printStackTrace();
+      // e.printStackTrace();
 		}
 	}
 

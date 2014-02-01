@@ -1,8 +1,7 @@
 package mergebot.nav;
 
 import static mergebot.utils.Utils.*;
-import mergebot.utils.BucketQueue;
-import mergebot.utils.LocSet;
+import mergebot.utils.*;
 import battlecode.common.*;
 
 public class Dijkstra {
@@ -123,7 +122,7 @@ public class Dijkstra {
           try {
             messagingSystem.writePathingInfo(next, dir, min, null /* parent[x][y] */);
           } catch (GameActionException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
           }
         }
 

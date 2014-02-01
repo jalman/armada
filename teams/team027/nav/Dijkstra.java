@@ -1,8 +1,7 @@
 package team027.nav;
 
 import static team027.utils.Utils.*;
-import team027.utils.BucketQueue;
-import team027.utils.LocSet;
+import team027.utils.*;
 import battlecode.common.*;
 
 public class Dijkstra {
@@ -123,7 +122,7 @@ public class Dijkstra {
           try {
             messagingSystem.writePathingInfo(next, dir, min, null /* parent[x][y] */);
           } catch (GameActionException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
           }
         }
 

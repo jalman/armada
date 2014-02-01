@@ -50,7 +50,7 @@ public class SoldierUtils {
       }
       return false;
     } else if (RC.isActive()) {
-      RC.setIndicatorString(2, "luging!");
+      // RC.setIndicatorString(2, "luging!");
       Robot[] nearbyTeam = RC.senseNearbyGameObjects(Robot.class, 35, ALLY_TEAM);
       int enemyWeight = 0;
 
@@ -87,7 +87,7 @@ public class SoldierUtils {
         }
         nearbyEnemyInfo[i] = ri;
       }
-      RC.setIndicatorString(1, "" + Clock.getRoundNum() + "," + enemyWeight);
+      // RC.setIndicatorString(1, "" + Clock.getRoundNum() + "," + enemyWeight);
 
       int help_message = RC.readBroadcast(HELP_CHANNEL);
       int callX = help_message / 256, callY = help_message % 256;
@@ -107,7 +107,7 @@ public class SoldierUtils {
 
       if (nearbyTeam.length + 1 >= enemyWeight || isHelpingOut) {
         if (isHelpingOut) {
-          RC.setIndicatorString(2, "helping out to kill guy at " + callX + "," + callY);
+          // RC.setIndicatorString(2, "helping out to kill guy at " + callX + "," + callY);
         }
         if (RC.isActive()) { // willing to attack!
           if ((nearbyEnemies.length == 0 || nearbyTeam.length - 1 >= enemyWeight || isHelpingOut)

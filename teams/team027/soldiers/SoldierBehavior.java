@@ -2,6 +2,7 @@ package team027.soldiers;
 
 import static team027.utils.Utils.*;
 import team027.*;
+import team027.hq.*;
 import team027.messaging.*;
 import team027.messaging.MessagingSystem.MessageType;
 import team027.nav.*;
@@ -28,8 +29,10 @@ public class SoldierBehavior extends RobotBehavior {
 
   static ArraySet<MapLocation> attackLocations = new ArraySet<MapLocation>(100);
   static ArraySet<MapLocation> microLocations = new ArraySet<MapLocation>(100);
+  public static MapLocation pastrDenyRequestLoc = null;
 
   static MapLocation buildPastureLoc = null;
+  static MapLocation buildPrecisePastureLoc = null;
 
   static boolean buildingSecondPastr;
   // private int buildPastureRound;
@@ -100,20 +103,29 @@ public class SoldierBehavior extends RobotBehavior {
             target = loc;
             setMode(Mode.DEFEND_PASTURE, target);
           }
+          buildPrecisePastureLoc = null;
           buildPastureLoc = null;
         }
       }
     };
-
 
     handlers[MessageType.BUILDING_SECOND_SIMULTANEOUS_PASTURE.type] = new MessageHandler() {
       @Override
       public void handleMessage(int[] message) throws GameActionException {
         MapLocation loc = new MapLocation(message[0], message[1]);
         if (mode == Mode.BUILD_PASTURE && buildingSecondPastr && !loc.equals(currentLocation)) {
+          buildPrecisePastureLoc = null;
           buildPastureLoc = null;
           target = loc;
         }
+      }
+    };
+
+    handlers[MessageType.PASTURE_DENY_REQUEST.type] = new MessageHandler() {
+      @Override
+      public void handleMessage(int[] message) throws GameActionException {
+        MapLocation loc = new MapLocation(message[0], message[1]);
+        pastrDenyRequestLoc = loc;
       }
     };
   }
@@ -130,6 +142,7 @@ public class SoldierBehavior extends RobotBehavior {
   @Override
   public void endRound() throws GameActionException {
     // sendEnemyMessages();
+    pastrDenyRequestLoc = null;
     messagingSystem.endRound();
   }
 
@@ -175,14 +188,7 @@ public class SoldierBehavior extends RobotBehavior {
       // build a pasture! Overwrites previous pasture target.
       target = buildPastureLoc;
       setMode(Mode.BUILD_PASTURE, target);
-      // if (currentRound > 400 && currentRound < 420) {
-      // System.out.println("I've been told to build pastr at " + target);
-      // }
       return;
-      // } else {
-      // // already building a pasture
-      // return;
-      // }
     }
 
     // TODO: use priorities for where to be?
@@ -224,12 +230,12 @@ public class SoldierBehavior extends RobotBehavior {
   }
 
   private void setMode(Mode m) {
-    RC.setIndicatorString(0, m.toString());
+    // RC.setIndicatorString(0, m.toString());
     mode = m;
   }
 
   private void setMode(Mode m, MapLocation target) {
-    RC.setIndicatorString(0, m + " " + target + " 2nd? " + buildingSecondPastr);
+    // RC.setIndicatorString(0, m + " " + target + " 2nd? " + buildingSecondPastr);
     mode = m;
   }
 
@@ -278,21 +284,18 @@ public class SoldierBehavior extends RobotBehavior {
         // if (!RC.isActive()) return;
         //micro.micro();
         // if (!NathanMicro.luge(mover)) {
-          //micro.micro();
+        //micro.micro();
         // }
         NathanMicro.luge(mover);
         break;
       case MOVE:
-        hybrid.setTarget(target);
-        hybrid.move();
+        hybrid.move(target);
         break;
       case FARM:
-        hybrid.setTarget(target);
-        hybrid.sneak();
+        hybrid.sneak(target);
         break;
       case EXPLORE:
-        hybrid.setTarget(target);
-        hybrid.move();
+        hybrid.move(target);
         break;
       case BUILD_PASTURE:
         int d = currentLocation.distanceSquaredTo(target);
@@ -301,7 +304,7 @@ public class SoldierBehavior extends RobotBehavior {
         if (d == 0) {
           if (!RC.isActive()) break;
           RC.construct(RobotType.NOISETOWER);
-          RC.setIndicatorString(1, "Building Noise Tower");
+          // RC.setIndicatorString(1, "Building Noise Tower");
           break;
         } else if (d <= 2) {
           if (!RC.isActive()) break;
@@ -310,41 +313,50 @@ public class SoldierBehavior extends RobotBehavior {
             RobotInfo targetInfo = RC.senseRobotInfo((Robot) RC.senseObjectAtLocation(target));
             if ((targetInfo.type == RobotType.SOLDIER && targetInfo.constructingRounds < 10 && targetInfo.constructingType == RobotType.NOISETOWER)
                 || targetInfo.type == RobotType.NOISETOWER) {
-              System.out.println("now building pastr at " + currentLocation);
-              if (buildingSecondPastr) {
-                messagingSystem.writeMessage(MessageType.BUILDING_SECOND_SIMULTANEOUS_PASTURE,
-                    target.x, target.y);
-              } else {
-                messagingSystem.writeBuildingPastureMessage(target);
+
+              // System.out.println("I should build a pasture near " + target);
+              if (buildPrecisePastureLoc == null) {
+                // System.out.println("precise pasture loc = " + buildPrecisePastureLoc);
+                buildPrecisePastureLoc = getBestPastrLocAdjacentTo(target);
               }
-              RC.setIndicatorString(1, "Building Pasture");
-              RC.construct(RobotType.PASTR);
+
+              if (currentLocation.equals(buildPrecisePastureLoc)) {
+                // System.out.println("now building pastr at " + currentLocation);
+                if (buildingSecondPastr) {
+                  messagingSystem.writeMessage(MessageType.BUILDING_SECOND_SIMULTANEOUS_PASTURE,
+                      target.x, target.y);
+                } else {
+                  messagingSystem.writeBuildingPastureMessage(target);
+                }
+                // RC.setIndicatorString(1, "Building Pasture");
+                RC.construct(RobotType.PASTR);
+              } else {
+                hybrid.move(buildPrecisePastureLoc);
+              }
               break;
             }
           }
         }
-        hybrid.setTarget(target);
-        hybrid.move();
+        hybrid.move(target);
         break;
       case DEFEND_PASTURE:
         boolean inRange = currentLocation.distanceSquaredTo(target) < 30;
-        hybrid.setTarget(target);
         if (inRange) {
-          hybrid.sneak();
+          hybrid.sneak(target);
         } else {
-          hybrid.move();
+          hybrid.move(target);
         }
         break;
       default:
         break;
     }
   }
-  
-  
+
+
   private boolean isAdjacentNoiseTowerBeingMade(MapLocation m) throws GameActionException {
     Direction d = Direction.NORTH;
     MapLocation loc = m.add(d);
-    
+
     for(int i = 0; i < 8; i++) {
       GameObject sensed = RC.senseObjectAtLocation(loc);
       if (sensed != null) {
@@ -354,10 +366,30 @@ public class SoldierBehavior extends RobotBehavior {
       }
       d.rotateLeft();
       loc = m.add(d);
-    }          
-    return false;  
-
-    
+    }
+    return false;
   }
-  
+
+  private MapLocation getBestPastrLocAdjacentTo(MapLocation loc) {
+    // System.out.println("checking around NT at " + loc);
+    MapLocation[] adjLocs = MapLocation.getAllMapLocationsWithinRadiusSq(loc, 2);
+    MapLocation best = null;
+    double bestCowEstimate = 0;
+    for (int i = adjLocs.length; --i >= 1;) {
+      MapLocation loc2 = adjLocs[i];
+      if (loc2.equals(loc)
+          || !RC.senseTerrainTile(loc2).isTraversableAtHeight(RobotLevel.ON_GROUND)
+          || loc2 == ALLY_HQ)
+        continue;
+      double cowEstimate = PastureFinder.estimateCowGrowth(loc2, 8, 1);
+      // System.out.println("cowEstimate at " + adjLocs[i] + " is " + cowEstimate);
+      if (cowEstimate > bestCowEstimate) {
+        best = loc2;
+        bestCowEstimate= cowEstimate;
+      }
+    }
+
+    return best;
+  }
+
 }

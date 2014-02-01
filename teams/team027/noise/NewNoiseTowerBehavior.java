@@ -1,16 +1,15 @@
 package team027.noise;
 
-import team027.RobotBehavior;
-import team027.utils.Utils;
-import battlecode.common.*;
 import static team027.utils.Utils.*;
+import team027.utils.*;
+import battlecode.common.*;
 
 public class NewNoiseTowerBehavior extends BFSNoiseTower {
-	
+
 	 public NewNoiseTowerBehavior() throws GameActionException {
 	   super();
 	 }
-	
+
 	/**
 	 * Called at the beginning of each round.
 	 */
@@ -19,7 +18,7 @@ public class NewNoiseTowerBehavior extends BFSNoiseTower {
     Utils.updateBuildingUtils();
     messagingSystem.beginRound(handlers);
   }
-  
+
   public void pickNewTarget() {
     double bestEstimate = -1.0;
     MapLocation bestPlace = null;
@@ -38,17 +37,17 @@ public class NewNoiseTowerBehavior extends BFSNoiseTower {
     }
     int x = bestPlace.x - currentLocation.x + 17;
     int y = bestPlace.y - currentLocation.y + 17;
-    System.out.println(bestPlace + " " + x + " " + y + " " + bestEstimate);
+    // System.out.println(bestPlace + " " + x + " " + y + " " + bestEstimate);
     target = bestPlace;
-    
+
   }
-  
+
   public void advanceTarget() {
     if(target == null || target.distanceSquaredTo(currentLocation) < 5) pickNewTarget();
-    
+
     target = target.add(dir[target.x - currentLocation.x + 17][target.y - currentLocation.y + 17]);
   }
-  
+
   public boolean fireAtTarget() throws GameActionException {
     int x = target.x - currentLocation.x + 17;
     int y = target.y - currentLocation.y + 17;
@@ -58,9 +57,10 @@ public class NewNoiseTowerBehavior extends BFSNoiseTower {
       RC.attackSquare(fireAt);
       for(int i = Math.max(fireAt.x - 2, currentLocation.x - 17); i <= Math.min(fireAt.x + 2, currentLocation.x + 17); i++)  for(int j = Math.max(fireAt.y - 2, currentLocation.y - 17); j <= Math.min(fireAt.y + 2, currentLocation.y + 17); j++) {
         last[i - currentLocation.x + 17][j - currentLocation.y + 17] = Clock.getRoundNum();
-        System.out.println(fireAt + " " + (i - currentLocation.x + 17) + " " + (j - currentLocation.y + 17));
+          // System.out.println(fireAt + " " + (i - currentLocation.x + 17) + " " + (j -
+          // currentLocation.y + 17));
       }
-      
+
       return true;
     }
     return false;
@@ -87,5 +87,5 @@ public class NewNoiseTowerBehavior extends BFSNoiseTower {
   public void endRound() throws GameActionException {
 	  messagingSystem.endRound();
   }
-	
+
 }

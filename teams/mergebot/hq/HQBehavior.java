@@ -101,9 +101,9 @@ public class HQBehavior extends RobotBehavior {
   public HQBehavior() {
     try {
       messagingSystem.writeRallyPoint(rally);
-      RC.setIndicatorString(1, "Rally " + rally);
+      // RC.setIndicatorString(1, "Rally " + rally);
     } catch (GameActionException e) {
-      e.printStackTrace();
+      // e.printStackTrace();
     }
 
     // takenPASTRLocs = new FastIterableLocSet();
@@ -202,14 +202,13 @@ public class HQBehavior extends RobotBehavior {
       // midgameStrategy.PASTRThresholds[1] += secondCowWeightOffset;
       // }
     } catch (GameActionException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
+      // e.printStackTrace();
     }
 
     currentStrategy = initialStrategy;
 
-    RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy
-        + ", phase " + gamePhase + ", cur: " + currentStrategy);
+    // RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy
+    // + ", phase " + gamePhase + ", cur: " + currentStrategy);
   }
 
   private void rallyToFirstPASTR() {
@@ -218,7 +217,7 @@ public class HQBehavior extends RobotBehavior {
     try {
       messagingSystem.writeRallyPoint(rally);
     } catch (GameActionException e) {
-      e.printStackTrace();
+      // e.printStackTrace();
     }
   }
 
@@ -281,7 +280,7 @@ public class HQBehavior extends RobotBehavior {
     try {
       RC.broadcast(ReservedMessageType.MAP_SYMMETRY.channel(), MAP_SYMMETRY.ordinal());
     } catch (GameActionException e) {
-      e.printStackTrace();
+      // e.printStackTrace();
     }
   }
 
@@ -341,7 +340,7 @@ public class HQBehavior extends RobotBehavior {
       // System.out.println(rally);
     }
     messagingSystem.writeRallyPoint(rally);
-    RC.setIndicatorString(1, "Rally " + rally);
+    // RC.setIndicatorString(1, "Rally " + rally);
   }
 
   @Override
@@ -351,7 +350,7 @@ public class HQBehavior extends RobotBehavior {
       dijkstra.compute(9900, true);
       if (dijkstra.done()) {
         PASTRReachabilityConfirmed = false;
-        System.out.println("Dijkstra finished on round " + currentRound);
+        // System.out.println("Dijkstra finished on round " + currentRound);
         if (!dijkstra.visited(rally)) {
           setRallyPoint();
         }
@@ -372,16 +371,16 @@ public class HQBehavior extends RobotBehavior {
             currentStrategy = midgameStrategy;
             break;
           }
-          RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy
-              + ", phase " + gamePhase + ", cur: " + currentStrategy);
+          // RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy
+          // + ", phase " + gamePhase + ", cur: " + currentStrategy);
           break strategyloop;
         case MIDGAME:
-          RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy
-              + ", phase " + gamePhase + ", cur: " + currentStrategy);
+          // RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy
+          // + ", phase " + gamePhase + ", cur: " + currentStrategy);
           break strategyloop;
         case ENDGAME:
-          RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy
-              + ", phase " + gamePhase + ", cur: " + currentStrategy);
+          // RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy
+          // + ", phase " + gamePhase + ", cur: " + currentStrategy);
           break strategyloop;
         default:
           break strategyloop;
@@ -412,9 +411,9 @@ public class HQBehavior extends RobotBehavior {
     //if (Clock.getRoundNum() != 400) return 0.4f;
     //this is pretty inefficient at the moment
     int ourSquaresFree = 0, ourSquaresTotal = 0, theirSquaresFree = 0, theirSquaresTotal = 0;
-    System.out.println(Clock.getBytecodeNum() + "," + Clock.getRoundNum());
+    // System.out.println(Clock.getBytecodeNum() + "," + Clock.getRoundNum());
     MapLocation l;
-    System.out.println(toEnemy.dx + "/" + toEnemy.dy);
+    // System.out.println(toEnemy.dx + "/" + toEnemy.dy);
     //String s1 = "", s2 = "";
     for (int i=-4; i<=4; ++i) {
       for (int j=-4; j<=4; ++j) {
@@ -438,7 +437,7 @@ public class HQBehavior extends RobotBehavior {
       }
     }
     //System.out.println(s1); System.out.println(s2);
-    System.out.println(Clock.getBytecodeNum() + "," + Clock.getRoundNum() + "!");
+    // System.out.println(Clock.getBytecodeNum() + "," + Clock.getRoundNum() + "!");
     //System.out.println("defend (" + loc.x + "," + loc.y + ") -> (" + toEnemy.dx + "," + toEnemy.dy + "): " + ourSquaresFree + "/" + ourSquaresTotal + " vs " + theirSquaresFree + "/" + theirSquaresTotal + " | " +
     //((float)ourSquaresFree / ourSquaresTotal - (float)theirSquaresFree / theirSquaresTotal) + " | turn " + Clock.getRoundNum());
     return (float)ourSquaresFree / ourSquaresTotal - (float)theirSquaresFree / theirSquaresTotal;
@@ -569,7 +568,7 @@ public class HQBehavior extends RobotBehavior {
     try {
       buildSoldier();
     } catch (GameActionException e) {
-      e.printStackTrace();
+      // e.printStackTrace();
     }
   }
 

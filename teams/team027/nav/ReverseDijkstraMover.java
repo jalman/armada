@@ -1,7 +1,7 @@
-package mergebot.nav;
+package team027.nav;
 
-import static mergebot.utils.Utils.*;
-import mergebot.utils.*;
+import static team027.utils.Utils.*;
+import team027.utils.*;
 import battlecode.common.*;
 
 /**

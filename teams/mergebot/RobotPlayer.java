@@ -1,14 +1,10 @@
 package mergebot;
 
-import battlecode.common.GameActionException;
-import battlecode.common.RobotController;
-import mergebot.hq.HQBehavior;
-import mergebot.noise.NewNoiseTowerBehavior;
-import mergebot.noise.OctantNoiseTowerBehavior;
-import mergebot.noise.SmartNoiseTowerBehavior;
-import mergebot.noise.SpiralNoiseTowerBehavior;
-import mergebot.soldiers.SoldierBehavior;
-import mergebot.utils.Utils;
+import mergebot.hq.*;
+import mergebot.noise.*;
+import mergebot.soldiers.*;
+import mergebot.utils.*;
+import battlecode.common.*;
 
 public class RobotPlayer {
   public static void run(RobotController rc) {
@@ -29,7 +25,7 @@ public class RobotPlayer {
       try {
         robot = new SmartNoiseTowerBehavior();
       } catch (GameActionException e1) {
-        e1.printStackTrace();
+          // e1.printStackTrace();
       }
         break;
       default: // autokill
@@ -43,7 +39,7 @@ public class RobotPlayer {
         robot.endRound();
         rc.yield();
       } catch (GameActionException e) {
-        e.printStackTrace();
+        // e.printStackTrace();
       }
     }
   }

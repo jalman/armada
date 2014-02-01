@@ -1,22 +1,22 @@
 package mergebot.noise;
 
-import mergebot.RobotBehavior;
-import mergebot.utils.Utils;
-import battlecode.common.*;
 import static mergebot.utils.Utils.*;
+import mergebot.*;
+import mergebot.utils.*;
+import battlecode.common.*;
 
 public class NoiseTowerBehavior extends RobotBehavior {
-	
+
 
 	public static int a=6, b=0; //for noise
 	double[][] cows = null; double[] cowsindir = new double[8];
 	static Direction[] directions = {Direction.NORTH, Direction.NORTH_EAST, Direction.EAST, Direction.SOUTH_EAST, Direction.SOUTH, Direction.SOUTH_WEST, Direction.WEST, Direction.NORTH_WEST};
 	public static final int[] yrangefornoise = { 17, 17, 17, 17, 16, 16, 16, 15, 15, 14, 14, 13, 12, 11, 10, 8, 6, 3 };
-	
+
 	public static MapLocation[][] paths = new MapLocation[8][30];
 	public static int[] pathat = new int[8];
 	public static boolean[] skip = new boolean[8];
-	
+
 	public NoiseTowerBehavior() {
 		for(int i = 7; i >= 0; i--) {
 			int lastdir = (i+4) % 8;
@@ -28,16 +28,16 @@ public class NoiseTowerBehavior extends RobotBehavior {
 					try {
 						makeSomeNoise();
 					} catch (GameActionException e1) {
-						e1.printStackTrace();
+            // e1.printStackTrace();
 					}
 				}
-				
+
 				int k = lastdir + 2;
 				k %= 8;
 				int bestscore = -1;
 				MapLocation bestplace = currentLocation;
 				while (k != (lastdir + 6) % 8) {
-					
+
 					int score = Math.abs(i - k);
 					if(score < 4) score = 8 - score;
 					score *= score*score;
@@ -50,12 +50,12 @@ public class NoiseTowerBehavior extends RobotBehavior {
 					} catch (Exception e) {
 						score = -2;
 					}
-					
+
 					if(score > bestscore) {
 						bestscore = score;
 						bestplace = here;
 					}
-					
+
 					k++;
 					if(k == 8) k = 0;
 				}
@@ -69,14 +69,14 @@ public class NoiseTowerBehavior extends RobotBehavior {
 			while(paths[i][pathat[i]] == null && pathat[i] > 0) pathat[i]--;
 			if(lastcow < 29) lastcow++;
 		}
-		
+
 		skip[0] = false;
-		
-		
+
+
 		double[] d = new double[8];
 		int[] dist = new int[8];
 		MapLocation[] toconsider = new MapLocation[8];
-		
+
 		for(int i = 7; i >= 0; i--) {
 			if(pathat[i] == 0){
 				d[i] = 0;
@@ -86,7 +86,7 @@ public class NoiseTowerBehavior extends RobotBehavior {
 				d[i] =  Math.atan2(toconsider[i].y - curY, toconsider[i].x - curX);
 				dist[i] = currentLocation.distanceSquaredTo(toconsider[i]);
 			}
-			
+
 		}
 		for(int i = 7; i >= 0; i--) {
 			if(dist[i] == 0) skip[i] = true;
@@ -99,11 +99,11 @@ public class NoiseTowerBehavior extends RobotBehavior {
 					}
 				}
 			}
-			
+
 		}
-		
+
 	}
-	
+
 	public static boolean pathbetween(MapLocation a, MapLocation b) {
 		while(!a.equals(b)) {
 			a = a.add(a.directionTo(b));
@@ -111,11 +111,11 @@ public class NoiseTowerBehavior extends RobotBehavior {
 		}
 		return true;
 	}
-	
+
 	public static double atan3(int a, int b) {
 		if (a==0 && b == 0) return 20.0;
 		return Math.atan2(a,b);
-		
+
 	}
 
 	/**
@@ -124,7 +124,7 @@ public class NoiseTowerBehavior extends RobotBehavior {
   @Override
   public void beginRound() throws GameActionException {
     Utils.updateBuildingUtils();
-    
+
     messagingSystem.beginRound(handlers);
   }
 
@@ -137,12 +137,12 @@ public class NoiseTowerBehavior extends RobotBehavior {
 		  RC.yield();
 	  }
     Robot[] robots = Utils.RC.senseNearbyGameObjects(Robot.class, 35, ENEMY_TEAM);
-    Utils.RC.setIndicatorString(1, "" + robots.length);
+    // Utils.RC.setIndicatorString(1, "" + robots.length);
     for (int i=0; i<robots.length; ++i) {
       messagingSystem.writeAttackMessage(Utils.RC.senseRobotInfo(robots[i]).location);
       messagingSystem.writeMicroMessage(Utils.RC.senseRobotInfo(robots[i]).location, 1);
     }
-    
+
 	  makeSomeNoise();
   }
 
@@ -153,7 +153,7 @@ public class NoiseTowerBehavior extends RobotBehavior {
   public void endRound() throws GameActionException {
 	  messagingSystem.endRound();
   }
-	
+
 	private static void incrementAB() {
 	  if(b < ((a%2 == 0) ? 6 : 5)) {
       a++;
@@ -167,17 +167,17 @@ public class NoiseTowerBehavior extends RobotBehavior {
       b--;
     }
 	}
-	
+
 	public static void makeSomeNoise() throws GameActionException { //assumes RC is active
-		  
+
 		  incrementAB();
-		  
+
 		  if(b < pathat[a] - 1 && b > 1 && paths[a][b] != null && paths[a][b+1] != null && paths[a][b-1] != null) {
 		    if(paths[a][b].directionTo(paths[a][b+1]) == paths[a][b-1].directionTo(paths[a][b])) {
 		      b--;
 		    }
 		  }
-		  
+
 		  if(paths[a][b] != null) {
 			  if(RC.canAttackSquare(paths[a][b].add(directions[a]))) {
 				  RC.attackSquare(paths[a][b].add(directions[a]));
@@ -185,6 +185,6 @@ public class NoiseTowerBehavior extends RobotBehavior {
 				  makeSomeNoise();
 			  }
 		  }
-		
+
 	}
 }

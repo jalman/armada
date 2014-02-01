@@ -230,12 +230,12 @@ public class SoldierBehavior extends RobotBehavior {
   }
 
   private void setMode(Mode m) {
-    RC.setIndicatorString(0, m.toString());
+    // RC.setIndicatorString(0, m.toString());
     mode = m;
   }
 
   private void setMode(Mode m, MapLocation target) {
-    RC.setIndicatorString(0, m + " " + target + " 2nd? " + buildingSecondPastr);
+    // RC.setIndicatorString(0, m + " " + target + " 2nd? " + buildingSecondPastr);
     mode = m;
   }
 
@@ -304,7 +304,7 @@ public class SoldierBehavior extends RobotBehavior {
         if (d == 0) {
           if (!RC.isActive()) break;
           RC.construct(RobotType.NOISETOWER);
-          RC.setIndicatorString(1, "Building Noise Tower");
+          // RC.setIndicatorString(1, "Building Noise Tower");
           break;
         } else if (d <= 2) {
           if (!RC.isActive()) break;
@@ -316,19 +316,19 @@ public class SoldierBehavior extends RobotBehavior {
 
               // System.out.println("I should build a pasture near " + target);
               if (buildPrecisePastureLoc == null) {
-                System.out.println("precise pasture loc = " + buildPrecisePastureLoc);
+                // System.out.println("precise pasture loc = " + buildPrecisePastureLoc);
                 buildPrecisePastureLoc = getBestPastrLocAdjacentTo(target);
               }
 
               if (currentLocation.equals(buildPrecisePastureLoc)) {
-                System.out.println("now building pastr at " + currentLocation);
+                // System.out.println("now building pastr at " + currentLocation);
                 if (buildingSecondPastr) {
                   messagingSystem.writeMessage(MessageType.BUILDING_SECOND_SIMULTANEOUS_PASTURE,
                       target.x, target.y);
                 } else {
                   messagingSystem.writeBuildingPastureMessage(target);
                 }
-                RC.setIndicatorString(1, "Building Pasture");
+                // RC.setIndicatorString(1, "Building Pasture");
                 RC.construct(RobotType.PASTR);
               } else {
                 hybrid.move(buildPrecisePastureLoc);

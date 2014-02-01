@@ -37,7 +37,7 @@ public class PastrBehavior extends RobotBehavior {
         2 * Math.max(Math.max(health3 - health2, health2 - health1), health1 - health0);
     if (health0 < damageRate || health0 < 20) {
       messagingSystem.writePastureDenyRequest(currentLocation);
-      System.out.println("deny me pls i am dying: " + health0);
+      // System.out.println("deny me pls i am dying: " + health0);
     }
   }
 

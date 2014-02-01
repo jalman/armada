@@ -1,7 +1,7 @@
 package mergebot.nav;
 
 import static mergebot.utils.Utils.*;
-import mergebot.utils.Pair;
+import mergebot.utils.*;
 import battlecode.common.*;
 
 public class HybridMover {
@@ -32,7 +32,7 @@ public class HybridMover {
 
       if (dir == null) return;
 
-      RC.setIndicatorString(2, "Computing outPath");
+      // RC.setIndicatorString(2, "Computing outPath");
 
       while (true) {
         if (Clock.getBytecodeNum() > bytecodes) return;
@@ -52,7 +52,7 @@ public class HybridMover {
         // loc = messagingSystem.readParent(loc);
       }
 
-      RC.setIndicatorString(2, "outPath done");
+      // RC.setIndicatorString(2, "outPath done");
       outPathDone = true;
     }
 
@@ -135,10 +135,10 @@ public class HybridMover {
       Pair<Direction, Integer> pathingInfo = messagingSystem.readPathingInfo(currentLocation);
       if (pathingInfo.first != null && computation.length > 1 &&
           pathingInfo.second <= naiveDistance(currentLocation, dest)) {
-        RC.setIndicatorString(1, "move to hq");
+        // RC.setIndicatorString(1, "move to hq");
         DijkstraMover.getDijkstraMover().move(movementType);
       } else {
-        RC.setIndicatorString(1, "simple move");
+        // RC.setIndicatorString(1, "simple move");
         simpleMove(dest);
       }
     } else {
