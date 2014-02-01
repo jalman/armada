@@ -61,6 +61,7 @@ public class NathanMicro {
 
       Robot[] nearbyTeam = RC.senseNearbyGameObjects(Robot.class, 35, ALLY_TEAM);
       double allyWeight = 0, enemyWeight = 0;
+      String bytect = "" + Clock.getBytecodeNum();
 
       RobotInfo ri;
 
@@ -69,6 +70,7 @@ public class NathanMicro {
 
       // find ally weight
       allyWeight = currentHealth + allyWeightAboutPoint(currentLocation, nearbyTeam);
+      bytect += " " + Clock.getBytecodeNum();
       // find enemy weight
       enemyWeight = enemyWeightAboutPoint(currentLocation, nearbyEnemies, false);
 
@@ -78,11 +80,9 @@ public class NathanMicro {
           isHelpingOut = false;
         }
       }
+      bytect += " " + Clock.getBytecodeNum();
       String zzz = (isHelpingOut ? "HELPING " + locToString(helpingLoc) : "") + "last help: "
           + lastHelpRequest + " | round: " + Clock.getRoundNum();
-      RC.setIndicatorString(1, "in range " + enemiesInRange.length + " | " + "ally " + allyWeight
-          + " / enemy " + enemyWeight + " (turn " + Clock.getRoundNum() + ") | " + zzz
-          + (JON_SCHNEIDER ? " RUNAWAY" : ""));
 
       // decide whether to retreat
       // more conservative: if (!JON_SCHNEIDER && (currentHealth < 30.1 && currentHealth < 10 *
@@ -97,6 +97,7 @@ public class NathanMicro {
 
       RobotInfo targetInfo = getHighestPriority(nearbyEnemies);
       MapLocation target = targetInfo == null ? null : targetInfo.location;
+      bytect += " " + Clock.getBytecodeNum();
 
       AIRBENDER = false;
       
@@ -125,8 +126,11 @@ public class NathanMicro {
           }
         }
       }
+      bytect += " " + Clock.getBytecodeNum();
 
-      
+      RC.setIndicatorString(1, "in range " + enemiesInRange.length + " | " + "ally " + allyWeight
+          + " / enemy " + enemyWeight + " (turn " + Clock.getRoundNum() + ") | " + zzz
+          + (JON_SCHNEIDER ? " RUNAWAY" : "") + " | " + bytect);
 
       if ((!JON_SCHNEIDER || (currentHealth >= 30 && allyWeight >= enemyWeight + 100))
           && (allyWeight >= enemyWeight || GREAT_LUGE)
@@ -135,7 +139,7 @@ public class NathanMicro {
 
         // if (RC.isActive()) { // willing to attack!
         MapLocation nextLoc = new MapLocation(-1, -1);
-        String zyzzl = "";
+        String zyzzl = "" + Clock.getBytecodeNum();
         double nextAllyWeight = 0, nextEnemyWeight = 0;
         if (target == null) {
           if (isHelpingOut) {
@@ -179,6 +183,7 @@ public class NathanMicro {
             }
           }
         }
+        bytect += "-" + Clock.getBytecodeNum();
         zyzzl +=
             "/// nextWeight: " + nextEnemyWeight + " at (" + nextLoc.x + "," + nextLoc.y + "))";
 
@@ -478,7 +483,7 @@ public class NathanMicro {
 
     for (int i = nearbyTeam.length; --i >= 0;) {
       RobotInfo ri = RC.senseRobotInfo(nearbyTeam[i]);
-
+      
       switch (ri.type) {
         case SOLDIER:
           if (ri.isConstructing) {
@@ -486,9 +491,18 @@ public class NathanMicro {
           }
 
           MapLocation soldierLoc = ri.location;
-          if (loc.distanceSquaredTo(soldierLoc) > 25) break;
+          int dist = loc.distanceSquaredTo(soldierLoc);
+          if (dist > 25) break;
+          
+          if (dist <= 3) {
+            // allyWeight += (ri.health > 10.0) ? ri.health : 0;
+            allyWeight += ri.health;
+          } else {
+            allyWeight += Math.max(0,
+                ri.health - ALLY_WEIGHT_DECAY * lazySqrt(dist - 3));
+          }
 
-          Robot[] stuff = RC.senseNearbyGameObjects(Robot.class, soldierLoc, 17, ENEMY_TEAM);
+          /*Robot[] stuff = RC.senseNearbyGameObjects(Robot.class, soldierLoc, 17, ENEMY_TEAM);
 
           boolean inCombat = false;
           int bestDist = 100000;
@@ -504,7 +518,7 @@ public class NathanMicro {
             allyWeight += Math.max(0,
                 ri.health - ALLY_WEIGHT_DECAY * lazySqrt(bestDist - 10));
           }
-          break;
+          break;*/
         default:
           break;
       }
