@@ -32,7 +32,8 @@ public class HQBehavior extends RobotBehavior {
   private final AttackSystem attackSystem = new AttackSystem();
 
   public static final int[] yrangefornoise = { 17, 17, 17, 17, 16, 16, 16, 15, 15, 14, 14, 13, 12, 11, 10, 8, 6, 3 };
-
+  
+  public static boolean PASTRReachabilityConfirmed = true;
   //public static final int[]
 
   /**
@@ -281,8 +282,30 @@ public class HQBehavior extends RobotBehavior {
   public void run() throws GameActionException {
     attackSystem.tryAttack();
     macro();
+    doublecheckPASTRs();
     executeStrategy();
     considerTeamAttacking();
+  }
+  
+  private void doublecheckPASTRs() {
+    if(PASTRReachabilityConfirmed) return;
+    
+    int num = 0;
+    Pair<MapLocation, Double>[] reachablePASTRs = new Pair[goodPASTRLocs.length];
+    
+    for(int i = 0; i < goodPASTRLocs.length; i++) {
+      if(dijkstra.visited(goodPASTRLocs[i].first)) {
+        reachablePASTRs[num++] = goodPASTRLocs[i];
+      }
+    }
+    
+    if(num>0) goodPASTRLocs = Arrays.copyOf(reachablePASTRs, num); //if statement to avoid blowing up, maybe should do something better?
+    
+    //Damien please fix for double PASTR??
+    
+    PASTRReachabilityConfirmed = true;
+    
+    System.out.println("CALLED!! " + goodPASTRLocs[0].first);
   }
 
   private void setRallyPoint() throws GameActionException {
@@ -304,6 +327,7 @@ public class HQBehavior extends RobotBehavior {
     if (!dijkstra.done() && currentRound <= 2000) {
       dijkstra.compute(9000, true);
       if (dijkstra.done()) {
+        PASTRReachabilityConfirmed = false;
         System.out.println("Dijkstra finished on round " + currentRound);
         if (!dijkstra.visited(rally)) {
           setRallyPoint();
