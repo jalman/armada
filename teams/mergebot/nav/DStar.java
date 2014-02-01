@@ -1,17 +1,18 @@
 package mergebot.nav;
 
 import static mergebot.utils.Utils.*;
-import mergebot.utils.*;
+import mergebot.utils.ArraySet;
+import mergebot.utils.BucketQueue;
 import battlecode.common.*;
 
-public class DStar {
+public class DStar extends GradientMover {
 
   /**
    * Starting locations of DStar.
    */
-  public final LocSet sources;
+  // public ArraySet<MapLocation> sources = new ArraySet<MapLocation>(MAP_SIZE);
 
-  private final MapLocation dest;
+  public MapLocation dest;
 
   /**
    * Direction in which we traveled to get to this location.
@@ -27,34 +28,47 @@ public class DStar {
    */
   // private final int estimate[][] = new int[MAP_WIDTH][MAP_HEIGHT];
 
-  private final boolean visited[][] = new boolean[MAP_WIDTH][MAP_HEIGHT];
+  private final boolean expanded[][] = new boolean[MAP_WIDTH][MAP_HEIGHT];
 
   private final BucketQueue<MapLocation> queue = new BucketQueue<MapLocation>(5 * MAP_SIZE, 4);
 
-  public DStar(LocSet sources, int[] distances, MapLocation dest) {
-    this.sources = sources;
-    this.dest = dest;
-
-    for (int i = sources.size; --i >= 0;) {
-      MapLocation source = sources.get(i);
-      int e = distances[i] + heuristic(source, dest);
-      queue.insert(e, source);
-      distance[source.x][source.y] = distances[i];
-      // estimate[source.x][source.y] = e;
-      // leave as null to cause exceptions if we accidentally try to use it?
-      from[source.x][source.y] = Direction.NONE;
-    }
-
+  public DStar() {
     // hack to go around the hqs
     distance[ALLY_HQ.x][ALLY_HQ.y] = Integer.MAX_VALUE;
-    visited[ALLY_HQ.x][ALLY_HQ.y] = true;
+    expanded[ALLY_HQ.x][ALLY_HQ.y] = true;
 
     ArraySet<MapLocation> unsafeLocs = getUnsafeLocs();
     for (int i = unsafeLocs.size; --i >= 0;) {
       MapLocation loc = unsafeLocs.get(i);
       distance[loc.x][loc.y] = Integer.MAX_VALUE;
-      visited[loc.x][loc.y] = true;
+      expanded[loc.x][loc.y] = true;
     }
+  }
+
+  public DStar(ArraySet<MapLocation> sources, int[] distances, MapLocation dest) {
+    this();
+    // this.sources = sources;
+
+    for (int i = sources.size; --i >= 0;) {
+      insert(sources.get(i), distances[i]);
+    }
+  }
+
+  public void insert(MapLocation source, int distance) {
+    int e = distance + naiveDistance(source, dest);
+    queue.insert(e, source);
+    this.distance[source.x][source.y] = distance;
+    // leave as null to cause exceptions if we accidentally try to use it?
+    from[source.x][source.y] = Direction.NONE;
+  }
+
+  public void insert(MapLocation source, int distance, Direction dir) {
+    int x = source.x, y = source.y;
+    expanded[x][y] = false;
+    this.distance[x][y] = distance;
+    int e = distance + naiveDistance(source, dest);
+    queue.insert(e, source);
+    from[x][y] = dir;
   }
 
   /**
@@ -62,23 +76,6 @@ public class DStar {
    */
   public boolean done() {
     return queue.size == 0;
-  }
-
-  /**
-   * Approximate action delay between two locations.
-   */
-  public static int heuristic(MapLocation loc1, MapLocation loc2) {
-    int dx = Math.abs(loc1.x - loc2.x);
-    int dy = Math.abs(loc1.y - loc2.y);
-    int min, diff;
-    if (dx > dy) {
-      min = dy;
-      diff = dx - dy;
-    } else {
-      min = dx;
-      diff = dy - dx;
-    }
-    return (min * NORMAL_DIAGONAL + diff * NORMAL_ORTHOGONAL);
   }
 
   public boolean compute(int bytecodes) {
@@ -90,6 +87,7 @@ public class DStar {
     final BucketQueue<MapLocation> queue = this.queue;
     final int[][] distance = this.distance;
     final Direction[][] from = this.from;
+    final MapLocation dest = this.dest;
 
     // int iters = 0;
     // int bc = Clock.getBytecodeNum();
@@ -109,8 +107,8 @@ public class DStar {
       d = distance[x][y];
 
       // check if we have already visited this node
-      if (!visited[x][y]) {
-        visited[x][y] = true;
+      if (!expanded[x][y]) {
+        expanded[x][y] = true;
         /*
          * if (broadcast) {
          * try {
@@ -140,15 +138,13 @@ public class DStar {
           nbr = next.add(dir);
           if (RC.senseTerrainTile(nbr).isTraversableAtHeight(RobotLevel.ON_GROUND)) {
             w = d + weight[dir.ordinal()];
-            e = w + heuristic(next, dest);
+            e = w + naiveDistance(nbr, dest);
 
             x = nbr.x;
             y = nbr.y;
 
             if (from[x][y] == null) {
               queue.insert(e, nbr);
-              // if (RC.getRobot().getID() == 118)
-              // System.out.println("inserted " + nbr + ": " + w + " " + e);
               distance[x][y] = w;
               // estimate[x][y] = e;
               from[x][y] = dir;
@@ -158,7 +154,7 @@ public class DStar {
                 distance[x][y] = w;
                 // estimate[x][y] = e;
                 from[x][y] = dir;
-                visited[x][y] = false;
+                expanded[x][y] = false;
               }
             }
           }
@@ -169,25 +165,7 @@ public class DStar {
     // bc = Clock.getBytecodeNum() - bc;
     // RC.setIndicatorString(2, "average DStar bytecodes: " + (iters > 0 ? bc / iters : bc));
 
-    return arrived(dest);
-  }
-
-  /**
-   * Computes a path from a location to the nearest source.
-   * Contains both start and end points.
-   * @param loc The location.
-   * @return The path as a LocSet.
-   */
-  public LocSet getPath(MapLocation loc) {
-    LocSet path = new LocSet();
-    path.insert(loc);
-
-    while (!sources.contains(loc)) {
-      loc = loc.subtract(from[loc.x][loc.y]);
-      path.insert(loc);
-    }
-
-    return path;
+    return visited(dest);
   }
 
   public int getDistance(int x, int y) {
@@ -198,7 +176,12 @@ public class DStar {
     return getDistance(loc.x, loc.y);
   }
 
-  public boolean arrived(MapLocation loc) {
-    return visited[loc.x][loc.y];
+  @Override
+  public int getWeight(MapLocation loc) {
+    return getDistance(loc.x, loc.y);
+  }
+
+  public boolean visited(MapLocation loc) {
+    return from[loc.x][loc.y] != null;
   }
 }

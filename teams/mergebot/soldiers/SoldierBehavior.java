@@ -1,11 +1,12 @@
 package mergebot.soldiers;
 
 import static mergebot.utils.Utils.*;
-import mergebot.*;
-import mergebot.messaging.*;
+import mergebot.RobotBehavior;
+import mergebot.messaging.MessageHandler;
 import mergebot.messaging.MessagingSystem.MessageType;
-import mergebot.nav.*;
-import mergebot.utils.*;
+import mergebot.nav.HybridMover;
+import mergebot.nav.Mover;
+import mergebot.utils.ArraySet;
 import battlecode.common.*;
 
 public class SoldierBehavior extends RobotBehavior {
@@ -278,21 +279,18 @@ public class SoldierBehavior extends RobotBehavior {
         // if (!RC.isActive()) return;
         //micro.micro();
         // if (!NathanMicro.luge(mover)) {
-          //micro.micro();
+        //micro.micro();
         // }
         NathanMicro.luge(mover);
         break;
       case MOVE:
-        hybrid.setTarget(target);
-        hybrid.move();
+        hybrid.move(target);
         break;
       case FARM:
-        hybrid.setTarget(target);
-        hybrid.sneak();
+        hybrid.sneak(target);
         break;
       case EXPLORE:
-        hybrid.setTarget(target);
-        hybrid.move();
+        hybrid.move(target);
         break;
       case BUILD_PASTURE:
         int d = currentLocation.distanceSquaredTo(target);
@@ -323,28 +321,26 @@ public class SoldierBehavior extends RobotBehavior {
             }
           }
         }
-        hybrid.setTarget(target);
-        hybrid.move();
+        hybrid.move(target);
         break;
       case DEFEND_PASTURE:
         boolean inRange = currentLocation.distanceSquaredTo(target) < 30;
-        hybrid.setTarget(target);
         if (inRange) {
-          hybrid.sneak();
+          hybrid.sneak(target);
         } else {
-          hybrid.move();
+          hybrid.move(target);
         }
         break;
       default:
         break;
     }
   }
-  
-  
+
+
   private boolean isAdjacentNoiseTowerBeingMade(MapLocation m) throws GameActionException {
     Direction d = Direction.NORTH;
     MapLocation loc = m.add(d);
-    
+
     for(int i = 0; i < 8; i++) {
       GameObject sensed = RC.senseObjectAtLocation(loc);
       if (sensed != null) {
@@ -354,10 +350,10 @@ public class SoldierBehavior extends RobotBehavior {
       }
       d.rotateLeft();
       loc = m.add(d);
-    }          
-    return false;  
+    }
+    return false;
 
-    
+
   }
-  
+
 }

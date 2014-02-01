@@ -1,35 +1,88 @@
 package mergebot.nav;
 
 import static mergebot.utils.Utils.*;
-import mergebot.utils.LocSet;
-import mergebot.utils.Pair;
 import battlecode.common.*;
 
 public class HybridMover {
   public static MapLocation DIJKSTRA_CENTER = ALLY_HQ;
 
   NavAlg simple = new BugMoveFun2();
+  private final DijkstraMover dijkstraMover = new DijkstraMover();
 
   MapLocation dest = null;
 
   private MapLocation simpleTarget;
 
-  private LocSet outPath;
-  private int[] distances;
+  private class Computation {
+    DStar dstar = new DStar();
+    MapLocation next = dest;
+    boolean outPathDone = false;
+    int length = 0;
+    int distance = 0;
 
-  /**
-   * Caches dstar computations.
-   */
-  private final DStar[][] cache = new DStar[MAP_WIDTH][MAP_HEIGHT];
+    Computation() {
+      dstar.dest = currentLocation;
+      dstar.insert(next, distance);
+    }
+
+    void computeOutPath(int bytecodes) throws GameActionException {
+      if (outPathDone) return;
+
+      Direction dir = messagingSystem.readPathingInfo(next).first;
+
+      if (dir == null) return;
+
+      RC.setIndicatorString(2, "Computing outPath");
+
+      while (true) {
+        if (Clock.getBytecodeNum() > bytecodes) return;
+
+        next = next.subtract(dir);
+
+        if (next.equals(DIJKSTRA_CENTER)) break;
+
+        dir = messagingSystem.readPathingInfo(next).first;
+
+        int diff = getActionDelay(next, dir);
+        diff = Math.max(1, diff / (1 + (++length) / 10));
+
+        distance += diff;
+
+        dstar.insert(next, distance, dir.opposite());
+        // loc = messagingSystem.readParent(loc);
+      }
+
+      RC.setIndicatorString(2, "outPath done");
+      outPathDone = true;
+    }
+
+    void compute() throws GameActionException {
+      dstar.dest = currentLocation;
+
+      if (!outPathDone) {
+        computeOutPath(8000);
+        return;
+      }
+
+      if (!dstar.visited(currentLocation)) {
+        dstar.compute(8000);
+      } else {
+        dstar.compute(3000);
+      }
+    }
+
+  }
+
+  private final Computation[][] cache = new Computation[MAP_WIDTH][MAP_HEIGHT];
+
+  private Computation getComputation() {
+    if (cache[dest.x][dest.y] == null) {
+      cache[dest.x][dest.y] = new Computation();
+    }
+    return cache[dest.x][dest.y];
+  }
 
   private MovementType movementType;
-
-  public void setTarget(MapLocation dest) throws GameActionException {
-    if (!dest.equals(this.dest)) {
-      this.dest = dest;
-      computeOutPath();
-    }
-  }
 
   private void simpleMove(MapLocation loc) throws GameActionException {
     if (!loc.equals(simpleTarget)) {
@@ -38,16 +91,16 @@ public class HybridMover {
     }
 
     Direction dir = simple.getNextDir();
-    if (RC.canMove(dir)) {
-      move(dir);
-    }
+    move(dir);
   }
 
-  public void sneak() throws GameActionException {
+  public void sneak(MapLocation target) throws GameActionException {
+    this.dest = target;
     move(MovementType.SNEAK);
   }
 
-  public void move() throws GameActionException {
+  public void move(MapLocation target) throws GameActionException {
+    this.dest = target;
     move(MovementType.RUN);
   }
 
@@ -64,97 +117,27 @@ public class HybridMover {
     return true;
   }
 
+  public void move(MovementType movementType, MapLocation target) throws GameActionException {
+    this.dest = target;
+    move(movementType);
+  }
+
   public void move(MovementType movementType) throws GameActionException {
     if (currentLocation.equals(dest)) return;
 
     this.movementType = movementType;
 
-    // try computing the outpath if it isn't set
-    if (outPath == null) {
-      computeOutPath();
-    }
+    Computation computation = getComputation();
+    computation.compute();
 
-    if (outPath != null) {
-      if (!moveToPath()) {
-        simpleMove(dest);
-        RC.setIndicatorString(1, "outPath not found, simpleMove to dest");
-      }
-    } else {
+    DStar dstar = computation.dstar;
+
+    if (!dstar.visited(currentLocation)) {
+      RC.setIndicatorString(1, "simple move");
       simpleMove(dest);
-      RC.setIndicatorString(1, "no outPath, simpleMove to dest");
-    }
-  }
-
-  private void computeOutPath() throws GameActionException {
-    Pair<Direction, Integer> pathingInfo = messagingSystem.readPathingInfo(dest);
-    if (pathingInfo.first == null) {
-      outPath = null;
-      return;
-    }
-    RC.setIndicatorString(1, "Computing outPath");
-
-    outPath = new LocSet();
-    distances = new int[MAP_SIZE];
-    MapLocation loc = dest;
-    int d = pathingInfo.second;
-    while (!loc.equals(DIJKSTRA_CENTER)) {
-      pathingInfo = messagingSystem.readPathingInfo(loc);
-      distances[outPath.size] = d - pathingInfo.second;
-      outPath.insert(loc);
-      loc = loc.subtract(pathingInfo.first);
-      // loc = messagingSystem.readParent(loc);
-    }
-
-    int[] diffs = new int[outPath.size - 1];
-    for (int i = diffs.length; --i > 0;) {
-      diffs[i] = distances[i + 1] - distances[i];
-    }
-
-    // heuristic to prefer further away points on the path (which may be closer to us)
-    for (int i = 1; i < outPath.size; i++) {
-      distances[i] = distances[i - 1] + Math.max(1, diffs[i - 1] / (1 + i / 10));
-    }
-  }
-
-  private boolean moveToPath() throws GameActionException {
-    DStar dstar = cache[dest.x][dest.y];
-    if (dstar == null) {
-      dstar = new DStar(outPath, distances, currentLocation);
-      for (MapLocation loc : MapLocation.getAllMapLocationsWithinRadiusSq(dest, 2)) {
-        if (isPathable(loc)) {
-          cache[dest.x][dest.y] = dstar;
-        }
-      }
-    }
-
-    if (!dstar.arrived(currentLocation)) {
-      dstar.compute(7000);
-    }
-
-    if (!RC.isActive()) return true;
-
-    Direction dir = Direction.NORTH, best = null;
-    int min = Integer.MAX_VALUE;
-    // StringBuilder str = new StringBuilder();
-    for (int i = 0; i < 8; i++) {
-      MapLocation next = currentLocation.add(dir);
-      int d = RC.canMove(dir) && isSafe(next) ? dstar.getDistance(next) : Integer.MAX_VALUE;
-      // str.append(dir + "(" + d + "), ");
-
-      if (d < min) {
-        min = d;
-        best = dir;
-      }
-      dir = dir.rotateRight();
-    }
-    // RC.setIndicatorString(1, dest + " " + dstar.getDistance(dest));
-    // RC.setIndicatorString(2, str.toString());
-
-    if (best != null && move(best)) {
-      RC.setIndicatorString(1, "Moving to outPath " + min);
-      return true;
     } else {
-      return false;
+      // RC.setIndicatorString(1, "dstar move");
+      dstar.move(movementType);
     }
   }
 
