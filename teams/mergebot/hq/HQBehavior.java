@@ -208,7 +208,7 @@ public class HQBehavior extends RobotBehavior {
   }
   
   private void rallyToFirstPASTR() {
-    rally = goodPASTRLocs[0].first;
+    rally = firstPASTRLocs == null || firstPASTRLocs.length == 0 ?  goodPASTRLocs[0].first : firstPASTRLocs[0].first;
     rally = rally.add(wayToEnemy(rally),2);
     try {
       messagingSystem.writeRallyPoint(rally);
@@ -440,7 +440,7 @@ public class HQBehavior extends RobotBehavior {
   }
 
   @SuppressWarnings("unchecked")
-  private static void determineNewPASTRLocations() throws GameActionException {
+  private void determineNewPASTRLocations() throws GameActionException {
     // TODO actually determine stuff
     if(currentStrategy.desiredPASTRNum >= 1) {
       if(firstPASTRLocs == null) {
@@ -473,6 +473,8 @@ public class HQBehavior extends RobotBehavior {
       }
       secondRequestedPASTRLoc = secondPASTRLocs[0].first; // TODO improve this choice
     }
+    
+    rallyToFirstPASTR();
   }
 
   private static void PASTRMessages() throws GameActionException {
