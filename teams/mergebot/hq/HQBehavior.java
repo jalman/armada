@@ -313,7 +313,7 @@ public class HQBehavior extends RobotBehavior {
     
     if(num>0) goodPASTRLocs = Arrays.copyOf(reachablePASTRs, num); //if statement to avoid blowing up, maybe should do something better?
     
-    //Damien please fix for double PASTR??
+    determineNewPASTRLocations();
     
     PASTRReachabilityConfirmed = true;
     
