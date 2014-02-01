@@ -29,6 +29,7 @@ public class SoldierBehavior extends RobotBehavior {
 
   static ArraySet<MapLocation> attackLocations = new ArraySet<MapLocation>(100);
   static ArraySet<MapLocation> microLocations = new ArraySet<MapLocation>(100);
+  public static MapLocation pastrDenyRequestLoc = null;
 
   static MapLocation buildPastureLoc = null;
 
@@ -106,7 +107,6 @@ public class SoldierBehavior extends RobotBehavior {
       }
     };
 
-
     handlers[MessageType.BUILDING_SECOND_SIMULTANEOUS_PASTURE.type] = new MessageHandler() {
       @Override
       public void handleMessage(int[] message) throws GameActionException {
@@ -115,6 +115,14 @@ public class SoldierBehavior extends RobotBehavior {
           buildPastureLoc = null;
           target = loc;
         }
+      }
+    };
+
+    handlers[MessageType.PASTURE_DENY_REQUEST.type] = new MessageHandler() {
+      @Override
+      public void handleMessage(int[] message) throws GameActionException {
+        MapLocation loc = new MapLocation(message[0], message[1]);
+        pastrDenyRequestLoc = loc;
       }
     };
   }
@@ -131,6 +139,7 @@ public class SoldierBehavior extends RobotBehavior {
   @Override
   public void endRound() throws GameActionException {
     // sendEnemyMessages();
+    pastrDenyRequestLoc = null;
     messagingSystem.endRound();
   }
 
