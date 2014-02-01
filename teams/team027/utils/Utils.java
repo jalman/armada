@@ -545,9 +545,42 @@ public class Utils {
   }
 
   /**
+   * Max radius in which hq can hit us.
+   */
+  public static final int SAFE_RADIUS_SQUARED = 25;
+
+  /**
    * Whether we can get splashed by the enemy hq.
    */
   public static boolean isSafe(MapLocation loc) {
     return loc.add(loc.directionTo(ENEMY_HQ)).distanceSquaredTo(ENEMY_HQ) > RobotType.HQ.attackRadiusMaxSquared;
+  }
+
+  private static ArraySet<MapLocation> unsafeLocs;
+  private static boolean[][] unsafe;
+
+  public static ArraySet<MapLocation> getUnsafeLocs() {
+    if (unsafeLocs == null) {
+      unsafeLocs = new ArraySet<MapLocation>(200);
+      for (MapLocation loc : MapLocation.getAllMapLocationsWithinRadiusSq(ENEMY_HQ,
+          SAFE_RADIUS_SQUARED)) {
+        if (isPathable(loc) && !isSafe(loc)) {
+          unsafeLocs.insert(loc);
+        }
+      }
+    }
+    return unsafeLocs;
+  }
+
+  public static boolean[][] getUnsafe() {
+    if (unsafe == null) {
+      unsafe = new boolean[GameConstants.MAP_MAX_WIDTH][GameConstants.MAP_MAX_HEIGHT];
+      getUnsafeLocs();
+      for (int i = unsafeLocs.size; --i >= 0;) {
+        MapLocation loc = unsafeLocs.get(i);
+        unsafe[loc.x][loc.y] = true;
+      }
+    }
+    return unsafe;
   }
 }

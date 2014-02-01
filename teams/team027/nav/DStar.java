@@ -1,8 +1,7 @@
 package team027.nav;
 
 import static team027.utils.Utils.*;
-import team027.utils.LocSet;
-import team027.utils.BucketQueue;
+import team027.utils.*;
 import battlecode.common.*;
 
 public class DStar {
@@ -44,6 +43,17 @@ public class DStar {
       // estimate[source.x][source.y] = e;
       // leave as null to cause exceptions if we accidentally try to use it?
       from[source.x][source.y] = Direction.NONE;
+    }
+
+    // hack to go around the hqs
+    distance[ALLY_HQ.x][ALLY_HQ.y] = Integer.MAX_VALUE;
+    visited[ALLY_HQ.x][ALLY_HQ.y] = true;
+
+    ArraySet<MapLocation> unsafeLocs = getUnsafeLocs();
+    for (int i = unsafeLocs.size; --i >= 0;) {
+      MapLocation loc = unsafeLocs.get(i);
+      distance[loc.x][loc.y] = Integer.MAX_VALUE;
+      visited[loc.x][loc.y] = true;
     }
   }
 

@@ -17,6 +17,7 @@ public class NathanMicro {
   public static final double ALLY_WEIGHT_DECAY = 12;
   public static final double POWER_ADVANTAGE = 1.2f;
   public static final int LIFE_VALUE = 20;
+  public static final int DEFEND_PASTR_INITIATIVE = 50;
 
   /**
    * TODO give actual names and/or definitions for these constants so other people know what's going on
@@ -30,7 +31,8 @@ public class NathanMicro {
   public static MapLocation helpingLoc = new MapLocation(0, 0);
   public static int lastHelpRequest = 0;
 
-  public static NavAlg navAlg = new DumbMove(); // new BugMoveFun2();
+  public static NavAlg navAlg = new BugMoveFun2();
+  public static NavAlg dumbMove = new DumbMove();
   public static MapLocation dest = null;
 
   public static MapLocation m = new MapLocation(0, 0);
@@ -154,6 +156,17 @@ public class NathanMicro {
             nextLoc = currentLocation.add(nd);
             nextAllyWeight = currentHealth + allyWeightAboutPoint(nextLoc, nearbyTeam);
             nextEnemyWeight = enemyWeightAboutPoint(nextLoc, nearbyEnemies, true);
+            
+
+            for (int i=0; i<ALLY_PASTR_COUNT; ++i) {
+              MapLocation loc = ALLY_PASTR_LOCS[i];
+              Direction towardsPastr = currentLocation.directionTo(loc);
+              
+              if (currentLocation.distanceSquaredTo(loc) <= 20
+                  && (currentLocation.distanceSquaredTo(loc) >= currentLocation.distanceSquaredTo(nextLoc))) {
+                nextAllyWeight += DEFEND_PASTR_INITIATIVE;
+              }
+            }
           }
         }
         zyzzl +=
@@ -218,8 +231,8 @@ public class NathanMicro {
               }
             }
             else {
-              setTarget(currentLocation.add(newDir));
-              newDir = navAlg.getNextDir(); // variable reuse, sorry
+              dumbMove.recompute(currentLocation.add(newDir));
+              newDir = dumbMove.getNextDir(); // variable reuse, sorry
               if (newDir != Direction.NONE) {
                 RC.move(newDir);
               }
@@ -370,8 +383,8 @@ public class NathanMicro {
             return true;
           }
           else {
-            setTarget(currentLocation.add(newDir));
-            newDir = navAlg.getNextDir(); // variable reuse, sorry
+            dumbMove.recompute(currentLocation.add(newDir));
+            newDir = dumbMove.getNextDir(); // variable reuse, sorry
             if (newDir != Direction.NONE) {
               RC.move(newDir);
             }
@@ -433,10 +446,10 @@ public class NathanMicro {
     Robot[] around = RC.senseNearbyGameObjects(Robot.class, 2);
     double allyDamage = RC.getHealth() + LIFE_VALUE, enemyDamage = 0;
     double predictDamage = GameConstants.SELF_DESTRUCT_BASE_DAMAGE + GameConstants.SELF_DESTRUCT_DAMAGE_FACTOR * RC.getHealth();
-       
+
     for (int i=0; i<around.length; ++i) {
     RobotInfo ri = RC.senseRobotInfo(around[i]);
-         
+
       double damage = (predictDamage >= ri.health ? ri.health : predictDamage);
       if (ri.team == ALLY_TEAM) {
         allyDamage += (damage + (predictDamage >= ri.health ? LIFE_VALUE : 0));
@@ -469,7 +482,7 @@ public class NathanMicro {
 
           boolean inCombat = false;
           int bestDist = 100000;
-          
+
           for (int j = stuff.length; --j >= 0;) {
             int dd = soldierLoc.distanceSquaredTo(RC.senseRobotInfo(stuff[j]).location);
             bestDist = (dd < bestDist ? dd : bestDist);
