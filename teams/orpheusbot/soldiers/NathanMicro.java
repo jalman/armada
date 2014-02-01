@@ -1,8 +1,8 @@
-package mergebot.soldiers;
+package orpheusbot.soldiers;
 
-import static mergebot.soldiers.SoldierUtils.*;
-import static mergebot.utils.Utils.*;
-import mergebot.nav.*;
+import static orpheusbot.soldiers.SoldierUtils.*;
+import static orpheusbot.utils.Utils.*;
+import orpheusbot.nav.*;
 import battlecode.common.*;
 
 public class NathanMicro {
@@ -34,12 +34,10 @@ public class NathanMicro {
   public static NavAlg navAlg = new BugMoveFun2();
   public static NavAlg dumbMove = new DumbMove();
   public static MapLocation dest = null;
-  public static double currentHealth;
 
   public static MapLocation microLoc = new MapLocation(0, 0);
 
   public static boolean luge(Mover mover) throws GameActionException {
-    currentHealth = RC.getHealth();
 
     for (int i = 0; i < SoldierBehavior.microLocations.size; ++i) {
       microLoc = SoldierBehavior.microLocations.get(i);
@@ -59,12 +57,16 @@ public class NathanMicro {
     }
 
     if (RC.isActive()) {
+      double currentHealth = RC.getHealth();
       RobotInfo[] nearbyEnemies = getEnemyRobotInfo();
       Robot[] enemiesInRange = RC.senseNearbyGameObjects(Robot.class, 10, ENEMY_TEAM);
 
       Robot[] nearbyTeam = RC.senseNearbyGameObjects(Robot.class, 35, ALLY_TEAM);
       double allyWeight = 0, enemyWeight = 0;
       String bytect = "" + Clock.getBytecodeNum();
+
+      RobotInfo ri;
+
 
       if (SoldierBehavior.pastrDenyRequestLoc != null) {
         MapLocation denyLoc = SoldierBehavior.pastrDenyRequestLoc;
@@ -82,15 +84,15 @@ public class NathanMicro {
         }
       }
 
+      MapLocation nearestPastrLoc = null;
+      int nearestPastrDistance = 1000000;
+
       // find ally weight
       allyWeight = currentHealth + allyWeightAboutPoint(currentLocation, nearbyTeam);
       bytect += " " + Clock.getBytecodeNum();
       // find enemy weight
       enemyWeight = enemyWeightAboutPoint(currentLocation, nearbyEnemies, false);
 
-      /**
-       * Reset isHelpingOut
-       */
       if (isHelpingOut) {
         if ((RC.canSenseSquare(helpingLoc) && RC.senseObjectAtLocation(helpingLoc) == null)
             || Clock.getRoundNum() > lastHelpRequest + HELP_DURATION) {
@@ -98,18 +100,13 @@ public class NathanMicro {
         }
       }
       bytect += " " + Clock.getBytecodeNum();
-      String zzz = (isHelpingOut ? "HELPING " + helpingLoc : "") + "last help: "
+      String zzz = (isHelpingOut ? "HELPING " + locToString(helpingLoc) : "") + "last help: "
           + lastHelpRequest + " | round: " + Clock.getRoundNum();
 
       RobotInfo targetInfo = getHighestPriority(nearbyEnemies);
       MapLocation target = targetInfo == null ? null : targetInfo.location;
 
-      RobotInfo nonAttackInfo = targetInfo;
-      MapLocation nonAttackTarget = target;
-
-      /**
-       * decide whether to be aggressive or not
-       */
+      // decide whether to retreat
       // more conservative: if (!JON_SCHNEIDER && (currentHealth < 30.1 && currentHealth < 10 *
       // (enemiesInRange.length + 1) + 0.1)
       if (!JON_SCHNEIDER
@@ -125,9 +122,6 @@ public class NathanMicro {
       AIRBENDER = false;
 
       if (target != null) {
-        /**
-         * If close and worth it, try to suicide
-         */
         if (target.distanceSquaredTo(currentLocation) <= 8 && getSquareSuicideValue(currentLocation.add(currentLocation.directionTo(target))) >= 40) {
           GREAT_LUGE = true;
         }
@@ -137,7 +131,7 @@ public class NathanMicro {
           if (threaten.length > 0) {
 
             int count = 0;
-            for (int i = threaten.length; --i >= 0;) {
+            for (int i = 0; i < threaten.length; ++i) {
               RobotInfo k = getRobotInfo(threaten[i]);
               if (k.actionDelay < 1.) {
                 count++;
@@ -158,178 +152,234 @@ public class NathanMicro {
           + " / enemy " + enemyWeight + " (turn " + Clock.getRoundNum() + ") | " + zzz
           + (JON_SCHNEIDER ? " RUNAWAY" : "") + " | " + bytect);
 
-      /**
-       * Choose an aggressive option
-       */
       if ((!JON_SCHNEIDER || (currentHealth >= 30 && allyWeight >= enemyWeight + 100) || enemyWeight < 0)
           && (allyWeight >= enemyWeight || GREAT_LUGE)
           && !AIRBENDER) {
+        // choose an aggressive option
+
         // if (RC.isActive()) { // willing to attack!
-        MapLocation nextLoc = null;
+        MapLocation nextLoc = new MapLocation(-1, -1);
         String zyzzl = "" + Clock.getBytecodeNum();
         double nextAllyWeight = 0, nextEnemyWeight = 0;
-        Direction nextDir = Direction.NONE;
-
 
         if (target == null) {
           if (isHelpingOut) {
-            // Direction helpDir = currentLocation.directionTo(helpingLoc);
-            // nextLoc = currentLocation.add(helpDir);
-            nonAttackTarget = helpingLoc;
-            dumbMove.recompute(nonAttackTarget);
-            nextDir = dumbMove.getNextDir();
-            if (nextDir == Direction.NONE) {
-              setMoveTarget(nonAttackTarget);
-              nextDir = navAlg.getNextDir();
-            }
-            if (nextDir != null && nextDir != Direction.NONE && nextDir != Direction.OMNI) {
-              nextLoc = currentLocation.add(nextDir);
-              nextAllyWeight = currentHealth + allyWeightAboutPoint(nextLoc, nearbyTeam);
-              nextEnemyWeight = enemyWeightAboutPoint(nextLoc, nearbyEnemies, true);
-            }
+            Direction helpDir = currentLocation.directionTo(helpingLoc);
+            nextLoc = currentLocation.add(helpDir);
+            nextAllyWeight = currentHealth + allyWeightAboutPoint(nextLoc, nearbyTeam);
+            nextEnemyWeight = enemyWeightAboutPoint(nextLoc, nearbyEnemies, true);
 
             /*if (nextAllyWeight < POWER_ADVANTAGE * nextEnemyWeight) {
               nextLoc = currentLocation.add(helpDir.rotateLeft());
             }*/
             // target = getHighestPriority(nextLoc, nearbyEnemies);
-          } else if (nearbyEnemies.length > 0) {
+          }
+          else if (nearbyEnemies.length > 0) {
             // if we don't have to do anything, consider moving towards the closest enemy
             int minDist = 1000, dist;
             for (int i = nearbyEnemies.length; --i >= 0;) {
               dist = currentLocation.distanceSquaredTo(nearbyEnemies[i].location);
               if (dist < minDist) {
                 minDist = dist;
-                nonAttackInfo = nearbyEnemies[i];
+                targetInfo = nearbyEnemies[i];
               }
             }
-            nonAttackTarget = nonAttackInfo.location;
-            dumbMove.recompute(nonAttackTarget);
-            nextDir = dumbMove.getNextDir();
-            if (nextDir == Direction.NONE) {
-              setMoveTarget(nonAttackTarget);
-              nextDir = navAlg.getNextDir();
-            }
-            if (nextDir != null && nextDir != Direction.NONE && nextDir != Direction.OMNI) {
-              nextLoc = currentLocation.add(nextDir);
-              nextAllyWeight = currentHealth + allyWeightAboutPoint(nextLoc, nearbyTeam);
-              nextEnemyWeight = enemyWeightAboutPoint(nextLoc, nearbyEnemies, true);
-            }
+            target = targetInfo.location;
+            setTarget(target);
+            Direction nd = navAlg.getNextDir();
 
-          }
+            nextLoc = currentLocation.add(nd);
+            nextAllyWeight = currentHealth + allyWeightAboutPoint(nextLoc, nearbyTeam);
+            nextEnemyWeight = enemyWeightAboutPoint(nextLoc, nearbyEnemies, true);
 
-          for (int i = 0; i < ALLY_PASTR_COUNT; ++i) {
-            MapLocation loc = ALLY_PASTR_LOCS[i];
-            // Direction towardsPastr = currentLocation.directionTo(loc);
 
-            if (currentLocation.distanceSquaredTo(loc) <= 20
-                && (currentLocation.distanceSquaredTo(loc) >= currentLocation
-                    .distanceSquaredTo(nextLoc))) {
-              nextAllyWeight += DEFEND_PASTR_INITIATIVE;
+            for (int i=0; i<ALLY_PASTR_COUNT; ++i) {
+              MapLocation loc = ALLY_PASTR_LOCS[i];
+              // Direction towardsPastr = currentLocation.directionTo(loc);
+
+              if (currentLocation.distanceSquaredTo(loc) <= 20
+                  && (currentLocation.distanceSquaredTo(loc) >= currentLocation.distanceSquaredTo(nextLoc))) {
+                nextAllyWeight += DEFEND_PASTR_INITIATIVE;
+              }
             }
           }
         }
         bytect += "-" + Clock.getBytecodeNum();
         zyzzl +=
-            "/// nextWeight: " + nextEnemyWeight + " at " + nextLoc + ")";
+            "/// nextWeight: " + nextEnemyWeight + " at (" + nextLoc.x + "," + nextLoc.y + "))";
 
-        // if nextLoc is set, we know where we're gonna move
+        // bytecodesUsed = Clock.getBytecodeNum();
+        // if (bytecodesUsed > 5000) {
+        // System.out.println(" used " + bytecodesUsed + " after trying to help/move toward enemy");
+        // }
+
         if (!isHelpingOut
-            && nextLoc != null
-            && ((enemiesInRange.length == 0 && nextAllyWeight >= POWER_ADVANTAGE
+            && (nearbyEnemies.length == 0 || (enemiesInRange.length == 0 && nextAllyWeight >= POWER_ADVANTAGE
                 * nextEnemyWeight + 100))) {
-            // nearbyEnemies.length == 0 ||
           // willing to move forward and attack!
-
+          // String ss = "";
+          // for (int z = 0; z < nearbyEnemies.length; ++z)
+          // ss += "," + nearbyEnemies[z].location.x + "," + nearbyEnemies[z].location.y;
           String zzss =
               "moving forward (ally weight: " + nextAllyWeight + ", enemy weight: "
-                  + nextEnemyWeight + " at " + nextLoc + ")"
-                  + (target == null ? " -- ceding control" : target) + " | " + zyzzl
+                  + nextEnemyWeight + " at (" + nextLoc.x + "," + nextLoc.y + "))"
+                  + (target == null ? " -- ceding control" : locToString(target)) + " | " + zyzzl
                   + " | turn " + Clock.getRoundNum();
-
-          if (nonAttackTarget != null) {
-            zzss += " going " + nextDir;
+          RC.setIndicatorString(2, zzss);
+          if (target != null) {
+            setTarget(target);
+            Direction nextDir = navAlg.getNextDir();
+            zzss += " going " + nextDir.dx + "," + nextDir.dy;
             RC.setIndicatorString(2, zzss);
 
             for (int i = nearbyEnemies.length; --i >= 0;) {
-              MapLocation nearbyEnemyLoc = nearbyEnemies[i].location;
-              if (nearbyEnemyLoc.distanceSquaredTo(nextLoc) <= FIRE_RANGE_SQUARED) {
-                messagingSystem.writeMicroMessage(nearbyEnemyLoc, 1);
-                RC.setIndicatorString(2, zzss + "//" + nearbyEnemyLoc);
+              if (nearbyEnemies[i].location.distanceSquaredTo(currentLocation.add(nextDir)) <= FIRE_RANGE_SQUARED) {
+                messagingSystem.writeMicroMessage(nearbyEnemies[i].location, 1);
+                RC.setIndicatorString(2, zzss + "//" + locToString(nearbyEnemies[i].location));
                 break;
               }
             }
-            // if (nextDir != null && nextDir != Direction.NONE && nextDir != Direction.OMNI)
-            // already checked for ^
-            RC.move(nextDir);
+            if (nextDir != null && nextDir != Direction.NONE && nextDir != Direction.OMNI)
+              RC.move(nextDir);
+            return true;
           } else {
-            RC.setIndicatorString(2, zzss);
+            return false;
           }
         }
-        /**
-         * Logic about advancing when helping out
-         */
-        else if (isHelpingOut && nextLoc != null
-            && nextAllyWeight >= POWER_ADVANTAGE * nextEnemyWeight
+        else if (isHelpingOut && nextAllyWeight >= POWER_ADVANTAGE * nextEnemyWeight
             && target == null) {
-          String sz = "";
-          for (int z = nearbyEnemies.length; --z >= 0;)
-            sz += "/" + nearbyEnemies[z].location;
-          RC.setIndicatorString(2, "/// helping out " + nextLoc + ","
-              + nextAllyWeight + "," + nextEnemyWeight + "|" + sz);
+          Direction newDir = currentLocation.directionTo(helpingLoc);
+          if (newDir != Direction.NONE && newDir != Direction.OMNI) {
+            // go straight towards the target point
+            // the point of the helping out flag is to get manpower ASAP
+            String sz = "";
+            for (int z = nearbyEnemies.length; --z >= 0;)
+              sz += "/" + locToString(nearbyEnemies[z].location);
+            RC.setIndicatorString(2, "/// helping out " + locToString(nextLoc) + ","
+                + nextAllyWeight + "," + nextEnemyWeight + "|" + sz);
+            setTarget(helpingLoc);
+            Direction navDir = navAlg.getNextDir();
 
-          RC.move(nextDir);
-//          Direction newDir = currentLocation.directionTo(helpingLoc);
-//          if (newDir != Direction.NONE && newDir != Direction.OMNI) {
-//            // go straight towards the target point
-//            // the point of the helping out flag is to get manpower ASAP
-//            String sz = "";
-//            for (int z = nearbyEnemies.length; --z >= 0;)
-//              sz += "/" + nearbyEnemies[z].location;
-//            RC.setIndicatorString(2, "/// helping out " + nextLoc + ","
-//                + nextAllyWeight + "," + nextEnemyWeight + "|" + sz);
-//            setTarget(helpingLoc);
-//            Direction navDir = navAlg.getNextDir();
-//
-//            if (navDir == newDir || navDir == newDir.rotateLeft() || navDir == newDir.rotateRight()) {
-//              if (RC.canMove(navDir)) {
-//                RC.move(navDir);
-//                return true;
-//              }
-//            }
-//            else {
-//              dumbMove.recompute(currentLocation.add(newDir));
-//              newDir = dumbMove.getNextDir(); // variable reuse, sorry
-//              if (newDir != Direction.NONE) {
-//                RC.move(newDir);
-//                return true;
-//              }
-//            }
-          // }
+            if (navDir == newDir || navDir == newDir.rotateLeft() || navDir == newDir.rotateRight()) {
+              if (RC.canMove(navDir)) {
+                RC.move(navDir);
+                return true;
+              }
+            }
+            else {
+              dumbMove.recompute(currentLocation.add(newDir));
+              newDir = dumbMove.getNextDir(); // variable reuse, sorry
+              if (newDir != Direction.NONE) {
+                RC.move(newDir);
+                return true;
+              }
+              // if (RC.canMove(newDir)) {
+              // // mover.setTarget(currentLocation.add(newDir));
+              // // mover.move();
+              // RC.move(newDir);
+              // return true;
+              // }
+              // else if (RC.canMove(newDir.rotateLeft())) {
+              // // mover.setTarget(currentLocation.add(newDir.rotateLeft()));
+              // // mover.move();
+              // RC.move(newDir.rotateLeft());
+              // return true;
+              // }
+              // else if (RC.canMove(newDir.rotateRight())) {
+              // // mover.setTarget(currentLocation.add(newDir.rotateRight()));
+              // // mover.move();
+              // RC.move(newDir.rotateRight());
+              // return true;
+              // }
+            }
+          }
         }
-        // RC.setIndicatorString(2, "" + target + "," + nearestPastrLoc + ","
-        // + (target != null ? RC.canAttackSquare(target) : ""));
-        /**
-         * Logic about shooting
-         */
-        else if (target != null && RC.canAttackSquare(target)) {
+        RC.setIndicatorString(2, "" + target + "," + nearestPastrLoc + ","
+            + (target != null ? RC.canAttackSquare(target) : ""));
+
+        if (target == null) {
+          // find nearest PASTR
+          for (int i = nearbyEnemies.length; --i >= 0;) {
+            ri = nearbyEnemies[i];
+            if (ri.type == RobotType.PASTR) {
+              int d = currentLocation.distanceSquaredTo(ri.location);
+              if (d < nearestPastrDistance) {
+                nearestPastrDistance = d;
+                nearestPastrLoc = ri.location;
+              }
+            }
+          }
+
+          // attack a PASTR i guess
+          if (nearestPastrLoc != null) {
+            // PASTR_RANGE = 5
+            Direction newDir = currentLocation.directionTo(nearestPastrLoc);
+            if (RC.canMove(newDir)
+                && currentLocation.add(newDir).distanceSquaredTo(ENEMY_HQ) < RobotType.HQ.attackRadiusMaxSquared) {
+
+              setTarget(nearestPastrLoc);
+              RC.move(navAlg.getNextDir());
+              return true;
+            }
+            else {
+              MapLocation cowTarget =
+                  getMostCowsLoc(
+                      MapLocation.getAllMapLocationsWithinRadiusSq(nearestPastrLoc, 5),
+                      500);
+              if (cowTarget != null && RC.canAttackSquare(cowTarget)
+                  && RC.senseObjectAtLocation(cowTarget) == null) {
+                RC.attackSquare(cowTarget);
+                return true;
+              }
+            }
+          }
+          /*
+           * else if (currentLocation.distanceSquaredTo(ENEMY_HQ) <= 100) {
+           * // copy-pasted from above.
+           * // if we're near the HQ but have nothing to do just randomly kill shit
+           * MapLocation cowTarget =
+           * getMostCowsLoc(
+           * MapLocation.getAllMapLocationsWithinRadiusSq(
+           * currentLocation.add(currentLocation.directionTo(ENEMY_HQ)), 5),
+           * //
+           * 500);
+           * if (RC.isActive() && cowTarget != null && RC.canAttackSquare(cowTarget)
+           * && RC.senseObjectAtLocation(cowTarget) == null) {
+           * RC.attackSquare(cowTarget);
+           * return true;
+           * }
+           * }
+           */
+        } else if (RC.canAttackSquare(target)) {
+          /*
+           * int d = 1;
+           * double dd = currentLocation.distanceSquaredTo(target) - 0.5;
+           * if (dd > 1 && dd <= 4) d = 2;
+           * if (dd > 4 && dd <= 9) d = 3;
+           * if (dd > 9) d = 4;
+           */
+
           int d = lazySqrt(currentLocation.distanceSquaredTo(target));
 
           int maxDmg = (int) (enemiesInRange.length * (d - 1) * RobotType.SOLDIER.attackPower);
           String sf =
               maxDmg + "," + currentHealth + "," + allyWeight + "," + enemyWeight + " | "
-                  + (GREAT_LUGE ? "suicide" : "") + "," + target + " - round "
-                  + currentRound;
+                  + (GREAT_LUGE ? "suicide" : "") + "," + target.x + "," + target.y + " - round "
+                  + Clock.getRoundNum();
           if (currentHealth > maxDmg + 5 && allyWeight < enemyWeight - GREAT_LUGE_ASSIST) {
             // TEMPORARY CHANGE ME LATER
             // GREAT_LUGE = true;
           }
           if (GREAT_LUGE) {
-            if (RC.canMove(currentLocation.directionTo(target))) {
+            if (d <= 1.)
+              RC.selfDestruct();
+            else if (RC.canMove(currentLocation.directionTo(target))) {
               RC.move(currentLocation.directionTo(target));
             } else {
               System.out.println("great luge attack");
               RC.attackSquare(target);
             }
+            return true;
           } else {
             if (targetInfo.health <= 10.01) {
               messagingSystem.writeKill();
@@ -339,16 +389,9 @@ public class NathanMicro {
             if (microLoc.x != target.x || microLoc.y != target.y) {
               messagingSystem.writeMicroMessage(target, 1);
             }
-            sf += " | requesting aid " + target;
+            sf += " | requesting aid " + target.x + "," + target.y;
+            RC.setIndicatorString(2, sf);
           }
-
-          RC.setIndicatorString(2, sf);
-        }
-        /**
-         * Logic about maybe attacking cows
-         */
-        else {
-          tryAttackingCows(nearbyEnemies);
         }
         // }
       } else if (nearbyEnemies.length > 0) {
@@ -371,7 +414,7 @@ public class NathanMicro {
         Direction newDir =
             currentLocation.directionTo(new MapLocation(2 * curX - dx, 2 * curY - dy));
 
-        if (newDir != Direction.NONE && newDir != Direction.OMNI) {
+        if (nearestEnemyDist <= 20 && newDir != Direction.NONE && newDir != Direction.OMNI) {
           Direction wayBack = messagingSystem.readPathingInfo(currentLocation).first.opposite();
 
           if (RC.canMove(wayBack)
@@ -381,6 +424,7 @@ public class NathanMicro {
             // mover.move();
             RC.setIndicatorString(2, "flee!");
             RC.move(wayBack);
+            return true;
           } else {
             dumbMove.recompute(currentLocation.add(newDir));
             newDir = dumbMove.getNextDir(); // variable reuse, sorry
@@ -388,8 +432,24 @@ public class NathanMicro {
               RC.move(newDir);
               RC.setIndicatorString(2, "flee!");
             }
+            // if (RC.canMove(newDir)) {
+            // // mover.setTarget(currentLocation.add(newDir));
+            // // mover.move();
+            // RC.move(newDir);
+            // return true;
+            // }
+            // else if (RC.canMove(newDir.rotateLeft())) {
+            // // mover.setTarget(currentLocation.add(newDir.rotateLeft(), 3));
+            // // mover.move();
+            // RC.move(newDir.rotateLeft());
+            // return true;
+            // }
+            // else if (RC.canMove(newDir.rotateRight())) {
+            // // mover.setTarget(currentLocation.add(newDir.rotateRight(), 3));
+            // // mover.move();
+            // RC.move(newDir.rotateRight());
+            // return true;
             else {
-              RC.setIndicatorString(2, "want to flee but...");
               if (target != null && RC.canAttackSquare(target)) {
                 RC.attackSquare(target);
                 if (targetInfo.health <= 10.) {
@@ -410,7 +470,7 @@ public class NathanMicro {
     return true;
   }
 
-  public static void setMoveTarget(MapLocation loc) {
+  public static void setTarget(MapLocation loc) {
     if (!loc.equals(dest)) {
       dest = loc;
       navAlg.recompute(loc);
@@ -430,10 +490,10 @@ public class NathanMicro {
   public static double getSquareSuicideValue(MapLocation loc) throws GameActionException {
     Robot[] around = RC.senseNearbyGameObjects(Robot.class, 2);
     // double allyDamage = RC.getHealth() + LIFE_VALUE, enemyDamage = 0;
-    double damageDelta = -(currentHealth + LIFE_VALUE);
-    double predictDamage = 41 + currentHealth / 2;
-    // GameConstants.SELF_DESTRUCT_BASE_DAMAGE + GameConstants.SELF_DESTRUCT_DAMAGE_FACTOR
-    // * RC.getHealth();
+    double damageDelta = -(RC.getHealth() + LIFE_VALUE);
+    double predictDamage =
+        GameConstants.SELF_DESTRUCT_BASE_DAMAGE + GameConstants.SELF_DESTRUCT_DAMAGE_FACTOR
+            * RC.getHealth() / 2;
     int predictedKills = 0;
 
     for (int i = around.length; --i >= 0;) {
@@ -447,65 +507,6 @@ public class NathanMicro {
     }
     // penalize not getting any kills
     return predictedKills > 0 ? damageDelta : damageDelta - LIFE_VALUE;
-  }
-
-  public static boolean tryAttackingCows(RobotInfo[] nearbyEnemies) throws GameActionException {
-    // find nearest PASTR
-    MapLocation nearestPastrLoc = null;
-    int nearestPastrDistance = 1000000;
-    RobotInfo ri;
-
-    for (int i = nearbyEnemies.length; --i >= 0;) {
-      ri = nearbyEnemies[i];
-      int d;
-      if (ri.type == RobotType.PASTR) {
-        d = currentLocation.distanceSquaredTo(ri.location);
-        if (d < nearestPastrDistance) {
-          nearestPastrDistance = d;
-          nearestPastrLoc = ri.location;
-        }
-      }
-    }
-
-    // attack a PASTR i guess
-    if (nearestPastrLoc != null) {
-      // PASTR_RANGE = 5
-      // Direction newDir = currentLocation.directionTo(nearestPastrLoc);
-      MapLocation cowTarget =
-          getMostCowsLoc(MapLocation.getAllMapLocationsWithinRadiusSq(nearestPastrLoc, 5),
-              1000);
-      if (cowTarget != null && RC.canAttackSquare(cowTarget)
-          && RC.senseObjectAtLocation(cowTarget) == null) {
-        RC.attackSquare(cowTarget);
-        return true;
-      }
-      setMoveTarget(nearestPastrLoc);
-      Direction newDir = navAlg.getNextDir();
-      if (RC.canMove(newDir)
-          && currentLocation.add(newDir).distanceSquaredTo(ENEMY_HQ) < RobotType.HQ.attackRadiusMaxSquared) {
-
-        RC.move(newDir);
-        return true;
-      }
-    }
-    /*
-     * else if (currentLocation.distanceSquaredTo(ENEMY_HQ) <= 100) {
-     * // copy-pasted from above.
-     * // if we're near the HQ but have nothing to do just randomly kill shit
-     * MapLocation cowTarget =
-     * getMostCowsLoc(
-     * MapLocation.getAllMapLocationsWithinRadiusSq(
-     * currentLocation.add(currentLocation.directionTo(ENEMY_HQ)), 5),
-     * //
-     * 500);
-     * if (RC.isActive() && cowTarget != null && RC.canAttackSquare(cowTarget)
-     * && RC.senseObjectAtLocation(cowTarget) == null) {
-     * RC.attackSquare(cowTarget);
-     * return true;
-     * }
-     * }
-     */
-    return false;
   }
 
   public static double allyWeightAboutPoint(MapLocation loc, Robot[] nearbyEnemies)
@@ -600,5 +601,9 @@ public class NathanMicro {
       }
     }
     return weight;
+  }
+
+  public static String locToString(MapLocation loc) {
+    return "(" + loc.x + "," + loc.y + ")";
   }
 }
