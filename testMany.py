@@ -3,8 +3,8 @@ import os
 import subprocess
 import re
 
-_maps2 = [ 'fieldsofgreen', 'almsman', 'troll', 'moo', 'temple', 'siege', 'backdoor', 'bakedpotato', 'blocky', 'castles', 'flagsoftheworld', 'cadmic', 'fenced' ] 
-_maps = _maps2[:]
+_maps2 = [ 'fieldsofgreen', 'almsman', 'troll', 'moo', 'temple', 'siege', 'backdoor', 'bakedpotato', 'blocky', 'castles', 'flagsoftheworld', 'cadmic', 'fenced', 'pipes', 'friendly', 'highschool', 'desolation' ] 
+_maps = _maps2[6:]
 
 _teamA = 'mergebot'
 _teamB = 'emptyplayer'

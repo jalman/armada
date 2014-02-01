@@ -19,7 +19,7 @@ public class PastureFinder {
     int num = 1;
     MapLocation inittry;
     int distDiff;
-    
+
     {
       inittry =
           // new MapLocation(x * (MAP_WIDTH) / xparts, y * (MAP_HEIGHT) / yparts);
@@ -34,8 +34,8 @@ public class PastureFinder {
         }
       }
     }
-    
-    
+
+
     for (int x = xparts; --x >= 0;) {
       for (int y = yparts; --y >= 0;) {
         inittry =
@@ -129,29 +129,24 @@ public class PastureFinder {
   static final int COW_GROWTH_RAND_ITERS = 2;
   static final int COW_GROWTH_RAND_DIST = 80;
 
-  static final int COW_CHECK_RADIUS_SQUARED = 9;
-  private static double estimateCowGrowth(MapLocation loc) {
+  public static double estimateCowGrowth(MapLocation loc, int cowRadius, int skip) {
     double estimate = 0;
 
-    // 5 = PASTR radius
     MapLocation[] locs =
-        MapLocation.getAllMapLocationsWithinRadiusSq(loc, COW_CHECK_RADIUS_SQUARED);
-    for (int i = locs.length - 1; i >= 0; i -= 2) {
+        MapLocation.getAllMapLocationsWithinRadiusSq(loc, cowRadius);
+    for (int i = locs.length - 1; i >= 0; i -= skip) {
       estimate += effectiveCowGrowth(locs[i]);
     }
-
-    // locs = randomUniformNearbyLocations(loc, COW_GROWTH_RAND_DIST, COW_GROWTH_RAND_ITERS);
-    // for (int i = locs.length - 1; i >= 0; --i) {
-    // estimate += effectiveCowGrowth(locs[i]);
-    // }
 
     return estimate;
   }
 
   private static boolean[][] tried = new boolean[MAP_WIDTH][MAP_HEIGHT];
 
+  static final int INITIAL_COW_SKIP = 2;
+  static final int COW_CHECK_RADIUS_SQUARED = 9;
   private static Pair<MapLocation, Double> gradientAscent(MapLocation current) {
-    double best = estimateCowGrowth(current);
+    double best = estimateCowGrowth(current, COW_CHECK_RADIUS_SQUARED, INITIAL_COW_SKIP);
     tried[current.x][current.y] = true;
 
     Direction dir = null;
@@ -180,7 +175,7 @@ public class PastureFinder {
         if (!RC.senseTerrainTile(loc).isTraversableAtHeight(RobotLevel.ON_GROUND)
             || tried[loc.x][loc.y]) continue;
         tried[loc.x][loc.y] = true;
-        double estimate = estimateCowGrowth(loc);
+        double estimate = estimateCowGrowth(loc, COW_CHECK_RADIUS_SQUARED, INITIAL_COW_SKIP);
         if (estimate > best) {
           best = estimate;
           current = loc;
