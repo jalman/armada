@@ -36,8 +36,8 @@ public class SoldierBehavior extends RobotBehavior {
   /**
    * Whether we're waiting to build a pasture.
    */
-  // private boolean waitingPasture = false;
-  // private int buildPastureRound;
+  private boolean waitingPasture = false;
+  private int buildPastureRound;
 
   static boolean buildingSecondPastr;
 
@@ -79,12 +79,9 @@ public class SoldierBehavior extends RobotBehavior {
       @Override
       public void handleMessage(int[] message) {
         if (!buildingSecondPastr) {
-          int id = message[2];
-          if (id < 0 || id == ID) {
-            buildPastureLoc = new MapLocation(message[0], message[1]);
-          }
+          buildPastureLoc = new MapLocation(message[0], message[1]);
         }
-        // buildPastureRound = currentRound;
+        buildPastureRound = currentRound;
       }
     };
 
@@ -194,7 +191,7 @@ public class SoldierBehavior extends RobotBehavior {
     if (buildPastureLoc != null) {
       // build a pasture! Overwrites previous pasture target.
       target = buildPastureLoc;
-      // waitingPasture = false;
+      waitingPasture = false;
       setMode(Mode.BUILD_PASTURE, target);
       // if (currentRound > 400 && currentRound < 420) {
       // System.out.println("I've been told to build pastr at " + target);
@@ -318,6 +315,7 @@ public class SoldierBehavior extends RobotBehavior {
         // if we're there wait to build a pasture
         if (d == 0) {
           // RC.setIndicatorString(1, "Waiting to build pasture.");
+          waitingPasture = true;
           if (!RC.isActive()) break;
           if (buildPasture()) {
             RC.construct(RobotType.PASTR);
