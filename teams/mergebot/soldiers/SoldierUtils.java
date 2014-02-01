@@ -208,7 +208,7 @@ public class SoldierUtils {
     // roundsUntilActive = (int) r.actionDelay;
     // }
 
-    int healthFactor = 500 / ((int) (r.health / 10 + 1)); // -(int) (healthPercent * 100);
+    int healthFactor = (int) (500 / (r.health / 10 + 1)); // -(int) (healthPercent * 100);
     int distFactor = 200 / distance;
     int delayFactor = 0; /* -5 * roundsUntilActive; */
 
@@ -243,7 +243,7 @@ public class SoldierUtils {
       case PASTR:
         return 0;
       case NOISETOWER:
-        return -250;
+        return -500;
       default:
         return -1000000;
     }

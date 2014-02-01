@@ -134,7 +134,7 @@ public class NathanMicro {
           + " / enemy " + enemyWeight + " (turn " + Clock.getRoundNum() + ") | " + zzz
           + (JON_SCHNEIDER ? " RUNAWAY" : "") + " | " + bytect);
 
-      if ((!JON_SCHNEIDER || (currentHealth >= 30 && allyWeight >= enemyWeight + 100))
+      if ((!JON_SCHNEIDER || (currentHealth >= 30 && allyWeight >= enemyWeight + 100) || enemyWeight < 0)
           && (allyWeight >= enemyWeight || GREAT_LUGE)
           && !AIRBENDER) {
         // choose an aggressive option
@@ -143,6 +143,7 @@ public class NathanMicro {
         MapLocation nextLoc = new MapLocation(-1, -1);
         String zyzzl = "" + Clock.getBytecodeNum();
         double nextAllyWeight = 0, nextEnemyWeight = 0;
+
         if (target == null) {
           if (isHelpingOut) {
             Direction helpDir = currentLocation.directionTo(helpingLoc);
@@ -545,7 +546,8 @@ public class NathanMicro {
     }
     for (int i = nearbyEnemies.length; --i >= 0;) {
       RobotInfo ri = nearbyEnemies[i];
-      if (ri.type == RobotType.SOLDIER) {
+      switch(ri.type) {
+        case SOLDIER:
           if (ri.isConstructing) {
             break;
           }
@@ -562,6 +564,12 @@ public class NathanMicro {
             weight += ri.health;
           else
             weight += ri.health - ALLY_WEIGHT_DECAY * lazySqrt(d - FIRE_RANGE_SQUARED);
+          break;
+        case PASTR:
+        case NOISETOWER:
+          weight -= 0.1;
+          break;
+        default:
           break;
       }
     }
