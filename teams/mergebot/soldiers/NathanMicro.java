@@ -50,15 +50,10 @@ public class NathanMicro {
       }
     }
 
-
-    /****************************************************************
-     *                                                              *
-     *                                                              *
-     * TODO DO NOT CALL SELFDESTRUCT INSIDE THIS IF STATEMENT!!!!!  *
-     * MAKE IT A SEPARATE MODE IN SOLDIERBEHAVIOR!!!!!              *
-     *                                                              *
-     *                                                              *
-     ****************************************************************/
+    if (getSquareSuicideValue(currentLocation) > 0) {
+      RC.selfDestruct();
+    }
+    
     if (RC.isActive()) {
       double currentHealth = RC.getHealth();
       RobotInfo[] nearbyEnemies = getEnemyRobotInfo();
@@ -103,26 +98,35 @@ public class NathanMicro {
       RobotInfo targetInfo = getHighestPriority(nearbyEnemies);
       MapLocation target = targetInfo == null ? null : targetInfo.location;
 
-      Robot[] threaten = new Robot[0];
-      if (target != null) threaten = RC.senseNearbyGameObjects(Robot.class, target, 2, ALLY_TEAM);
-
       AIRBENDER = false;
-      if (threaten.length > 0) {
-
-        int count = 0;
-        for (int i = 0; i < threaten.length; ++i) {
-          RobotInfo k = RC.senseRobotInfo(threaten[i]);
-          if (k.actionDelay < 1.) {
-            count++;
-          }
-        }
-        if (count * 10 > threaten.length) {
-          // blow it up!
+      
+      if (target != null) {
+        if (target.distanceSquaredTo(currentLocation) <= 8 && getSquareSuicideValue(currentLocation.add(currentLocation.directionTo(target))) >= 40) {
+          GREAT_LUGE = true;
         }
         else {
-          AIRBENDER = true;
+          Robot[] threaten = RC.senseNearbyGameObjects(Robot.class, target, 2, ALLY_TEAM);
+          
+          if (threaten.length > 0) {
+
+            int count = 0;
+            for (int i = 0; i < threaten.length; ++i) {
+              RobotInfo k = RC.senseRobotInfo(threaten[i]);
+              if (k.actionDelay < 1.) {
+                count++;
+              }
+            }
+            if (count * 10 > threaten.length) {
+              // blow it up!
+            }
+            else {
+              AIRBENDER = true;
+            }
+          }
         }
       }
+
+      
 
       if ((!JON_SCHNEIDER || (currentHealth >= 30 && allyWeight >= enemyWeight + 100))
           && (allyWeight >= enemyWeight || GREAT_LUGE)
@@ -135,11 +139,17 @@ public class NathanMicro {
         double nextAllyWeight = 0, nextEnemyWeight = 0;
         if (target == null) {
           if (isHelpingOut) {
-            nextLoc = currentLocation.add(currentLocation.directionTo(helpingLoc));
+            Direction helpDir = currentLocation.directionTo(helpingLoc);
+            nextLoc = currentLocation.add(helpDir);
             nextAllyWeight = currentHealth + allyWeightAboutPoint(nextLoc, nearbyTeam);
             nextEnemyWeight = enemyWeightAboutPoint(nextLoc, nearbyEnemies, true);
+            
+            /*if (nextAllyWeight < POWER_ADVANTAGE * nextEnemyWeight) {
+              nextLoc = currentLocation.add(helpDir.rotateLeft());
+            }*/
             // target = getHighestPriority(nextLoc, nearbyEnemies);
-          } else if (nearbyEnemies.length > 0) {
+          }
+          else if (nearbyEnemies.length > 0) {
             // if we don't have to do anything, consider moving towards the closest enemy
             int minDist = 1000, dist;
             for (int i = nearbyEnemies.length; --i >= 0;) {
