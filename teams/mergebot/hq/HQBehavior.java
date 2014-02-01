@@ -2,14 +2,16 @@ package mergebot.hq;
 
 import static mergebot.utils.Utils.*;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
 
 import mergebot.*;
 import mergebot.Strategy.GamePhase;
 import mergebot.messaging.*;
 import mergebot.messaging.MessagingSystem.MessageType;
 import mergebot.messaging.MessagingSystem.ReservedMessageType;
-import mergebot.nav.*;
+import mergebot.nav.Dijkstra;
+import mergebot.nav.HybridMover;
 import mergebot.utils.*;
 import mergebot.utils.Utils.SymmetryType;
 import battlecode.common.*;
@@ -32,7 +34,7 @@ public class HQBehavior extends RobotBehavior {
   private final AttackSystem attackSystem = new AttackSystem();
 
   public static final int[] yrangefornoise = { 17, 17, 17, 17, 16, 16, 16, 15, 15, 14, 14, 13, 12, 11, 10, 8, 6, 3 };
-  
+
   public static boolean PASTRReachabilityConfirmed = true;
   //public static final int[]
 
@@ -46,11 +48,11 @@ public class HQBehavior extends RobotBehavior {
 
   static final Comparator<Pair<MapLocation, Double>> pairMapLocDoubleComp =
       new Comparator<Pair<MapLocation, Double>>() {
-        @Override
-        public int compare(Pair<MapLocation, Double> a, Pair<MapLocation, Double> b) {
-          return Double.compare(b.second, a.second);
-        }
-      };
+    @Override
+    public int compare(Pair<MapLocation, Double> a, Pair<MapLocation, Double> b) {
+      return Double.compare(b.second, a.second);
+    }
+  };
 
   /**
    * Approximate locations of PASTRs we've actually taken.
@@ -206,7 +208,7 @@ public class HQBehavior extends RobotBehavior {
     RC.setIndicatorString(0, "init: " + initialStrategy + ", mid: " + midgameStrategy
         + ", phase " + gamePhase + ", cur: " + currentStrategy);
   }
-  
+
   private void rallyToFirstPASTR() {
     rally = goodPASTRLocs[0].first;
     rally = rally.add(wayToEnemy(rally),2);
@@ -298,25 +300,25 @@ public class HQBehavior extends RobotBehavior {
     executeStrategy();
     considerTeamAttacking();
   }
-  
+
   private void doublecheckPASTRs() {
     if(PASTRReachabilityConfirmed) return;
-    
+
     int num = 0;
     Pair<MapLocation, Double>[] reachablePASTRs = new Pair[goodPASTRLocs.length];
-    
+
     for(int i = 0; i < goodPASTRLocs.length; i++) {
       if(dijkstra.visited(goodPASTRLocs[i].first)) {
         reachablePASTRs[num++] = goodPASTRLocs[i];
       }
     }
-    
+
     if(num>0) goodPASTRLocs = Arrays.copyOf(reachablePASTRs, num); //if statement to avoid blowing up, maybe should do something better?
-    
+
     //Damien please fix for double PASTR??
-    
+
     PASTRReachabilityConfirmed = true;
-    
+
     System.out.println("CALLED!! " + goodPASTRLocs[0].first);
   }
 
@@ -442,7 +444,7 @@ public class HQBehavior extends RobotBehavior {
         for(int i = goodPASTRLocs.length; --i >= 0; ) {
           MapLocation loc = goodPASTRLocs[i].first;
           double weight = goodPASTRLocs[i].second
-                  + (loc.distanceSquaredTo(ENEMY_HQ) / (5 * loc.distanceSquaredTo(ALLY_HQ)));
+              + (loc.distanceSquaredTo(ENEMY_HQ) / (5 * loc.distanceSquaredTo(ALLY_HQ)));
           // + (int) (Math.sqrt(loc.distanceSquaredTo(ENEMY_HQ) - loc.distanceSquaredTo(ALLY_HQ)) /
           // 4);
           firstPASTRLocs[i] = new Pair<MapLocation, Double>(loc, weight);
@@ -529,7 +531,15 @@ public class HQBehavior extends RobotBehavior {
 
     if (!PASTRMessageSent && numBots > currentStrategy.PASTRThresholds[ALLY_PASTR_COUNT]
         && ALLY_PASTR_COUNT < desiredPASTRNumAdjusted) {
-      messagingSystem.writeBuildPastureMessage(requestedPASTRLoc);
+      buildPasture(requestedPASTRLoc);
+    }
+  }
+
+  private static void buildPasture(MapLocation loc) throws GameActionException {
+    Robot[] allies = RC.senseNearbyGameObjects(Robot.class, Integer.MAX_VALUE, ALLY_TEAM);
+
+    for (int i = 3; --i >= 0;) {
+      messagingSystem.writeBuildPastureMessage(loc, allies[i].getID());
     }
   }
 

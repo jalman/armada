@@ -1,7 +1,7 @@
 package mergebot.messaging;
 
 import static mergebot.utils.Utils.*;
-import mergebot.utils.*;
+import mergebot.utils.Pair;
 import mergebot.utils.Utils.SymmetryType;
 import battlecode.common.*;
 
@@ -24,7 +24,7 @@ public class MessagingSystem {
     SOLDIER_ID(1),
     ENEMY_BOT(2),
     MILK_INFO(4),
-    BUILD_PASTURE(2),
+    BUILD_PASTURE(3),
     BUILD_SECOND_SIMULTANEOUS_PASTURE(3), // target soldier ID, (x, y)
     BUILDING_PASTURE(2),
     BUILDING_SECOND_SIMULTANEOUS_PASTURE(3), // (x, y)
@@ -320,8 +320,8 @@ public class MessagingSystem {
     writeMessage(MessageType.MILK_INFO, allyPastrCount, enemyPastrCount, allyMilk, enemyMilk);
   }
 
-  public void writeBuildPastureMessage(MapLocation loc) throws GameActionException {
-    writeMessage(MessageType.BUILD_PASTURE, loc.x, loc.y);
+  public void writeBuildPastureMessage(MapLocation loc, int id) throws GameActionException {
+    writeMessage(MessageType.BUILD_PASTURE, loc.x, loc.y, id);
   }
 
   public void writeBuildingPastureMessage(MapLocation target) throws GameActionException {
