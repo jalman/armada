@@ -26,8 +26,8 @@ public class Strategy {
   public static final Strategy INIT_DOUBLE_PASTR = new Strategy(2, 0, 2, true);
   public static final Strategy INIT_EARLY_SINGLE_PASTR = new Strategy(1, 4, 100, true);
   public static final Strategy INIT_SINGLE_PASTR = new Strategy(1, 5, 100, true);
-  public static final Strategy INIT_LATE_SINGLE_PASTR = new Strategy(1, 7, 100, true);
-  public static final Strategy INIT_VERY_LATE_SINGLE_PASTR = new Strategy(1, 8, 100, true);
+  public static final Strategy INIT_LATE_SINGLE_PASTR = new Strategy(1, 8, 100, true);
+  public static final Strategy INIT_VERY_LATE_SINGLE_PASTR = new Strategy(1, 10, 100, true);
   // public static final Strategy INIT_RUSH = new Strategy(1, 12, 100, true);
 
   public static final Strategy MID_DOUBLE_PASTR_AGGRESSIVE = new Strategy(2, 6, 12, true);
