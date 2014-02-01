@@ -490,8 +490,7 @@ public class NathanMicro {
     for (int i = nearbyTeam.length; --i >= 0;) {
       RobotInfo ri = getRobotInfo(nearbyTeam[i]);
 
-      switch (ri.type) {
-        case SOLDIER:
+      if (ri.type == RobotType.SOLDIER)
           if (ri.isConstructing) {
             break;
           }
@@ -504,8 +503,7 @@ public class NathanMicro {
             // allyWeight += (ri.health > 10.0) ? ri.health : 0;
             allyWeight += ri.health;
           } else {
-            allyWeight += Math.max(0,
-                ri.health - ALLY_WEIGHT_DECAY * lazySqrt(dist - 3));
+            allyWeight += Math.max(0, ri.health - ALLY_WEIGHT_DECAY * (lazySqrt(dist) - 1));
           }
 
           /*
@@ -525,9 +523,6 @@ public class NathanMicro {
            * }
            * break;
            */
-        default:
-          break;
-      }
     }
     return allyWeight;
   }
@@ -549,10 +544,7 @@ public class NathanMicro {
     }
     for (int i = nearbyEnemies.length; --i >= 0;) {
       RobotInfo ri = nearbyEnemies[i];
-      switch (ri.type) {
-      // case HQ:
-      // break;
-        case SOLDIER:
+      if (ri.type == RobotType.SOLDIER) {
           if (ri.isConstructing) {
             break;
           }
@@ -569,8 +561,6 @@ public class NathanMicro {
             weight += ri.health;
           else
             weight += ri.health - ALLY_WEIGHT_DECAY * lazySqrt(d - FIRE_RANGE_SQUARED);
-          break;
-        default:
           break;
       }
     }
