@@ -336,6 +336,7 @@ public class Utils {
   }
 
   public static Direction getSymmetricDirection(Direction d) {
+    if(d == null) return d;
     switch (MAP_SYMMETRY) {
       case ROTATION:
         return d.opposite();
