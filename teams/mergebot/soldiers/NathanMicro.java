@@ -50,15 +50,11 @@ public class NathanMicro {
       }
     }
 
+    if (getSquareSuicideValue(currentLocation) > 0) {
+      // no message for enemies killed via selfdestruct...
+      RC.selfDestruct();
+    }
 
-    /****************************************************************
-     *                                                              *
-     *                                                              *
-     * TODO DO NOT CALL SELFDESTRUCT INSIDE THIS IF STATEMENT!!!!!  *
-     * MAKE IT A SEPARATE MODE IN SOLDIERBEHAVIOR!!!!!              *
-     *                                                              *
-     *                                                              *
-     ****************************************************************/
     if (RC.isActive()) {
       double currentHealth = RC.getHealth();
       RobotInfo[] nearbyEnemies = getEnemyRobotInfo();
@@ -66,6 +62,7 @@ public class NathanMicro {
 
       Robot[] nearbyTeam = RC.senseNearbyGameObjects(Robot.class, 35, ALLY_TEAM);
       double allyWeight = 0, enemyWeight = 0;
+      String bytect = "" + Clock.getBytecodeNum();
 
       RobotInfo ri;
 
@@ -74,6 +71,7 @@ public class NathanMicro {
 
       // find ally weight
       allyWeight = currentHealth + allyWeightAboutPoint(currentLocation, nearbyTeam);
+      bytect += " " + Clock.getBytecodeNum();
       // find enemy weight
       enemyWeight = enemyWeightAboutPoint(currentLocation, nearbyEnemies, false);
 
@@ -83,63 +81,82 @@ public class NathanMicro {
           isHelpingOut = false;
         }
       }
+      bytect += " " + Clock.getBytecodeNum();
       String zzz = (isHelpingOut ? "HELPING " + locToString(helpingLoc) : "") + "last help: "
           + lastHelpRequest + " | round: " + Clock.getRoundNum();
-      RC.setIndicatorString(1, "in range " + enemiesInRange.length + " | " + "ally " + allyWeight
-          + " / enemy " + enemyWeight + " (turn " + Clock.getRoundNum() + ") | " + zzz
-          + (JON_SCHNEIDER ? " RUNAWAY" : ""));
+
+      RobotInfo targetInfo = getHighestPriority(nearbyEnemies);
+      MapLocation target = targetInfo == null ? null : targetInfo.location;
 
       // decide whether to retreat
       // more conservative: if (!JON_SCHNEIDER && (currentHealth < 30.1 && currentHealth < 10 *
       // (enemiesInRange.length + 1) + 0.1)
       if (!JON_SCHNEIDER
-          && currentHealth <= enemiesInRange.length * 10 + 0.1
-          // && (currentHealth <= 10.1 || (currentHealth <= 20.1 && enemiesInRange.length >= 3))
+          && currentHealth <= enemiesInRange.length * 10 + 0.01 && targetInfo.health > 10.0
+          // && (currentHealth <= 10.01 || (currentHealth <= 20.1 && enemiesInRange.length >= 3))
           && allyWeight >= enemyWeight + 40) {
         JON_SCHNEIDER = true;
       }
       if (JON_SCHNEIDER && currentHealth >= 50) JON_SCHNEIDER = false;
 
-      RobotInfo targetInfo = getHighestPriority(nearbyEnemies);
-      MapLocation target = targetInfo == null ? null : targetInfo.location;
-
-      Robot[] threaten = new Robot[0];
-      if (target != null) threaten = RC.senseNearbyGameObjects(Robot.class, target, 2, ALLY_TEAM);
+      bytect += " " + Clock.getBytecodeNum();
 
       AIRBENDER = false;
-      if (threaten.length > 0) {
 
-        int count = 0;
-        for (int i = 0; i < threaten.length; ++i) {
-          RobotInfo k = RC.senseRobotInfo(threaten[i]);
-          if (k.actionDelay < 1.) {
-            count++;
-          }
-        }
-        if (count * 10 > threaten.length) {
-          // blow it up!
+      if (target != null) {
+        if (target.distanceSquaredTo(currentLocation) <= 8 && getSquareSuicideValue(currentLocation.add(currentLocation.directionTo(target))) >= 40) {
+          GREAT_LUGE = true;
         }
         else {
-          AIRBENDER = true;
+          Robot[] threaten = RC.senseNearbyGameObjects(Robot.class, target, 2, ALLY_TEAM);
+
+          if (threaten.length > 0) {
+
+            int count = 0;
+            for (int i = 0; i < threaten.length; ++i) {
+              RobotInfo k = getRobotInfo(threaten[i]);
+              if (k.actionDelay < 1.) {
+                count++;
+              }
+            }
+            if (count * 10 > threaten.length) {
+              // blow it up!
+            }
+            else {
+              AIRBENDER = true;
+            }
+          }
         }
       }
+      bytect += " " + Clock.getBytecodeNum();
 
-      if ((!JON_SCHNEIDER || (currentHealth >= 30 && allyWeight >= enemyWeight + 100))
+      RC.setIndicatorString(1, "in range " + enemiesInRange.length + " | " + "ally " + allyWeight
+          + " / enemy " + enemyWeight + " (turn " + Clock.getRoundNum() + ") | " + zzz
+          + (JON_SCHNEIDER ? " RUNAWAY" : "") + " | " + bytect);
+
+      if ((!JON_SCHNEIDER || (currentHealth >= 30 && allyWeight >= enemyWeight + 100) || enemyWeight < 0)
           && (allyWeight >= enemyWeight || GREAT_LUGE)
           && !AIRBENDER) {
         // choose an aggressive option
 
         // if (RC.isActive()) { // willing to attack!
         MapLocation nextLoc = new MapLocation(-1, -1);
-        String zyzzl = "";
+        String zyzzl = "" + Clock.getBytecodeNum();
         double nextAllyWeight = 0, nextEnemyWeight = 0;
+
         if (target == null) {
           if (isHelpingOut) {
-            nextLoc = currentLocation.add(currentLocation.directionTo(helpingLoc));
+            Direction helpDir = currentLocation.directionTo(helpingLoc);
+            nextLoc = currentLocation.add(helpDir);
             nextAllyWeight = currentHealth + allyWeightAboutPoint(nextLoc, nearbyTeam);
             nextEnemyWeight = enemyWeightAboutPoint(nextLoc, nearbyEnemies, true);
+
+            /*if (nextAllyWeight < POWER_ADVANTAGE * nextEnemyWeight) {
+              nextLoc = currentLocation.add(helpDir.rotateLeft());
+            }*/
             // target = getHighestPriority(nextLoc, nearbyEnemies);
-          } else if (nearbyEnemies.length > 0) {
+          }
+          else if (nearbyEnemies.length > 0) {
             // if we don't have to do anything, consider moving towards the closest enemy
             int minDist = 1000, dist;
             for (int i = nearbyEnemies.length; --i >= 0;) {
@@ -156,12 +173,12 @@ public class NathanMicro {
             nextLoc = currentLocation.add(nd);
             nextAllyWeight = currentHealth + allyWeightAboutPoint(nextLoc, nearbyTeam);
             nextEnemyWeight = enemyWeightAboutPoint(nextLoc, nearbyEnemies, true);
-            
+
 
             for (int i=0; i<ALLY_PASTR_COUNT; ++i) {
               MapLocation loc = ALLY_PASTR_LOCS[i];
               Direction towardsPastr = currentLocation.directionTo(loc);
-              
+
               if (currentLocation.distanceSquaredTo(loc) <= 20
                   && (currentLocation.distanceSquaredTo(loc) >= currentLocation.distanceSquaredTo(nextLoc))) {
                 nextAllyWeight += DEFEND_PASTR_INITIATIVE;
@@ -169,6 +186,7 @@ public class NathanMicro {
             }
           }
         }
+        bytect += "-" + Clock.getBytecodeNum();
         zyzzl +=
             "/// nextWeight: " + nextEnemyWeight + " at (" + nextLoc.x + "," + nextLoc.y + "))";
 
@@ -344,7 +362,7 @@ public class NathanMicro {
             }
             return true;
           } else {
-            if (targetInfo.health <= 10.1) {
+            if (targetInfo.health <= 10.01) {
               messagingSystem.writeKill();
               sf += "| kill count: " + messagingSystem.readKills();
             }
@@ -388,23 +406,23 @@ public class NathanMicro {
             if (newDir != Direction.NONE) {
               RC.move(newDir);
             }
-//            if (RC.canMove(newDir)) {
-//              // mover.setTarget(currentLocation.add(newDir));
-//              // mover.move();
-//              RC.move(newDir);
-//              return true;
-//            }
-//            else if (RC.canMove(newDir.rotateLeft())) {
-//              // mover.setTarget(currentLocation.add(newDir.rotateLeft(), 3));
-//              // mover.move();
+            // if (RC.canMove(newDir)) {
+            // // mover.setTarget(currentLocation.add(newDir));
+            // // mover.move();
+            // RC.move(newDir);
+            // return true;
+            // }
+            // else if (RC.canMove(newDir.rotateLeft())) {
+            // // mover.setTarget(currentLocation.add(newDir.rotateLeft(), 3));
+            // // mover.move();
             // RC.move(newDir.rotateLeft());
-//              return true;
-//            }
-//            else if (RC.canMove(newDir.rotateRight())) {
-//              // mover.setTarget(currentLocation.add(newDir.rotateRight(), 3));
-//              // mover.move();
+            // return true;
+            // }
+            // else if (RC.canMove(newDir.rotateRight())) {
+            // // mover.setTarget(currentLocation.add(newDir.rotateRight(), 3));
+            // // mover.move();
             // RC.move(newDir.rotateRight());
-//              return true;
+            // return true;
             else {
               if (target != null && RC.canAttackSquare(target)) {
                 RC.attackSquare(target);
@@ -442,23 +460,27 @@ public class NathanMicro {
   public static int lazySqrt(int k) {
     return (k <= 15) ? sqrtArray[k] : 4;
   }
+
   public static double getSquareSuicideValue(MapLocation loc) throws GameActionException {
     Robot[] around = RC.senseNearbyGameObjects(Robot.class, 2);
-    double allyDamage = RC.getHealth() + LIFE_VALUE, enemyDamage = 0;
-    double predictDamage = GameConstants.SELF_DESTRUCT_BASE_DAMAGE + GameConstants.SELF_DESTRUCT_DAMAGE_FACTOR * RC.getHealth();
+    // double allyDamage = RC.getHealth() + LIFE_VALUE, enemyDamage = 0;
+    double damageDelta = -(RC.getHealth() + LIFE_VALUE);
+    double predictDamage =
+        GameConstants.SELF_DESTRUCT_BASE_DAMAGE + GameConstants.SELF_DESTRUCT_DAMAGE_FACTOR
+            * RC.getHealth() / 2;
+    int predictedKills = 0;
 
-    for (int i=0; i<around.length; ++i) {
-    RobotInfo ri = RC.senseRobotInfo(around[i]);
-
-      double damage = (predictDamage >= ri.health ? ri.health : predictDamage);
-      if (ri.team == ALLY_TEAM) {
-        allyDamage += (damage + (predictDamage >= ri.health ? LIFE_VALUE : 0));
-      }
-      else {
-        enemyDamage += (damage + (predictDamage >= ri.health ? LIFE_VALUE : 0));
+    for (int i = around.length; --i >= 0;) {
+      RobotInfo ri = getRobotInfo(around[i]);
+      if(predictDamage >= ri.health) {
+        damageDelta += ((ri.team == ALLY_TEAM) ? -(ri.health + LIFE_VALUE) : ri.health + LIFE_VALUE);
+        predictedKills++;
+      } else {
+        damageDelta += ((ri.team == ALLY_TEAM) ? -predictDamage : predictDamage);
       }
     }
-    return enemyDamage - allyDamage;
+    // penalize not getting any kills
+    return predictedKills > 0 ? damageDelta : damageDelta - LIFE_VALUE;
   }
 
   public static double allyWeightAboutPoint(MapLocation loc, Robot[] nearbyEnemies)
@@ -467,36 +489,41 @@ public class NathanMicro {
     Robot[] nearbyTeam = RC.senseNearbyGameObjects(Robot.class, loc, 17, ALLY_TEAM);
 
     for (int i = nearbyTeam.length; --i >= 0;) {
-      RobotInfo ri = RC.senseRobotInfo(nearbyTeam[i]);
+      RobotInfo ri = getRobotInfo(nearbyTeam[i]);
 
-      switch (ri.type) {
-        case SOLDIER:
+      if (ri.type == RobotType.SOLDIER) {
           if (ri.isConstructing) {
             break;
           }
 
           MapLocation soldierLoc = ri.location;
-          if (loc.distanceSquaredTo(soldierLoc) > 25) break;
+          int dist = loc.distanceSquaredTo(soldierLoc);
+          if (dist > 25) break;
 
-          Robot[] stuff = RC.senseNearbyGameObjects(Robot.class, soldierLoc, 17, ENEMY_TEAM);
-
-          boolean inCombat = false;
-          int bestDist = 100000;
-
-          for (int j = stuff.length; --j >= 0;) {
-            int dd = soldierLoc.distanceSquaredTo(RC.senseRobotInfo(stuff[j]).location);
-            bestDist = (dd < bestDist ? dd : bestDist);
-          }
-          if (bestDist <= 10) {
+          if (dist <= 3) {
             // allyWeight += (ri.health > 10.0) ? ri.health : 0;
             allyWeight += ri.health;
           } else {
-            allyWeight += Math.max(0,
-                ri.health - ALLY_WEIGHT_DECAY * lazySqrt(bestDist - 10));
+            allyWeight += Math.max(0, ri.health - ALLY_WEIGHT_DECAY * (lazySqrt(dist) - 1));
           }
-          break;
-        default:
-          break;
+
+          /*
+           * Robot[] stuff = RC.senseNearbyGameObjects(Robot.class, soldierLoc, 17, ENEMY_TEAM);
+           * boolean inCombat = false;
+           * int bestDist = 100000;
+           * for (int j = stuff.length; --j >= 0;) {
+           * int dd = soldierLoc.distanceSquaredTo(getRobotInfo(stuff[j]).location);
+           * bestDist = (dd < bestDist ? dd : bestDist);
+           * }
+           * if (bestDist <= 10) {
+           * // allyWeight += (ri.health > 10.0) ? ri.health : 0;
+           * allyWeight += ri.health;
+           * } else {
+           * allyWeight += Math.max(0,
+           * ri.health - ALLY_WEIGHT_DECAY * lazySqrt(bestDist - 10));
+           * }
+           * break;
+           */
       }
     }
     return allyWeight;
@@ -519,9 +546,7 @@ public class NathanMicro {
     }
     for (int i = nearbyEnemies.length; --i >= 0;) {
       RobotInfo ri = nearbyEnemies[i];
-      switch (ri.type) {
-      // case HQ:
-      // break;
+      switch(ri.type) {
         case SOLDIER:
           if (ri.isConstructing) {
             break;
@@ -533,12 +558,16 @@ public class NathanMicro {
           if (d > 25) break;
 
 
-          if (d <= 3 || (d <= 8 && RC.senseTerrainTile(soldierLoc) == TerrainTile.ROAD)) {
-            weight += 100;
+          if (evaluateNewSquare && d <= 8 && ri.actionDelay < 2) {
+            weight += (41 + ri.health / 2);
           } else if (d <= FIRE_RANGE_SQUARED)
             weight += ri.health;
           else
             weight += ri.health - ALLY_WEIGHT_DECAY * lazySqrt(d - FIRE_RANGE_SQUARED);
+          break;
+        case PASTR:
+        case NOISETOWER:
+          weight -= 0.1;
           break;
         default:
           break;

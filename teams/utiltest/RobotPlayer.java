@@ -27,58 +27,67 @@ public class RobotPlayer {
     int dx = 3, dy = 4;
 
     if (rc.getType() == RobotType.SOLDIER) {
-      System.out.println("born on round " + Clock.getRoundNum());
-
       try {
-        Direction dir = Direction.NORTH;
-        if (RC.isActive()) {
-          for (int i = 0; i < 8; i++) {
-            if (RC.canMove(dir)) {
-              RC.move(dir);
-              break;
-            }
+        System.out.println("born on round " + Clock.getRoundNum());
+        while (true) {
+          if (rc.isActive()) {
+            rc.construct(RobotType.PASTR);
           }
+          rc.yield();
         }
-        rc.yield();
-        rc.selfDestruct();
       } catch (Exception e) {
-        e.printStackTrace();
-      }
-      countBytecodes(false);
-      for (int i = 100; --i >= 0;) {
-        dx += 2;
-      }
-      countBytecodes(true);
 
-      countBytecodes(false);
-      for (int i = 100; i >= 0; --i) {
-        dx += 2;
       }
-      countBytecodes(true);
-
-      while (true)
+    } else if (rc.getType() == RobotType.PASTR) {
+      while (true) {
         rc.yield();
+      }
     } else if (rc.getType() == RobotType.HQ) {
       try {
-        Direction dir = Direction.NORTH;
-        if (RC.isActive() && RC.senseRobotCount() < GameConstants.MAX_ROBOTS) {
-          // Spawn soldier
-          for (int i = 0; i < 8; i++) {
-            // if square is movable, spawn soldier there and send initial messages
-            if (RC.canMove(dir)) {
-              RC.spawn(dir);
-              break;
+        while (true) {
+          Direction dir = Direction.NORTH;
+          if (RC.isActive() && RC.senseRobotCount() < GameConstants.MAX_ROBOTS) {
+            // Spawn soldier
+            for (int i = 0; i < 8; i++) {
+              // if square is movable, spawn soldier there and send initial messages
+              if (RC.canMove(dir)) {
+                RC.spawn(dir);
+                break;
+              }
+              // otherwise keep rotating until this is possible
+              dir = dir.rotateRight();
             }
-            // otherwise keep rotating until this is possible
-            dir = dir.rotateRight();
+            System.out.println(rc.senseObjectAtLocation(rc.getLocation().add(dir)));
+            rc.yield();
+            System.out.println(rc.senseObjectAtLocation(rc.getLocation().add(dir)));
+            // message guys to get out of the way??
           }
-          System.out.println(rc.senseObjectAtLocation(rc.getLocation().add(dir)));
-          rc.yield();
-          System.out.println(rc.senseObjectAtLocation(rc.getLocation().add(dir)));
-          // message guys to get out of the way??
+          Robot[] botsNearby = rc.senseNearbyGameObjects(Robot.class, 2);
+          int lol = 0;
+          for (int i = botsNearby.length; --i >= 0;) {
+            if (rc.canSenseObject(botsNearby[i])) {
+              RobotInfo ri = rc.senseRobotInfo(botsNearby[i]);
+              System.out.println("-----");
+              countBytecodes(false);
+              if (ri.type == RobotType.PASTR) {
+                lol++;
+              }
+              countBytecodes(true);
+              countBytecodes(false);
+              switch (ri.type) {
+                case PASTR:
+                  lol++;
+                  break;
+                default:
+                  break;
+              }
+              countBytecodes(true);
+            }
+          }
         }
-      } catch (Exception e) {
 
+      } catch (Exception e) {
+        e.printStackTrace();
       }
       /*
        * rc.yield();

@@ -2,10 +2,9 @@ package mergebot.utils;
 
 import static battlecode.common.Direction.*;
 
-import java.util.Arrays;
-import java.util.Random;
+import java.util.*;
 
-import mergebot.messaging.MessagingSystem;
+import mergebot.messaging.*;
 import mergebot.messaging.MessagingSystem.ReservedMessageType;
 import battlecode.common.*;
 
@@ -101,6 +100,9 @@ public class Utils {
   public static int SENSOR_RADIUS2;
   public static Robot[] enemyRobots = new Robot[0];
 
+  // cache all RobotInfos sensed this turn; hash by ID
+  public static RobotInfo[] robotInfoCache;
+
 
   /**
    * Type of map symmetry. Reflection orientations describe the line connecting the HQs.
@@ -181,6 +183,8 @@ public class Utils {
    * Called at the beginning of each round by buildings.
    */
   public static void updateBuildingUtils() {
+    robotInfoCache = new RobotInfo[100000];
+
     enemyRobots =
         RC.senseNearbyGameObjects(Robot.class, currentLocation, SENSOR_RADIUS2, ENEMY_TEAM);
     currentRound = Clock.getRoundNum();
@@ -199,6 +203,8 @@ public class Utils {
    * Called at the beginning of each round by moving units.
    */
   public static void updateUnitUtils() {
+    robotInfoCache = new RobotInfo[100000];
+
     currentLocation = RC.getLocation();
     curX = currentLocation.x;
     curY = currentLocation.y;
@@ -218,6 +224,17 @@ public class Utils {
   private static RobotInfo[] enemyRobotInfo = new RobotInfo[0];
   private static int roundInfoUpdated = -1;
 
+  public static RobotInfo getRobotInfo(Robot r) throws GameActionException {
+    int id = r.getID();
+    if (robotInfoCache[id] == null) {
+      RobotInfo ri = RC.senseRobotInfo(r);
+      robotInfoCache[id] = ri;
+      return ri;
+    } else {
+      return robotInfoCache[id];
+    }
+  }
+
   /**
    * Get RobotInfos of each enemy in @enemyRobots.
    * @return RobotInfos of each enemy in @enemyRobots
@@ -227,7 +244,7 @@ public class Utils {
     if (roundInfoUpdated < currentRound) {
       enemyRobotInfo = new RobotInfo[enemyRobots.length];
       for (int i = enemyRobots.length - 1; i >= 0; i--) {
-        enemyRobotInfo[i] = RC.senseRobotInfo(enemyRobots[i]);
+        enemyRobotInfo[i] = getRobotInfo(enemyRobots[i]);
       }
       roundInfoUpdated = currentRound;
     }
@@ -357,6 +374,7 @@ public class Utils {
   }
 
   public static Direction getSymmetricDirection(Direction d) {
+    if(d == null) return d;
     switch (MAP_SYMMETRY) {
       case ROTATION:
         return d.opposite();
