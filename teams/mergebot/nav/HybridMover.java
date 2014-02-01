@@ -1,13 +1,13 @@
 package mergebot.nav;
 
 import static mergebot.utils.Utils.*;
+import mergebot.utils.Pair;
 import battlecode.common.*;
 
 public class HybridMover {
   public static MapLocation DIJKSTRA_CENTER = ALLY_HQ;
 
   NavAlg simple = new BugMoveFun2();
-  private final DijkstraMover dijkstraMover = new DijkstraMover();
 
   MapLocation dest = null;
 
@@ -60,8 +60,7 @@ public class HybridMover {
       dstar.dest = currentLocation;
 
       if (!outPathDone) {
-        computeOutPath(8000);
-        return;
+        computeOutPath(5000);
       }
 
       if (!dstar.visited(currentLocation)) {
@@ -133,8 +132,15 @@ public class HybridMover {
     DStar dstar = computation.dstar;
 
     if (!dstar.visited(currentLocation)) {
-      RC.setIndicatorString(1, "simple move");
-      simpleMove(dest);
+      Pair<Direction, Integer> pathingInfo = messagingSystem.readPathingInfo(currentLocation);
+      if (pathingInfo.first != null && computation.length > 1 &&
+          pathingInfo.second <= naiveDistance(currentLocation, dest)) {
+        RC.setIndicatorString(1, "move to hq");
+        DijkstraMover.getDijkstraMover().move(movementType);
+      } else {
+        RC.setIndicatorString(1, "simple move");
+        simpleMove(dest);
+      }
     } else {
       // RC.setIndicatorString(1, "dstar move");
       dstar.move(movementType);

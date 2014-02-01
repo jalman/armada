@@ -10,7 +10,14 @@ import battlecode.common.*;
  *
  */
 public class DijkstraMover extends GradientMover {
-  public static final DijkstraMover dijkstraMover = new DijkstraMover();
+  private static DijkstraMover dijkstraMover;
+
+  public static DijkstraMover getDijkstraMover() {
+    if (dijkstraMover == null) {
+      dijkstraMover = new DijkstraMover();
+    }
+    return dijkstraMover;
+  }
 
   @Override
   public int getWeight(MapLocation loc) {
