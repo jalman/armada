@@ -299,8 +299,10 @@ public class HQBehavior extends RobotBehavior {
     considerTeamAttacking();
   }
   
-  private void doublecheckPASTRs() {
+  private void doublecheckPASTRs() throws GameActionException {
     if(PASTRReachabilityConfirmed) return;
+    
+    boolean changes = false;
     
     int num = 0;
     Pair<MapLocation, Double>[] reachablePASTRs = new Pair[goodPASTRLocs.length];
@@ -308,16 +310,20 @@ public class HQBehavior extends RobotBehavior {
     for(int i = 0; i < goodPASTRLocs.length; i++) {
       if(dijkstra.visited(goodPASTRLocs[i].first)) {
         reachablePASTRs[num++] = goodPASTRLocs[i];
+      } else {
+        changes = true;
       }
     }
     
     if(num>0) goodPASTRLocs = Arrays.copyOf(reachablePASTRs, num); //if statement to avoid blowing up, maybe should do something better?
     
-    determineNewPASTRLocations();
+    if(changes && num != 0) {
+      firstPASTRLocs = null;
+      secondPASTRLocs = null;
+      determineNewPASTRLocations();
+    }
     
     PASTRReachabilityConfirmed = true;
-    
-    System.out.println("CALLED!! " + goodPASTRLocs[0].first);
   }
 
   private void setRallyPoint() throws GameActionException {
